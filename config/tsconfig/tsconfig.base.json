@@ -1,0 +1,61 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ES2022"
+        ],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+        "incremental": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "baseUrl": "../..",
+        "paths": {
+            "@repo/services": [
+                "shared/services/src/index.ts"
+            ],
+            "@repo/auth": [
+                "shared/auth/src/index.ts"
+            ],
+            "@repo/ui": [
+                "shared/ui/src/index.ts"
+            ],
+            "@repo/utils": [
+                "shared/utils/src/index.ts"
+            ],
+            "@repo/hooks": [
+                "shared/hooks/src/index.ts"
+            ],
+            "@repo/types": [
+                "shared/types/src/index.ts"
+            ],
+            "@repo/api-client": [
+                "packages/api-client/src/index.ts"
+            ],
+            "@repo/design-system": [
+                "packages/design-system/src/index.ts"
+            ]
+        }
+    },
+    "exclude": [
+        "node_modules",
+        "dist",
+        ".next",
+        ".turbo"
+    ]
+}

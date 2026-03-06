@@ -1,0 +1,32 @@
+
+> super-admin@0.1.0 dev
+> next dev -p 3001
+
+node:internal/modules/cjs/loader:491
+      const err = new Error(
+                  ^
+
+Error: Cannot find module '/home/lenovo/Desktop/Real Estate/node_modules/@next/env/dist/index.js'. Please verify that the package.json has a valid "main" entry
+    at tryPackage (node:internal/modules/cjs/loader:491:19)
+    at Module._findPath (node:internal/modules/cjs/loader:758:18)
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1193:27)
+    at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/server/require-hook.js:55:36
+    at Module._load (node:internal/modules/cjs/loader:1038:27)
+    at Module.require (node:internal/modules/cjs/loader:1289:19)
+    at mod.require (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/server/config.js:44:14)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14) {
+  code: 'MODULE_NOT_FOUND',
+  path: '/home/lenovo/Desktop/Real Estate/node_modules/@next/env/package.json',
+  requestPath: '@next/env'
+}
+
+Node.js v20.19.5
+npm error Lifecycle script `dev` failed with error:
+npm error code 1
+npm error path /home/lenovo/Desktop/Real Estate/apps/super-admin
+npm error workspace super-admin@0.1.0
+npm error location /home/lenovo/Desktop/Real Estate/apps/super-admin
+npm error command failed
+npm error command sh -c next dev -p 3001

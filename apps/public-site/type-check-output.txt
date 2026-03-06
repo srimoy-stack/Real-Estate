@@ -1,0 +1,18 @@
+
+> public-site@0.1.0 type-check
+> tsc --noEmit
+
+src/components/layout/Footer.tsx(2,15): error TS2305: Module '"@/types/website"' has no exported member 'FooterConfig'.
+src/components/layout/Footer.tsx(2,29): error TS2305: Module '"@/types/website"' has no exported member 'SocialLinks'.
+src/components/layout/Footer.tsx(35,32): error TS7006: Parameter 'col' implicitly has an 'any' type.
+src/components/layout/Footer.tsx(41,33): error TS7006: Parameter 'link' implicitly has an 'any' type.
+src/components/layout/Navbar.tsx(5,15): error TS2305: Module '"@/types/website"' has no exported member 'NavLink'.
+../../shared/auth/src/AuthProvider.tsx(11,32): error TS6133: 'logout' is declared but its value is never read.
+../../shared/services/src/apiClient.ts(12,16): error TS6133: 'token' is declared but its value is never read.
+npm error Lifecycle script `type-check` failed with error:
+npm error code 1
+npm error path /home/lenovo/Desktop/Real Estate/apps/public-site
+npm error workspace public-site@0.1.0
+npm error location /home/lenovo/Desktop/Real Estate/apps/public-site
+npm error command failed
+npm error command sh -c tsc --noEmit

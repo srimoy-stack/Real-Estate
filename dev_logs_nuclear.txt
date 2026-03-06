@@ -1,0 +1,300 @@
+
+> real-estate-platform@1.0.0 dev
+> turbo dev
+
+• turbo 2.8.14
+• Packages in scope: @repo/api-client, @repo/auth, @repo/design-system, @repo/eslint-config, @repo/hooks, @repo/services, @repo/tsconfig, @repo/types, @repo/ui, @repo/utils, client-admin, public-site, super-admin
+• Running dev in 13 packages
+• Remote caching disabled
+public-site:dev: cache bypass, force executing 592adb6ea011b0d2
+super-admin:dev: cache bypass, force executing 2d34cfbd6e20676d
+client-admin:dev: cache bypass, force executing ccbf927dc3ee06e0
+client-admin:dev: 
+client-admin:dev: > client-admin@0.1.0 dev
+client-admin:dev: > next dev -p 3002
+client-admin:dev: 
+public-site:dev: 
+public-site:dev: > public-site@0.1.0 dev
+public-site:dev: > next dev -p 3000
+public-site:dev: 
+super-admin:dev: 
+super-admin:dev: > super-admin@0.1.0 dev
+super-admin:dev: > next dev -p 3001
+super-admin:dev: 
+super-admin:dev:   ▲ Next.js 14.2.35
+super-admin:dev:   - Local:        http://localhost:3001
+super-admin:dev: 
+super-admin:dev:  ✓ Starting...
+public-site:dev:   ▲ Next.js 14.2.35
+public-site:dev:   - Local:        http://localhost:3000
+public-site:dev: 
+public-site:dev:  ✓ Starting...
+client-admin:dev:   ▲ Next.js 14.2.35
+client-admin:dev:   - Local:        http://localhost:3002
+client-admin:dev:   - Experiments (use with caution):
+client-admin:dev:     · typedRoutes
+client-admin:dev: 
+client-admin:dev:  ✓ Starting...
+client-admin:dev:  ✓ Ready in 5.6s
+public-site:dev:  ✓ Ready in 5.7s
+super-admin:dev:  ✓ Ready in 5.8s
+super-admin:dev:  ○ Compiling /test ...
+super-admin:dev:  ✓ Compiled /test in 20.3s (507 modules)
+super-admin:dev:  GET /test 200 in 21331ms
+super-admin:dev:  ✓ Compiled in 1500ms (260 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET /test 200 in 259ms
+super-admin:dev:  ✓ Compiled in 1266ms (260 modules)
+super-admin:dev:  GET /test 200 in 112ms
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  ✓ Compiled in 1182ms (507 modules)
+super-admin:dev:  GET /test 200 in 1175ms
+client-admin:dev:  ○ Compiling /src/middleware ...
+client-admin:dev:  ✓ Compiled /src/middleware in 889ms (72 modules)
+client-admin:dev:  ○ Compiling /website-builder ...
+client-admin:dev:  ✓ Compiled /website-builder in 7.8s (813 modules)
+client-admin:dev:  GET /website-builder 200 in 8175ms
+client-admin:dev:  ○ Compiling /login ...
+client-admin:dev:  ✓ Compiled /login in 5.7s (819 modules)
+client-admin:dev:  ✓ Compiled /dashboard in 482ms (811 modules)
+client-admin:dev:  ✓ Compiled /website-builder/seo in 387ms (822 modules)
+client-admin:dev:  ✓ Compiled /website-builder/pages in 386ms (828 modules)
+client-admin:dev:  ○ Compiling /leads ...
+client-admin:dev:  ✓ Compiled /leads in 766ms (830 modules)
+public-site:dev:  ○ Compiling /src/middleware ...
+public-site:dev:  ✓ Compiled /src/middleware in 692ms (83 modules)
+public-site:dev:  ○ Compiling / ...
+public-site:dev:  ✓ Compiled / in 6.5s (815 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET / 200 in 6916ms
+public-site:dev:  ○ Compiling /_not-found ...
+public-site:dev:  ✓ Compiled /_not-found in 7.7s (816 modules)
+public-site:dev:  GET /images/brokerage-logo.png 404 in 8055ms
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 42ms
+super-admin:dev:  ✓ Compiled / in 500ms (500 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET / 200 in 764ms
+super-admin:dev:  GET /test 200 in 75ms
+super-admin:dev:  ○ Compiling /dashboard ...
+super-admin:dev:  ✓ Compiled /dashboard in 2.7s (801 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET /dashboard 200 in 2271ms
+super-admin:dev:  GET /test 200 in 75ms
+super-admin:dev:  ○ Compiling /login ...
+super-admin:dev:  ✓ Compiled /login in 558ms (807 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET /test 200 in 144ms
+client-admin:dev:  ○ Compiling / ...
+client-admin:dev:  ✓ Compiled / in 777ms (837 modules)
+client-admin:dev:  GET / 200 in 1231ms
+client-admin:dev:  GET /dashboard 200 in 61ms
+super-admin:dev:  GET /dashboard 200 in 113ms
+super-admin:dev:  ○ Compiling /organizations ...
+super-admin:dev:  ✓ Compiled /organizations in 1018ms (819 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET /organizations 200 in 1239ms
+super-admin:dev:  GET /test 200 in 59ms
+super-admin:dev:  ✓ Compiled /subscriptions in 460ms (825 modules)
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  GET /subscriptions 200 in 703ms
+super-admin:dev:  GET /test 200 in 90ms
+public-site:dev:  ○ Compiling /listings ...
+public-site:dev:  ✓ Compiled /listings in 2.5s (998 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /listings. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /listings. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev: Listing API failed, using mock data for demo
+public-site:dev: Listing API failed, using mock data for demo
+public-site:dev:  ✓ Compiled /_not-found in 315ms (635 modules)
+public-site:dev:  GET /images/brokerage-logo.png 404 in 490ms
+public-site:dev: Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+public-site:dev: 1. You might have mismatching versions of React and the renderer (such as React DOM)
+public-site:dev: 2. You might be breaking the Rules of Hooks
+public-site:dev: 3. You might have more than one copy of React in the same app
+public-site:dev: See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+public-site:dev: Warning: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+public-site:dev: 1. You might have mismatching versions of React and the renderer (such as React DOM)
+public-site:dev: 2. You might be breaking the Rules of Hooks
+public-site:dev: 3. You might have more than one copy of React in the same app
+public-site:dev: See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.
+public-site:dev:  ⨯ Internal error: TypeError: Cannot read properties of null (reading 'useContext')
+public-site:dev:     at t.useContext (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:162364)
+public-site:dev:     at LinkComponent (../../node_modules/next/dist/client/link.js:125:40)
+public-site:dev:     at au (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:10446)
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:44746)
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46505)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at aC (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:52874)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50095)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at aC (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:52874)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50095)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50067)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:58612
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:59270
+public-site:dev:     at aN (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:59278)
+public-site:dev:     at Timeout._onTimeout (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6939)
+public-site:dev:     at listOnTimeout (node:internal/timers:581:17)
+public-site:dev:     at process.processTimers (node:internal/timers:519:7)
+public-site:dev: digest: "728611730"
+public-site:dev:  ⨯ Internal error: TypeError: Cannot read properties of null (reading 'useContext')
+public-site:dev:     at t.useContext (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:162364)
+public-site:dev:     at LinkComponent (../../node_modules/next/dist/client/link.js:125:40)
+public-site:dev:     at au (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:10446)
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:44746)
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46505)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at aC (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:52874)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50095)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at aC (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:52874)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50095)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at aj (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:53793)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42336
+public-site:dev:     at aw (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:42822)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49776)
+public-site:dev:     at a_ (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50067)
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:58612
+public-site:dev:     at /home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:59270
+public-site:dev:     at aN (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:59278)
+public-site:dev:     at Timeout._onTimeout (/home/lenovo/Desktop/Real Estate/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6939)
+public-site:dev:     at listOnTimeout (node:internal/timers:581:17)
+public-site:dev:     at process.processTimers (node:internal/timers:519:7)
+public-site:dev: digest: "728611730"
+public-site:dev:  GET /listings 200 in 1407ms
+public-site:dev:  GET /images/brokerage-logo.png 404 in 29ms
+public-site:dev:  ○ Compiling /listings/[id] ...
+public-site:dev:  ✓ Compiled /listings/[id] in 869ms (1023 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /listings/the-glass-pavilion-mansion. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /listings/the-glass-pavilion-mansion?_rsc=1qmtg 200 in 1671ms
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /listings/the-glass-pavilion-mansion. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /listings/the-glass-pavilion-mansion?_rsc=152hi 200 in 54ms
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=11abv 200 in 94ms
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /about. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /about 404 in 160ms
+public-site:dev:  GET /images/brokerage-logo.png 404 in 48ms
+public-site:dev:  GET /images/brokerage-logo.png 404 in 29ms
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=77yha 200 in 41ms
+public-site:dev:  ✓ Compiled in 1156ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 57ms
+public-site:dev:  ✓ Compiled in 796ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 35ms
+public-site:dev:  ✓ Compiled in 1827ms (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 213ms
+public-site:dev:  ✓ Compiled in 919ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 35ms
+public-site:dev:  ✓ Compiled in 2.6s (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 245ms
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ✓ Compiled in 7.4s (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 308ms
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+super-admin:dev:  ✓ Compiled in 9.3s (821 modules)
+client-admin:dev:  ✓ Compiled in 9.4s (844 modules)
+super-admin:dev:  GET /test 200 in 4490ms
+public-site:dev:  ✓ Compiled in 1159ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 54ms
+public-site:dev:  ✓ Compiled in 1394ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 90ms
+public-site:dev:  ✓ Compiled in 860ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 47ms
+public-site:dev:  ✓ Compiled in 682ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 48ms
+public-site:dev:  ✓ Compiled in 680ms (380 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 43ms
+public-site:dev:  ✓ Compiled in 2.7s (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 208ms
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ✓ Compiled in 4.4s (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+public-site:dev:  GET /?_rsc=1p60s 200 in 684ms
+super-admin:dev:  ✓ Compiled in 6.3s (821 modules)
+super-admin:dev:  ✓ Compiled in 0ms (443 modules)
+super-admin:dev:  ✓ Compiled in 0ms (443 modules)
+client-admin:dev:  ✓ Compiled in 8.1s (844 modules)
+super-admin:dev:  ✓ Compiled in 1ms (443 modules)
+super-admin:dev:  GET /test 200 in 4898ms
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+client-admin:dev:  ✓ Compiled in 6.7s (844 modules)
+public-site:dev:  ✓ Compiled in 7.2s (1015 modules)
+public-site:dev:  ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+public-site:dev: Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+super-admin:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  GET /?_rsc=1p60s 200 in 395ms
+super-admin:dev:  ✓ Compiled in 8.1s (821 modules)
+super-admin:dev:  GET /test 200 in 5324ms
+client-admin:dev: ERROR: command finished with error: command (/home/lenovo/Desktop/Real Estate/apps/client-admin) /home/lenovo/.nvm/versions/node/v20.19.5/bin/npm run dev was killed (exit code 137), likely due to running out of memory
+client-admin#dev: command (/home/lenovo/Desktop/Real Estate/apps/client-admin) /home/lenovo/.nvm/versions/node/v20.19.5/bin/npm run dev exited (137)
+
+ Tasks:    0 successful, 3 total
+Cached:    0 cached, 3 total
+  Time:    1h57m31.656s 
+Failed:    client-admin#dev
+
+ ERROR  run failed: command  exited (137)

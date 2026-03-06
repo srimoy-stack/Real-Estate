@@ -1,0 +1,54 @@
+{
+  "extends": "../../config/tsconfig/tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@repo/ui": [
+        "../../shared/ui/src"
+      ],
+      "@repo/types": [
+        "../../shared/types/src"
+      ],
+      "@repo/utils": [
+        "../../shared/utils/src"
+      ],
+      "@repo/hooks": [
+        "../../shared/hooks/src"
+      ],
+      "@repo/auth": [
+        "../../shared/auth/src"
+      ],
+      "@repo/services": [
+        "../../shared/services/src"
+      ],
+      "@repo/api-client": [
+        "../../packages/api-client/src"
+      ],
+      "@repo/design-system": [
+        "../../packages/design-system/src"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
