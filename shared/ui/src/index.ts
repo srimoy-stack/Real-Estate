@@ -1,5 +1,6 @@
 export { Button } from './components/Button';
 export { Card } from './components/Card';
+export { ListingCard } from './components/ListingCard';
 export { Input } from './components/Input';
 export { Textarea } from './components/Textarea';
 export { Select } from './components/Select';

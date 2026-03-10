@@ -8,7 +8,6 @@ const AuthContext = createContext<ReturnType<typeof useAuthStore> | undefined>(u
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const store = useAuthStore();
-    const { accessToken, user } = store;
 
     // Bridge the gap between store and api client to avoid cyclic dependency.
     useEffect(() => {
@@ -16,12 +15,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         apiAuthConfig.getTenantId = () => useAuthStore.getState().user?.tenantId || null;
         apiAuthConfig.setToken = (newToken: string) => useAuthStore.getState().setToken(newToken);
         apiAuthConfig.onLogout = () => useAuthStore.getState().logout();
-    }, []);
 
-    // Also update current store value whenever token or user changes
-    useEffect(() => {
-        // Updated dependencies for persistence tracking (if any)
-    }, [accessToken, user]);
+        // Local Development: Sync impersonation from URL if available
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const isImpersonating = params.get('impersonating') === 'true';
+
+            if (token && isImpersonating && !useAuthStore.getState().isImpersonating) {
+                console.log("[AUTH] Detecting impersonation session from URL redirect...");
+                // In a real app, we'd verify the token first.
+                // For mock, we set a generic impersonated user if one isn't already set.
+                if (!useAuthStore.getState().user) {
+                    useAuthStore.getState().setAuth({
+                        id: 'impersonated-dev',
+                        name: 'Impersonated User',
+                        email: 'impersonated@demo.com',
+                        role: 'BROKERAGE_ADMIN' as any,
+                        tenantId: 'demo-tenant'
+                    }, token);
+                    useAuthStore.setState({
+                        isImpersonating: true,
+                        originalUser: { id: 'admin', name: 'Super Admin', email: 'admin@system.com', role: 'SUPER_ADMIN' as any }
+                    });
+                }
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+    }, []);
 
     const value = useMemo(() => store, [store]);
 

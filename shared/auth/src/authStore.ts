@@ -8,9 +8,10 @@ interface AuthActions {
     logout: () => void
     startImpersonation: (original: User, impersonated: User) => void
     stopImpersonation: () => void
+    setHasHydrated: (state: boolean) => void
 }
 
-export const useAuthStore = create<AuthState & AuthActions>()(
+export const useAuthStore = create<AuthState & AuthActions & { _hasHydrated: boolean }>()(
     persist(
         (set) => ({
             user: null,
@@ -18,6 +19,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             isAuthenticated: false,
             isImpersonating: false,
             originalUser: null,
+            _hasHydrated: false,
+
+            setHasHydrated: (state) => set({ _hasHydrated: state }),
 
             setAuth: (user, token) =>
                 set({
@@ -54,6 +58,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => sessionStorage),
+            onRehydrateStorage: (state) => {
+                return () => state.setHasHydrated(true);
+            },
             partialize: (state) => ({
                 accessToken: state.accessToken,
                 user: state.user,

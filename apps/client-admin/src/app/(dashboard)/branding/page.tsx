@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { useNotificationStore } from '@repo/services';
 
 interface BrandingFormState {
+    templateId: string;
+    allowedTemplates: string[];
     primaryColor: string;
     secondaryColor: string;
     logoUrl: string;
@@ -26,77 +28,111 @@ interface BrandingFormState {
     }[];
 }
 
+import { useSearchParams } from 'next/navigation';
+
+const mockAgents: Record<string, { name: string; template: string }> = {
+    '1': { name: 'David Armstrong', template: 'corporate-brokerage' },
+    '2': { name: 'Sarah Jenkins', template: 'agent-portfolio' },
+    '3': { name: 'Michael Chen', template: 'modern-realty' },
+    '4': { name: 'Emily Park', template: 'agent-portfolio' },
+    '5': { name: 'James Wilson', template: 'agent-portfolio' },
+};
+
 export default function BrandingPage() {
+    const searchParams = useSearchParams();
+    const agentId = searchParams.get('agentId');
+    const targetAgent = agentId ? mockAgents[agentId] : null;
+
     const [form, setForm] = useState<BrandingFormState>({
-        primaryColor: '#6366f1',
-        secondaryColor: '#8b5cf6',
+        templateId: targetAgent ? targetAgent.template : 'modern-realty',
+        allowedTemplates: targetAgent ? ['agent-portfolio', 'modern-realty', 'minimal-realty'] : ['modern-realty', 'luxury-estate', 'minimal-realty'],
+        primaryColor: targetAgent ? '#4f46e5' : '#6366f1',
+        secondaryColor: targetAgent ? '#7c3aed' : '#8b5cf6',
         logoUrl: '',
         faviconUrl: '',
-        companyName: 'Prestige Realty',
-        tagline: 'Luxury Living, Redefined',
+        companyName: targetAgent ? targetAgent.name : 'Prestige Realty',
+        tagline: targetAgent ? 'Expert Guidance, Personal Touch' : 'Luxury Living, Redefined',
         headerFont: 'Inter',
         bodyFont: 'Inter',
         social: {
-            facebook: 'https://facebook.com/prestigerealty',
-            instagram: 'https://instagram.com/prestigerealty',
-            twitter: 'https://twitter.com/prestigerealty',
-            linkedin: 'https://linkedin.com/company/prestigerealty',
+            facebook: `https://facebook.com/${targetAgent ? targetAgent.name.toLowerCase().replace(' ', '') : 'prestigerealty'}`,
+            instagram: `https://instagram.com/${targetAgent ? targetAgent.name.toLowerCase().replace(' ', '') : 'prestigerealty'}`,
+            twitter: `https://twitter.com/${targetAgent ? targetAgent.name.toLowerCase().replace(' ', '') : 'prestigerealty'}`,
+            linkedin: `https://linkedin.com/in/${targetAgent ? targetAgent.name.toLowerCase().replace(' ', '') : 'prestigerealty'}`,
         },
         officeLocations: [
             {
                 address: '123 Luxury Ave',
                 city: 'Beverly Hills, CA',
                 phone: '+1 (555) 123-4567',
-                email: 'contact@prestigerealty.com'
+                email: targetAgent ? `${targetAgent.name.toLowerCase().replace(' ', '.')}@prestigerealty.com` : 'contact@prestigerealty.com'
             }
         ]
     });
+
+    const [previewTemplate, setPreviewTemplate] = useState<{ id: string, name: string } | null>(null);
     const [saved, setSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleSave = () => {
-        // Validation
         if (!form.companyName.trim()) {
-            setError('Company Name is required');
+            setError('Legal Identity is required');
             return;
         }
-        if (!form.primaryColor || !form.secondaryColor) {
-            setError('Brand colors are required');
-            return;
-        }
-
         setError(null);
         setIsSaving(true);
 
-        // Simulate API saving and public site invalidation
         setTimeout(() => {
             setIsSaving(false);
             setSaved(true);
-
             useNotificationStore.getState().addNotification({
                 type: 'success',
-                title: 'Branding Saved',
-                message: 'Your website branding has been updated and published.'
+                title: targetAgent ? 'Agent Branding Synced' : 'Corporate Branding Saved',
+                message: targetAgent
+                    ? `Changes for ${targetAgent.name} have been propagated to their personal site.`
+                    : 'Your website branding has been updated and published.'
             });
-
             setTimeout(() => setSaved(false), 3000);
         }, 800);
     };
 
     return (
         <div className="space-y-10">
+            {/* Context Badge */}
+            {targetAgent && (
+                <div className="bg-emerald-600 text-white px-6 py-3 rounded-2xl flex items-center justify-between shadow-xl shadow-emerald-500/20 animate-in slide-in-from-top duration-500 mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center font-black">
+                            {targetAgent.name.charAt(0)}
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Managing Associate Branding</p>
+                            <p className="font-bold">{targetAgent.name} — Personal Identity</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => window.location.href = '/team'}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                        Return to Team
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="space-y-2">
                 <div className="flex items-center gap-2">
                     <span className="h-1 w-8 bg-indigo-600 rounded-full" />
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">Brand Identity</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">{targetAgent ? 'Personal Identity' : 'Brand Identity'}</span>
                 </div>
                 <h1 className="text-4xl font-black tracking-tight text-slate-900">
-                    Website <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">Branding</span>
+                    {targetAgent ? 'Agent' : 'Website'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">Branding</span>
                 </h1>
                 <p className="text-lg text-slate-600 font-medium max-w-2xl">
-                    Customize how your public-facing real estate website looks and feels. Changes here will be reflected on your live site.
+                    {targetAgent
+                        ? `Customize the visual identity for ${targetAgent.name}. These settings define their personal logo, colors, and social presence.`
+                        : 'Customize how your public-facing real estate website looks and feels. Changes here will be reflected on your live site.'}
                 </p>
             </div>
 
@@ -170,76 +206,60 @@ export default function BrandingPage() {
                     </div>
                 </div>
 
-                {/* Colors & Typography */}
-                <div className="p-8 rounded-3xl bg-white shadow-sm border border-slate-200 space-y-6">
-                    <h3 className="text-lg font-bold text-slate-900">Colors & Typography</h3>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <label className="block">
-                            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Primary Color</span>
-                            <div className="mt-2 flex items-center gap-3">
-                                <input
-                                    type="color"
-                                    value={form.primaryColor}
-                                    onChange={e => setForm({ ...form, primaryColor: e.target.value })}
-                                    className="h-10 w-14 rounded-lg cursor-pointer border-0"
-                                />
-                                <input
-                                    type="text"
-                                    value={form.primaryColor}
-                                    onChange={e => setForm({ ...form, primaryColor: e.target.value })}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-colors"
-                                />
-                            </div>
-                        </label>
-                        <label className="block">
-                            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Secondary Color</span>
-                            <div className="mt-2 flex items-center gap-3">
-                                <input
-                                    type="color"
-                                    value={form.secondaryColor}
-                                    onChange={e => setForm({ ...form, secondaryColor: e.target.value })}
-                                    className="h-10 w-14 rounded-lg cursor-pointer border-0"
-                                />
-                                <input
-                                    type="text"
-                                    value={form.secondaryColor}
-                                    onChange={e => setForm({ ...form, secondaryColor: e.target.value })}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-colors"
-                                />
-                            </div>
-                        </label>
+                {/* Template Selection */}
+                <div className="p-8 rounded-3xl bg-white shadow-sm border border-slate-200 col-span-1 lg:col-span-2 space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Active Website Template</h3>
+                            <p className="text-sm text-slate-500 font-medium">Choose the base layout for your public website.</p>
+                        </div>
+                        <span className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest leading-none">
+                            Current: {form.templateId.replace('-', ' ')}
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <label className="block">
-                            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Heading Font</span>
-                            <select
-                                value={form.headerFont}
-                                onChange={e => setForm({ ...form, headerFont: e.target.value })}
-                                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 text-sm font-medium focus:outline-none focus:border-indigo-500 transition-colors"
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {[
+                            { id: 'modern-realty', name: 'Modern Realty', img: '/images/templates/modern-thumb.jpg' },
+                            { id: 'luxury-estate', name: 'Luxury Estate', img: '/images/templates/luxury-thumb.jpg' },
+                            { id: 'corporate-brokerage', name: 'Corporate', img: '/images/templates/classic-thumb.jpg' },
+                            { id: 'agent-portfolio', name: 'Portfolio', img: '/images/templates/agent-thumb.jpg' },
+                            { id: 'minimal-realty', name: 'Minimal', img: '/images/templates/minimal-thumb.jpg' },
+                        ].filter(t => form.allowedTemplates.includes(t.id)).map((tpl) => (
+                            <button
+                                key={tpl.id}
+                                onClick={() => setForm({ ...form, templateId: tpl.id as any })}
+                                className={`relative group p-2 rounded-[28px] border-2 transition-all text-left overflow-hidden ${form.templateId === tpl.id
+                                    ? 'border-indigo-600 bg-indigo-50/50 shadow-xl shadow-indigo-500/10'
+                                    : 'border-slate-100 hover:border-slate-200 bg-white'
+                                    }`}
                             >
-                                <option value="Inter">Inter</option>
-                                <option value="Outfit">Outfit</option>
-                                <option value="Playfair Display">Playfair Display</option>
-                                <option value="Roboto">Roboto</option>
-                                <option value="Montserrat">Montserrat</option>
-                            </select>
-                        </label>
-                        <label className="block">
-                            <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Body Font</span>
-                            <select
-                                value={form.bodyFont}
-                                onChange={e => setForm({ ...form, bodyFont: e.target.value })}
-                                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 text-sm font-medium focus:outline-none focus:border-indigo-500 transition-colors"
-                            >
-                                <option value="Inter">Inter</option>
-                                <option value="Outfit">Outfit</option>
-                                <option value="Roboto">Roboto</option>
-                                <option value="Open Sans">Open Sans</option>
-                                <option value="Lato">Lato</option>
-                            </select>
-                        </label>
+                                <div className="aspect-[4/3] rounded-[20px] bg-slate-100 mb-3 overflow-hidden border border-slate-200/50">
+                                    <div className="w-full h-full bg-slate-200 animate-pulse group-hover:scale-110 transition-transform duration-500" />
+                                </div>
+                                <div className="px-2 pb-2">
+                                    <p className={`text-xs font-black uppercase tracking-widest ${form.templateId === tpl.id ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                        {tpl.name}
+                                    </p>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setPreviewTemplate(tpl); }}
+                                        className="text-[10px] text-indigo-600 font-bold mt-1 hover:underline flex items-center gap-1"
+                                    >
+                                        Review Layout
+                                        <svg className="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                {form.templateId === tpl.id && (
+                                    <div className="absolute top-4 right-4 h-6 w-6 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -322,6 +342,62 @@ export default function BrandingPage() {
                 </div>
             </div>
 
+            {/* Template Preview Modal */}
+            {
+                previewTemplate && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[48px] border border-slate-200 shadow-3xl w-full max-w-5xl overflow-hidden animate-in zoom-in-95 duration-400">
+                            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                <div>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic">Template <span className="text-indigo-600">Preview</span></h2>
+                                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Viewing: {previewTemplate.name}</p>
+                                </div>
+                                <button onClick={() => setPreviewTemplate(null)} className="h-14 w-14 flex items-center justify-center hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-200">
+                                    <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="p-2 bg-slate-100">
+                                <div className="aspect-video bg-white rounded-[36px] shadow-inner overflow-hidden border border-slate-200 relative group">
+                                    <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12">
+                                        <div className="h-20 w-20 bg-indigo-600 rounded-3xl mb-6 flex items-center justify-center text-white shadow-2xl">
+                                            <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-4xl font-black text-slate-900 mb-4">{previewTemplate.name}</h3>
+                                        <p className="text-xl text-slate-500 max-w-lg font-medium leading-relaxed">
+                                            This is a high-fidelity preview of the {previewTemplate.name} layout.
+                                            All your brand colors and logos will be automatically injected into this structure.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-8 flex items-center justify-between bg-white">
+                                <div className="flex gap-4">
+                                    <div className="h-10 w-10 rounded-full border-2 border-slate-100 p-1 flex items-center justify-center">
+                                        <div className="h-full w-full rounded-full" style={{ backgroundColor: form.primaryColor }} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Branding</p>
+                                        <p className="text-xs font-bold text-slate-900">Colors will match {form.primaryColor}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => { setForm({ ...form, templateId: previewTemplate.id }); setPreviewTemplate(null); }}
+                                    className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-500/10 uppercase tracking-widest"
+                                >
+                                    Activate This Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
             {/* Save Action */}
             <div className="flex items-center justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <div className="flex-1 flex gap-4 items-center">
@@ -349,6 +425,6 @@ export default function BrandingPage() {
                     {isSaving ? 'Publishing...' : 'Publish Changes'}
                 </button>
             </div>
-        </div>
+        </div >
     );
 }

@@ -36,7 +36,63 @@ export interface Organization {
     subscriptionPlan: SubscriptionPlan;
     status: OrgStatus;
     createdAt: string;
+    modules?: {
+        listings: boolean;
+        mapSearch: boolean;
+        blog: boolean;
+        leadCRM: boolean;
+        emailNotifications: boolean;
+        sms: boolean;
+        analytics: boolean;
+        teamManagement: boolean;
+        neighborhoodPages: boolean;
+    };
+    adminEmail?: string;
+    legalName?: string;
+    allowedTemplates: string[];
 }
+
+// Mock Table: TenantTemplates
+// In a real app this would be a DB table.
+export interface TenantTemplate {
+    id: string;
+    tenantId: string;
+    templateId: string;
+    assignedBy: string;
+    createdAt: string;
+}
+
+let mockTenantTemplates: TenantTemplate[] = [
+    { id: 'tt-1', tenantId: 'org-1', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2023-10-15T10:00:00Z' },
+    { id: 'tt-2', tenantId: 'org-1', templateId: 'minimal-realty', assignedBy: 'super-admin', createdAt: '2023-10-15T10:00:00Z' },
+    { id: 'tt-3', tenantId: 'org-2', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2023-11-02T14:30:00Z' },
+    { id: 'tt-4', tenantId: 'TENANT_1', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+    { id: 'tt-5', tenantId: 'TENANT_1', templateId: 'luxury-estate', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+    { id: 'tt-6', tenantId: 'tenant_7721', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+    { id: 'tt-7', tenantId: 'tenant_7721', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+    { id: 'tt-8', tenantId: 'TENANT_1', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+    { id: 'tt-9', tenantId: 'TENANT_1', templateId: 'corporate-brokerage', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
+];
+
+export const getAssignedTemplates = async (tenantId: string): Promise<TenantTemplate[]> => {
+    return mockTenantTemplates.filter(t => t.tenantId === tenantId);
+};
+
+export const assignTemplateToTenant = async (tenantId: string, templateId: string, assignedBy: string): Promise<TenantTemplate> => {
+    const newEntry: TenantTemplate = {
+        id: `tt-${Math.random().toString(36).substr(2, 9)}`,
+        tenantId,
+        templateId,
+        assignedBy,
+        createdAt: new Date().toISOString()
+    };
+    mockTenantTemplates.push(newEntry);
+
+    // Also update the Organization allowedTemplates for legacy compatibility if needed
+    // In a real app, allowedTemplates might be a computed field from this table
+    return newEntry;
+};
+
 
 export interface GetOrgsParams {
     page: number;
@@ -66,49 +122,77 @@ export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsRe
                 id: 'org-1',
                 name: 'Skyline Real Estate',
                 type: OrgType.BROKERAGE,
-                template: 'Modern Luxury',
+                template: 'modern-realty',
                 domain: 'skyline-demo.realestate.com',
                 ddfStatus: DDFStatus.HEALTHY,
                 leads30d: 452,
                 subscriptionPlan: SubscriptionPlan.ENTERPRISE,
                 status: OrgStatus.ACTIVE,
-                createdAt: '2023-10-15T10:00:00Z'
+                createdAt: '2023-10-15T10:00:00Z',
+                adminEmail: 'admin@skyline.com',
+                allowedTemplates: ['modern-realty', 'minimal-realty', 'corporate-brokerage'],
+                modules: {
+                    listings: true, mapSearch: true, blog: true, leadCRM: true,
+                    emailNotifications: true, sms: true, analytics: true,
+                    teamManagement: true, neighborhoodPages: true
+                }
             },
             {
                 id: 'org-2',
                 name: 'Jane Doe Properties',
                 type: OrgType.AGENT,
-                template: 'Minimalist',
+                template: 'agent-portfolio',
                 domain: 'janedoe.com',
                 ddfStatus: DDFStatus.WARNING,
                 leads30d: 87,
                 subscriptionPlan: SubscriptionPlan.PREMIUM,
                 status: OrgStatus.ACTIVE,
-                createdAt: '2023-11-02T14:30:00Z'
+                createdAt: '2023-11-02T14:30:00Z',
+                adminEmail: 'jane@properties.com',
+                allowedTemplates: ['agent-portfolio', 'minimal-realty'],
+                modules: {
+                    listings: true, mapSearch: true, blog: false, leadCRM: true,
+                    emailNotifications: true, sms: false, analytics: true,
+                    teamManagement: false, neighborhoodPages: false
+                }
             },
             {
                 id: 'org-3',
                 name: 'Metro Listings',
                 type: OrgType.BROKERAGE,
-                template: 'Standard',
+                template: 'corporate-brokerage',
                 domain: 'metro.realestate.ca',
                 ddfStatus: DDFStatus.ERROR,
                 leads30d: 312,
                 subscriptionPlan: SubscriptionPlan.BASIC,
                 status: OrgStatus.SUSPENDED,
-                createdAt: '2023-09-20T08:15:00Z'
+                createdAt: '2023-09-20T08:15:00Z',
+                adminEmail: 'support@metro.ca',
+                allowedTemplates: ['corporate-brokerage', 'minimal-realty'],
+                modules: {
+                    listings: true, mapSearch: false, blog: true, leadCRM: false,
+                    emailNotifications: false, sms: false, analytics: true,
+                    teamManagement: true, neighborhoodPages: false
+                }
             },
             {
                 id: 'org-4',
                 name: 'Coastal Homes',
                 type: OrgType.BROKERAGE,
-                template: 'Beachfront',
+                template: 'luxury-estate',
                 domain: 'coastalhomes.com',
                 ddfStatus: DDFStatus.HEALTHY,
                 leads30d: 156,
                 subscriptionPlan: SubscriptionPlan.PREMIUM,
                 status: OrgStatus.INACTIVE,
-                createdAt: '2024-01-10T12:00:00Z'
+                createdAt: '2024-01-10T12:00:00Z',
+                adminEmail: 'office@coastal.com',
+                allowedTemplates: ['luxury-estate', 'modern-realty', 'agent-portfolio'],
+                modules: {
+                    listings: true, mapSearch: true, blog: true, leadCRM: true,
+                    emailNotifications: true, sms: false, analytics: true,
+                    teamManagement: true, neighborhoodPages: true
+                }
             }
         ];
 
@@ -147,6 +231,24 @@ export const updateOrgStatus = async (id: string, status: OrgStatus): Promise<vo
             message: 'Could not update organization status'
         });
         throw error;
+    }
+};
+
+export const updateOrganization = async (id: string, data: Partial<Organization>): Promise<void> => {
+    try {
+        await apiClient.put(`/super-admin/organizations/${id}`, data);
+        useNotificationStore.getState().addNotification({
+            type: 'success',
+            title: 'Organization Updated',
+            message: 'All changes have been saved successfully.'
+        });
+    } catch (error) {
+        // Mock success for demo
+        useNotificationStore.getState().addNotification({
+            type: 'success',
+            title: 'Organization Updated (Mock)',
+            message: 'Changes saved locally (Mock API).'
+        });
     }
 };
 

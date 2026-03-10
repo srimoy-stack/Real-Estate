@@ -11,6 +11,7 @@ import type {
     AboutBannerContent,
     GalleryContent,
     BlogPreviewContent,
+    CommunitiesContent,
 } from '@repo/types';
 
 // ═══════════════════════════════════════════════════════════
@@ -70,7 +71,11 @@ const FeaturedListingsSection: React.FC<{ content: FeaturedListingsContent }> = 
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Array.from({ length: Math.min(content.maxItems, 3) }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group cursor-pointer">
+                    <a
+                        key={i}
+                        href={`/listings/premium-property-${i + 1}`}
+                        className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group cursor-pointer block"
+                    >
                         <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="absolute top-3 left-3 px-2.5 py-1 bg-emerald-500 rounded-md text-[11px] font-semibold text-white">
@@ -84,7 +89,7 @@ const FeaturedListingsSection: React.FC<{ content: FeaturedListingsContent }> = 
                             </div>
                         </div>
                         <div className="p-4">
-                            <h3 className="text-base font-semibold text-gray-900 mb-0.5">Premium Property {i + 1}</h3>
+                            <h3 className="text-base font-semibold text-gray-900 mb-0.5 group-hover:text-emerald-700 transition-colors">Premium Property {i + 1}</h3>
                             <p className="text-sm text-gray-500 mb-3">Toronto, Ontario</p>
                             <p className="text-xl font-bold text-gray-900 mb-2">$4,250,000</p>
                             <div className="flex items-center gap-3 text-sm text-gray-500 border-t border-gray-100 pt-3">
@@ -93,7 +98,7 @@ const FeaturedListingsSection: React.FC<{ content: FeaturedListingsContent }> = 
                                 <span>3,200 sqft</span>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 ))}
             </div>
         </div>
@@ -285,6 +290,33 @@ const BlogPreviewSection: React.FC<{ content: BlogPreviewContent }> = ({ content
     </section>
 );
 
+const CommunitiesSection: React.FC<{ content: CommunitiesContent }> = ({ content }) => (
+    <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">{content.title}</h2>
+                {content.subtitle && (
+                    <p className="text-gray-500">{content.subtitle}</p>
+                )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {content.communities.map((community, i) => (
+                    <a key={i} href={community.link ?? '#'} className="group block relative rounded-2xl overflow-hidden aspect-[3/4] bg-gray-100">
+                        {community.imageUrl && (
+                            <img src={community.imageUrl} alt={community.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 className="text-white text-xl font-bold mb-2">{community.name}</h3>
+                            <p className="text-gray-300 text-sm line-clamp-2">{community.description}</p>
+                        </div>
+                    </a>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
 // ═══════════════════════════════════════════════════════════
 //  SECTION RENDERER
 // ═══════════════════════════════════════════════════════════
@@ -314,6 +346,8 @@ function renderSection(section: SectionConfig): React.ReactNode {
             return <GallerySection content={content} />;
         case 'blog_preview':
             return <BlogPreviewSection content={content} />;
+        case 'communities':
+            return <CommunitiesSection content={content} />;
         default:
             console.warn(`[SectionRenderer] Unknown section type: "${section.type}"`);
             return null;

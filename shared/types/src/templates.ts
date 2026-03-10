@@ -249,16 +249,16 @@ const classicSections: SectionConfig[] = [
 
 // ─── Template Definitions ──────────────────────────
 
-export const TEMPLATE_MODERN: TemplateDefinition = {
-    id: 'modern',
-    name: 'Modern Premium',
-    description: 'Clean, bold design with strong typography. Perfect for brokerages and teams.',
-    thumbnailUrl: '/images/templates/modern-thumb.jpg',
+export const TEMPLATE_MODERN_REALTY: TemplateDefinition = {
+    id: 'modern-realty',
+    name: 'Modern Realty',
+    description: 'Clean, bold design with strong typography. Perfect for teams.',
+    thumbnailUrl: '/images/templates/modern-thumb.png',
     lockedSections: ['hero', 'featured_listings', 'contact_cta'],
     allowedSections: [
         'hero', 'featured_listings', 'how_it_works', 'stats',
         'contact_cta', 'testimonials', 'blog_preview', 'newsletter',
-        'about_banner', 'gallery',
+        'about_banner', 'gallery', 'communities',
     ],
     defaultHomepageSections: modernSections,
     headerStyle: 'solid',
@@ -266,15 +266,15 @@ export const TEMPLATE_MODERN: TemplateDefinition = {
     listingPageLayout: 'grid',
 };
 
-export const TEMPLATE_LUXURY: TemplateDefinition = {
-    id: 'luxury',
-    name: 'Luxury Editorial',
-    description: 'Elegant, editorial layout with gold accents. Ideal for luxury agents.',
-    thumbnailUrl: '/images/templates/luxury-thumb.jpg',
+export const TEMPLATE_LUXURY_ESTATE: TemplateDefinition = {
+    id: 'luxury-estate',
+    name: 'Luxury Estate',
+    description: 'Elegant layout with gold accents. Ideal for luxury agents.',
+    thumbnailUrl: '/images/templates/luxury-thumb.png',
     lockedSections: ['hero', 'featured_listings', 'contact_cta'],
     allowedSections: [
         'hero', 'featured_listings', 'testimonials', 'about_banner',
-        'contact_cta', 'gallery', 'stats',
+        'contact_cta', 'gallery', 'stats', 'communities',
     ],
     defaultHomepageSections: luxurySections,
     headerStyle: 'transparent',
@@ -282,10 +282,10 @@ export const TEMPLATE_LUXURY: TemplateDefinition = {
     listingPageLayout: 'grid',
 };
 
-export const TEMPLATE_CLASSIC: TemplateDefinition = {
-    id: 'classic',
-    name: 'Classic Professional',
-    description: 'Traditional, trustworthy look. Great for established brokerages.',
+export const TEMPLATE_CORPORATE_BROKERAGE: TemplateDefinition = {
+    id: 'corporate-brokerage',
+    name: 'Corporate Brokerage',
+    description: 'Traditional, trustworthy look for large offices.',
     thumbnailUrl: '/images/templates/classic-thumb.jpg',
     lockedSections: ['hero', 'featured_listings', 'contact_cta'],
     allowedSections: [
@@ -298,12 +298,40 @@ export const TEMPLATE_CLASSIC: TemplateDefinition = {
     listingPageLayout: 'list',
 };
 
+export const TEMPLATE_AGENT_PORTFOLIO: TemplateDefinition = {
+    id: 'agent-portfolio',
+    name: 'Agent Portfolio',
+    description: 'Personalized design to showcase individual agent performance.',
+    thumbnailUrl: '/images/templates/agent-thumb.png',
+    lockedSections: ['hero', 'featured_listings'],
+    allowedSections: ['hero', 'featured_listings', 'testimonials', 'contact_cta', 'stats', 'communities'],
+    defaultHomepageSections: modernSections,
+    headerStyle: 'transparent',
+    footerStyle: 'minimal',
+    listingPageLayout: 'grid',
+};
+
+export const TEMPLATE_MINIMAL_REALTY: TemplateDefinition = {
+    id: 'minimal-realty',
+    name: 'Minimal Realty',
+    description: 'Clean, high-performance design for speed and simplicity.',
+    thumbnailUrl: '/images/templates/minimal-thumb.jpg',
+    lockedSections: ['hero', 'featured_listings'],
+    allowedSections: ['hero', 'featured_listings', 'newsletter', 'contact_cta'],
+    defaultHomepageSections: modernSections,
+    headerStyle: 'solid',
+    footerStyle: 'minimal',
+    listingPageLayout: 'list',
+};
+
 // ─── Template Registry ─────────────────────────────
 
 export const TEMPLATE_REGISTRY: Record<string, TemplateDefinition> = {
-    modern: TEMPLATE_MODERN,
-    luxury: TEMPLATE_LUXURY,
-    classic: TEMPLATE_CLASSIC,
+    'modern-realty': TEMPLATE_MODERN_REALTY,
+    'luxury-estate': TEMPLATE_LUXURY_ESTATE,
+    'corporate-brokerage': TEMPLATE_CORPORATE_BROKERAGE,
+    'agent-portfolio': TEMPLATE_AGENT_PORTFOLIO,
+    'minimal-realty': TEMPLATE_MINIMAL_REALTY,
 };
 
 /**

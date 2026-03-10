@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import { listingService } from '@repo/services';
-import { Listing, ListingFilters, PropertyType, ListingStatus } from '@repo/types';
+import { ListingFilters, PropertyType } from '@repo/types';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { ListingFilters as FilterSidebar } from '@/components/listings/ListingFilters';
 import { ListingGridSkeleton } from '@/components/listings/ListingSkeleton';
@@ -13,7 +12,9 @@ export const metadata: Metadata = {
   description: 'Explore properties and homes. Filter by price, location, and amenities.',
 };
 
-async function getListings(searchParams: any, websiteId: string) {
+import { mockListings } from '@/templates/shared/mock-data';
+
+async function getListings(searchParams: any) {
   const filters: ListingFilters = {
     minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
     maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
@@ -33,77 +34,12 @@ async function getListings(searchParams: any, websiteId: string) {
   } catch (error) {
     console.warn('Listing API failed, using mock data for demo');
 
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const mockListings: Listing[] = [
-      {
-        id: '1',
-        tenantId: websiteId,
-        slug: 'the-glass-pavilion-mansion',
-        title: 'The Glass Pavilion Mansion',
-        description: 'Iconic architectural masterpiece with infinity pool.',
-        price: 12500000,
-        currency: 'CAD',
-        bedrooms: 6,
-        bathrooms: 8,
-        squareFeet: 12400,
-        propertyType: PropertyType.DETACHED,
-        status: ListingStatus.ACTIVE,
-        address: { street: '12 Peak View Rd', city: 'Toronto', province: 'ON', postalCode: 'M5V 2N8' },
-        mainImage: '/modern_mansion_exterior_1772566757109.png',
-        images: [],
-        features: ['Wine Cellar', 'Infinity Pool', 'Home Cinema'],
-        amenities: ['Private Security', 'Smart Home'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        tenantId: websiteId,
-        slug: 'skyline-penthouse-suites',
-        title: 'Skyline Penthouse Suites',
-        description: 'Breathtaking city views with floor-to-ceiling glass.',
-        price: 3800000,
-        currency: 'CAD',
-        bedrooms: 3,
-        bathrooms: 3,
-        squareFeet: 2800,
-        propertyType: PropertyType.CONDO,
-        status: ListingStatus.ACTIVE,
-        address: { street: '101 Bay St', city: 'Toronto', province: 'ON', postalCode: 'M5J 2R8' },
-        mainImage: '/minimalist_apartment_interior_1772567117240.png',
-        images: [],
-        features: ['24/7 Concierge', 'Gym', 'Rooftop Terrace'],
-        amenities: ['Valet Parking'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        tenantId: websiteId,
-        slug: 'elysian-shore-villa',
-        title: 'Elysian Shore Villa',
-        description: 'Mediterranean-inspired estate with private beach access.',
-        price: 8900000,
-        currency: 'CAD',
-        bedrooms: 5,
-        bathrooms: 6,
-        squareFeet: 7500,
-        propertyType: PropertyType.DETACHED,
-        status: ListingStatus.ACTIVE,
-        address: { street: '45 Coastal Dr', city: 'Vancouver', province: 'BC', postalCode: 'V6B 1A1' },
-        mainImage: '/coastal_villa_daylight_1772567153237.png',
-        images: [],
-        features: ['Private Beach', 'Garden', 'Outdoor Kitchen'],
-        amenities: ['Helipad Access'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    ];
-
-    let filtered = mockListings;
+    let filtered = [...mockListings];
     if (filters.keyword) {
-      filtered = filtered.filter(l => l.title.toLowerCase().includes(filters.keyword!.toLowerCase()) || l.address.city.toLowerCase().includes(filters.keyword!.toLowerCase()));
+      filtered = filtered.filter(l =>
+        l.title.toLowerCase().includes(filters.keyword!.toLowerCase()) ||
+        l.address.city.toLowerCase().includes(filters.keyword!.toLowerCase())
+      );
     }
     if (filters.minPrice) filtered = filtered.filter(l => l.price >= filters.minPrice!);
     if (filters.maxPrice) filtered = filtered.filter(l => l.price <= filters.maxPrice!);
@@ -126,10 +62,7 @@ export default async function ListingsPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const headerList = headers();
-  const websiteId = headerList.get('x-website-id') || 'default';
-
-  const results = await getListings(searchParams, websiteId);
+  const results = await getListings(searchParams);
   const view = searchParams.view === 'map' ? 'map' : 'grid';
 
   return (

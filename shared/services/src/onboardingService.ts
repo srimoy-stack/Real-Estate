@@ -98,9 +98,10 @@ export const checkDomainAvailability = async (domain: string): Promise<boolean> 
 
 export const getTemplates = async () => {
     return [
-        { id: 'modern-luxury', name: 'Modern Luxury', description: 'Sleek, gold-accented design for premium brokerages.', image: '/templates/modern-luxury.jpg' },
-        { id: 'minimalist', name: 'Minimalist', description: 'Clean, white-space driven layout for individual agents.', image: '/templates/minimalist.jpg' },
-        { id: 'standard', name: 'Professional Standard', description: 'Reliable, accessibility-focused classic design.', image: '/templates/standard.jpg' },
-        { id: 'coastal', name: 'Beachfront Breeze', description: 'Vibrant, photo-centric layout for vacation properties.', image: '/templates/coastal.jpg' },
+        { id: 'luxury-estate', name: 'Luxury Estate', description: 'Sleek, gold-accented design for premium brokerages.', image: '/templates/luxury-thumb.jpg' },
+        { id: 'minimal-realty', name: 'Minimal Realty', description: 'Clean, white-space driven layout for individual agents.', image: '/templates/minimal-thumb.jpg' },
+        { id: 'corporate-brokerage', name: 'Corporate Brokerage', description: 'Reliable, accessibility-focused classic design.', image: '/templates/classic-thumb.jpg' },
+        { id: 'modern-realty', name: 'Modern Realty', description: 'Vibrant, photo-centric layout for teams.', image: '/templates/modern-thumb.jpg' },
+        { id: 'agent-portfolio', name: 'Agent Portfolio', description: 'Personalized design to showcase individual agent performance.', image: '/templates/agent-thumb.jpg' },
     ];
 };

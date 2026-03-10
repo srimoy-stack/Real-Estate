@@ -5,17 +5,18 @@ import { getWebsiteFromHeaders } from '../lib/tenant/getWebsiteFromHeaders';
 import { WebsiteProvider } from '../lib/tenant/website-context';
 import { AuthProvider } from '@repo/auth';
 import { getHeaderLinks, getFontUrls, getBrandingCssVars } from '@repo/types';
+import { Footer } from '@repo/ui';
+import { NavbarAuthWrapper } from '../components/layout/NavbarAuthWrapper';
 
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const website = getWebsiteFromHeaders();
-  if (!website) return { title: 'Not Found' };
+  if (!website) return { title: 'Template Preview | Platform Engine' };
 
   return {
     title: website.seo.defaultTitle || website.brandName,
     description: website.seo.defaultDescription || `Premium properties by ${website.brandName}`,
-    themeColor: website.branding.primaryColor,
     icons: {
       icon: website.branding.faviconUrl || website.branding.logoUrl,
     },
@@ -30,12 +31,11 @@ export default function RootLayout({
   const website = getWebsiteFromHeaders();
 
   if (!website) {
+    // If it's a demo route, we still want to render children without the tenant wrapper
     return (
       <html lang="en">
-        <body>
-          <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Website not found.</p>
-          </div>
+        <body className="min-h-screen bg-white antialiased">
+          {children}
         </body>
       </html>
     );
@@ -46,64 +46,37 @@ export default function RootLayout({
   const fontUrls = getFontUrls(branding);
   const cssVars = getBrandingCssVars(branding);
 
+  // Convert Website HeaderLinks to NavItems (Navbar expects {label, href})
+  const navItems = headerLinks.map(link => ({
+    label: link.label,
+    href: link.href
+  }));
+
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
         {fontUrls.map(url => (
           <link key={url} rel="stylesheet" href={url} />
         ))}
       </head>
-      <body style={{
-        fontFamily: `var(--brand-font-body)`,
-        margin: 0,
-        backgroundColor: '#fff',
-        color: '#333',
-        ...cssVars,
-      } as React.CSSProperties}>
+      <body
+        className="min-h-screen bg-white antialiased selection:bg-emerald-100 selection:text-emerald-900"
+        style={{
+          fontFamily: `var(--brand-font-body)`,
+          ...cssVars,
+        } as React.CSSProperties}
+      >
         <AuthProvider>
           <WebsiteProvider website={website}>
-            <header style={{
-              backgroundColor: branding.primaryColor,
-              color: '#fff',
-              padding: '1rem 2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <img
-                src={branding.logoUrl}
-                alt={`${website.brandName} logo`}
-                style={{ height: '40px' }}
-              />
-              <nav style={{ display: 'flex', gap: '1.5rem' }}>
-                {headerLinks.map(link => (
-                  <a
-                    key={link.id}
-                    href={link.href}
-                    target={link.isExternal ? '_blank' : undefined}
-                    rel={link.isExternal ? 'noopener noreferrer' : undefined}
-                    style={{
-                      color: '#fff',
-                      textDecoration: 'none',
-                      fontWeight: 600,
-                      fontSize: '0.875rem',
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-            </header>
-            <main style={{ minHeight: 'calc(100vh - 120px)' }}>{children}</main>
-            <footer style={{
-              backgroundColor: '#f4f4f4',
-              padding: '2rem',
-              textAlign: 'center',
-              borderTop: `4px solid ${branding.primaryColor}`,
-            }}>
-              <p>&copy; {new Date().getFullYear()} {website.brandName}</p>
-            </footer>
+            <NavbarAuthWrapper
+              brand={website.brandName}
+              items={navItems}
+            />
+            {/* Added a subtle top accent bar that follows the user on scroll (optional, but premium) */}
+            <main className="min-h-[70vh]">
+              {children}
+            </main>
+            <Footer brand={website.brandName} />
           </WebsiteProvider>
         </AuthProvider>
       </body>

@@ -8,6 +8,7 @@ const navItems = [
     { label: 'Organizations', href: '/organizations' },
     { label: 'Audit Logs', href: '/audit-logs' },
     { label: 'Subscriptions', href: '/subscriptions' },
+    { label: 'Templates', href: '/templates' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 stopImpersonation={stopImpersonation}
             />
             <Navbar brand="Super Admin" items={navItems} />
-            <main className="flex-1 bg-slate-950">
+            <main className="flex-1 bg-slate-50">
                 <div className="mx-auto max-w-[1600px] p-8">
                     <ErrorBoundary>
                         {children}

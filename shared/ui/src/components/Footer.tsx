@@ -48,12 +48,19 @@ export function Footer({ brand = 'Real Estate Platform', year = new Date().getFu
 
           {/* Links */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Company</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3 text-emerald-600 italic">Company</h3>
             <ul className="space-y-1.5">
-              {['Privacy & Terms', 'Contact', 'Sitemap', 'Support'].map((link) => (
-                <li key={link}>
-                  <a href={`/${link.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`} className="text-sm text-gray-500 hover:text-emerald-600 transition-colors">
-                    {link}
+              {[
+                { label: 'About Us', href: '/about' },
+                { label: 'Careers', href: '/careers' },
+                { label: 'Contact', href: '/contact' },
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Listing Sitemap', href: '/sitemap.xml' },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="text-sm text-gray-500 font-medium hover:text-emerald-600 transition-colors uppercase tracking-widest text-[10px]">
+                    {link.label}
                   </a>
                 </li>
               ))}

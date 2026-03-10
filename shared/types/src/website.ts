@@ -6,7 +6,7 @@ import { BaseEntity } from './index';
 //  They serve as the "blueprint" for a tenant website.
 // ═══════════════════════════════════════════════════════════
 
-export type TemplateId = 'modern' | 'classic' | 'luxury';
+export type TemplateId = 'agent-portfolio' | 'corporate-brokerage' | 'luxury-estate' | 'minimal-realty' | 'modern-realty';
 
 export interface TemplateDefinition {
     id: TemplateId;
@@ -46,7 +46,8 @@ export type SectionType =
     | 'blog_preview'
     | 'newsletter'
     | 'about_banner'
-    | 'gallery';
+    | 'gallery'
+    | 'communities';
 
 export interface SectionConfig {
     id: string;
@@ -76,7 +77,8 @@ export type SectionContent =
     | BlogPreviewContent
     | NewsletterContent
     | AboutBannerContent
-    | GalleryContent;
+    | GalleryContent
+    | CommunitiesContent;
 
 export interface HeroContent {
     _type: 'hero';
@@ -95,6 +97,8 @@ export interface FeaturedListingsContent {
     maxItems: number;
     /** If empty, platform auto-selects featured listings */
     listingIds?: string[];
+    /** Reference to a ShortcodeConfig name */
+    shortcodeName?: string;
 }
 
 export interface HowItWorksContent {
@@ -169,6 +173,18 @@ export interface GalleryContent {
         caption?: string;
     }>;
     layout: 'grid' | 'masonry' | 'carousel';
+}
+
+export interface CommunitiesContent {
+    _type: 'communities';
+    title: string;
+    subtitle?: string;
+    communities: Array<{
+        name: string;
+        description: string;
+        imageUrl?: string;
+        link?: string;
+    }>;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -322,7 +338,7 @@ export interface PageSeoConfig {
 //  Tenant branding overrides applied on top of template.
 // ═══════════════════════════════════════════════════════════
 
-export type ThemeMode = 'classic' | 'modern' | 'luxury';
+export type ThemeMode = 'agent-portfolio' | 'corporate-brokerage' | 'luxury-estate' | 'minimal-realty' | 'modern-realty';
 
 export interface BrandingConfig {
     /** Theme mode (must match templateId in most cases) */
@@ -379,4 +395,24 @@ export interface WebsiteConfig extends BaseEntity {
     navigation: NavigationConfig;
     /** Site-level SEO settings */
     seo: WebsiteSeoConfig;
+}
+
+export interface TenantTemplate {
+    id: string;
+    tenantId: string;
+    templateId: string;
+    assignedBy: string;
+    createdAt: string;
+}
+
+export interface WebsiteInstance {
+    id: string;
+    tenantId: string;
+    agentId: string;
+    templateId: string;
+    domain: string;
+    layoutConfig: any; // Copy of defaultLayoutConfig
+    brandingConfig: any;
+    createdAt: string;
+    updatedAt: string;
 }

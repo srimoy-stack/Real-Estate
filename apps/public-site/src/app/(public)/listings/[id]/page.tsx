@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { listingService } from '@repo/services';
-import { PropertyType, ListingStatus, Listing } from '@repo/types';
+import { ListingStatus, Listing } from '@repo/types';
 import { LeadCaptureForm } from '@/components/listings/LeadCaptureForm';
 
 interface ListingDetailProps {
@@ -13,7 +13,7 @@ interface ListingDetailProps {
 }
 
 // Add structured data (LD+JSON) for SEO
-function ListingStructuredData({ listing, baseUrl }: { listing: any, baseUrl: string }) {
+function ListingStructuredData({ listing, baseUrl }: { listing: Listing, baseUrl: string }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'RealEstateListing',
@@ -46,73 +46,18 @@ function ListingStructuredData({ listing, baseUrl }: { listing: any, baseUrl: st
   );
 }
 
-async function getListing(idOrSlug: string, websiteId: string) {
+import { mockListings } from '@/templates/shared/mock-data';
+
+async function getListing(idOrSlug: string, websiteId: string): Promise<Listing | null> {
   try {
     const listing = await listingService.getById(idOrSlug);
-    if (listing && listing.tenantId === websiteId) {
+    if (listing && (listing.tenantId === websiteId || websiteId === 'default')) {
       return listing;
     }
   } catch (e) { }
 
-  // Mock for demo
-  const mockListings: Listing[] = [
-    {
-      id: '1',
-      tenantId: 'website_1',
-      slug: 'the-glass-pavilion-mansion',
-      externalId: 'MLS-12345',
-      title: 'The Glass Pavilion Mansion',
-      description: 'Immaculate luxury estate featuring a stunning open-concept design with floor-to-ceiling glass walls that frame panoramic mountain and ocean views. This architectural masterpiece boasts professional-grade appliances, a heated infinity pool, and a private wine cellar that can hold over 1,000 bottles. Every detail has been meticulously crafted to provide the ultimate living experience.',
-      price: 12500000,
-      currency: 'CAD',
-      bedrooms: 6,
-      bathrooms: 8,
-      squareFeet: 12400,
-      lotSize: 2.5,
-      yearBuilt: 2022,
-      propertyType: PropertyType.DETACHED,
-      status: ListingStatus.ACTIVE,
-      address: { unit: '', street: '12 Peak View Rd', city: 'Toronto', province: 'ON', postalCode: 'M5V 2N8' },
-      mainImage: '/modern_mansion_exterior_1772566757109.png',
-      images: [
-        '/minimalist_apartment_interior_1772567117240.png',
-        '/coastal_villa_daylight_1772567153237.png',
-        '/modern_mansion_exterior_1772566757109.png'
-      ],
-      features: ['Wine Cellar', 'Infinity Pool', 'Home Cinema', 'Chef Kitchen', 'Smart Home System'],
-      amenities: ['Private Security', 'Helipad Access', 'Valet Parking'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      tenantId: 'website_1',
-      slug: 'skyline-penthouse-suites',
-      title: 'Skyline Penthouse Suites',
-      description: 'Elite penthouse in the heart of the financial district. Featuring ultra-modern finishes, private elevator access, and a terrace overlooking the entire city skyline. This unit represents the peak of urban luxury living.',
-      price: 3800000,
-      currency: 'CAD',
-      bedrooms: 3,
-      bathrooms: 3,
-      squareFeet: 2800,
-      yearBuilt: 2020,
-      propertyType: PropertyType.CONDO,
-      status: ListingStatus.ACTIVE,
-      address: { unit: 'PH 01', street: '101 Bay St', city: 'Toronto', province: 'ON', postalCode: 'M5J 2R8' },
-      mainImage: '/minimalist_apartment_interior_1772567117240.png',
-      images: [
-        '/minimalist_apartment_interior_1772567117240.png',
-        '/coastal_villa_daylight_1772567153237.png'
-      ],
-      features: ['Private Elevator', 'Smart Home', 'Chef Kitchen'],
-      amenities: ['24/7 Concierge', 'Gym', 'Rooftop Terrace'],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  ];
-
   const found = mockListings.find(l => l.id === idOrSlug || l.slug === idOrSlug);
-  if (found && (found.tenantId === websiteId || websiteId === 'default')) {
+  if (found) {
     return found;
   }
 
@@ -168,299 +113,365 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
   if (!listing) return notFound();
 
   const monthlyPayment = Math.round(listing.price * 0.0044);
-  const addedDate = new Date(listing.createdAt);
-  const hoursAgo = Math.round((Date.now() - addedDate.getTime()) / (1000 * 60 * 60));
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50/50">
       <ListingStructuredData listing={listing} baseUrl={baseUrl} />
 
       {/* Navigation Bar Spacing */}
       <div className="h-20" />
 
-      {/* Breadcrumbs — Zolo-style */}
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8 py-4">
-        <nav className="flex items-center gap-2 text-sm text-gray-500">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">← Back to Search</Link>
-          <span className="text-gray-300">›</span>
-          <Link href="/listings" className="hover:text-emerald-600 transition-colors">
-            {listing.address.province}
-          </Link>
-          <span className="text-gray-300">›</span>
-          <Link href="/listings" className="hover:text-emerald-600 transition-colors">
-            {listing.address.city}
-          </Link>
-          <span className="text-gray-300">›</span>
-          <span className="text-gray-900 font-medium">{listing.address.street}</span>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
-        {/* Image Gallery — Zolo-style */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-6 rounded-xl overflow-hidden">
-          <div className="md:col-span-7 relative aspect-[16/11] overflow-hidden group cursor-pointer">
+      {/* Improved Gallery Layout: High-Fid Reference Style */}
+      <div className="mx-auto max-w-[1440px] px-0 md:px-4 lg:px-6 pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 h-[500px] md:h-[600px] rounded-xl overflow-hidden shadow-2xl">
+          <div className="md:col-span-6 relative h-full overflow-hidden group cursor-pointer">
             <Image
               src={listing.mainImage}
               alt={listing.title}
               fill
               priority
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
             />
+            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500" />
           </div>
-          <div className="md:col-span-5 grid grid-cols-2 gap-2">
-            {listing.images.slice(0, 3).map((img: string, i: number) => (
-              <div key={i} className="relative overflow-hidden group cursor-pointer aspect-[4/3]">
+          <div className="hidden md:grid md:col-span-6 grid-cols-2 grid-rows-2 gap-2 h-full">
+            {listing.images.slice(0, 4).map((img: string, i: number) => (
+              <div key={i} className="relative overflow-hidden group cursor-pointer">
                 <Image
                   src={img}
                   alt={`${listing.title} gallery ${i}`}
                   fill
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  sizes="25vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
+                <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors duration-500" />
+                {i === 3 && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white font-bold tracking-widest text-sm uppercase">View all photos</span>
+                  </div>
+                )}
               </div>
             ))}
-            <div className="relative overflow-hidden bg-gray-800 flex items-center justify-center cursor-pointer group aspect-[4/3]">
-              {listing.images[0] && (
-                <Image
-                  src={listing.images[0]}
-                  alt="View more"
-                  fill
-                  className="absolute inset-0 object-cover opacity-30 group-hover:scale-110 transition-transform duration-500"
-                />
-              )}
-              <div className="relative z-10 text-center text-white">
-                <svg className="w-8 h-8 mx-auto mb-1.5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-sm font-semibold">See all {listing.images.length + 1} Photos</span>
-              </div>
-            </div>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 pb-16">
-          {/* Left Column: Details */}
-          <div className="lg:col-span-8 space-y-8">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-            {/* Title + Price Header — Zolo-style */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  {listing.address.unit ? `${listing.address.unit} - ` : ''}{listing.address.street}
-                </h1>
-                <p className="text-gray-500">
-                  {listing.address.city},{' '}
-                  <span className="text-emerald-600 hover:underline cursor-pointer">{listing.address.postalCode}</span>
-                </p>
+          {/* Main Details Column */}
+          <div className="lg:col-span-2 space-y-12">
+
+            {/* Header: Title, Price & Status */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div className="space-y-2">
+                <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
+                  <Link href="/" className="hover:text-amber-600 transition-colors">Home</Link>
+                  <span>/</span>
+                  <Link href="/listings" className="hover:text-amber-600 transition-colors">Property Values</Link>
+                  <span>/</span>
+                  <span className="text-slate-900">{listing.title}</span>
+                </nav>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-extrabold text-slate-900 tracking-tighter">{listing.title}</h1>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200 ${listing.status === ListingStatus.ACTIVE ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                    {listing.status === ListingStatus.ACTIVE ? 'For Sale' : listing.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  </svg>
+                  <p className="text-lg font-medium">{listing.address.street}, {listing.address.city}, {listing.address.province} {listing.address.postalCode}</p>
+                </div>
               </div>
+
+              <div className="text-right">
+                <div className="text-5xl font-black text-slate-900 tracking-tighter">
+                  {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(listing.price)}
+                </div>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-2">Estimated Payment: ${monthlyPayment.toLocaleString()}/mo</p>
+                <div className="flex justify-end gap-3 mt-4">
+                  <button className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
+                    <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 115.367-2.684 3 3 0 01-5.367 2.684zm0 9.316a3 3 0 115.368 2.684 3 3 0 01-5.368-2.684z" /></svg>
+                  </button>
+                  <button className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
+                    <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Specs Icons */}
+            <div className="flex border-y border-slate-200 divide-x divide-slate-200 py-6">
+              <div className="flex-1 flex flex-col items-center gap-2">
+                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span className="text-xl font-black text-slate-900">{listing.bedrooms} + 1</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bedrooms</span>
+              </div>
+              <div className="flex-1 flex flex-col items-center gap-2">
+                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 10l.135-.675M20 10l-.135-.675M12 4v4m0 0l-1.5-1.5M12 8l1.5-1.5M4 10h16M4 10l1.35 6.75A2 2 0 007.3 18h9.4a2 2 0 001.95-1.25L20 10" />
+                </svg>
+                <span className="text-xl font-black text-slate-900">{listing.bathrooms}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bathrooms</span>
+              </div>
+              <div className="flex-1 flex flex-col items-center gap-2">
+                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                <span className="text-xl font-black text-slate-900">{listing.squareFeet?.toLocaleString()}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sq. Ft.</span>
+              </div>
+              <div className="flex-1 flex flex-col items-center gap-2">
+                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xl font-black text-slate-900">{listing.lotSize}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Acres</span>
+              </div>
+            </div>
+
+            {/* Listing History Section */}
+            <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  View on Map
-                </button>
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 115.367-2.684 3 3 0 01-5.367 2.684zm0 9.316a3 3 0 115.368 2.684 3 3 0 01-5.368-2.684z" /></svg>
-                  Share
-                </button>
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                  Save
-                </button>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Listing <span className="text-amber-600">History</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
+              </div>
+              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Date</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Days On Market</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Price</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Event</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Listing ID</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">May 19, 2024</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">0</td>
+                      <td className="px-6 py-4 text-sm font-black text-slate-900">$4,250,000</td>
+                      <td className="px-6 py-4"><span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest">Listed</span></td>
+                      <td className="px-6 py-4 text-sm font-mono text-slate-400 text-right">{listing.externalId}</td>
+                    </tr>
+                    <tr className="hover:bg-slate-50 transition-colors grayscale opacity-60">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-900">Oct 24, 2022</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">12</td>
+                      <td className="px-6 py-4 text-sm font-black text-slate-900">$4,380,000</td>
+                      <td className="px-6 py-4"><span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest">Expired</span></td>
+                      <td className="px-6 py-4 text-sm font-mono text-slate-400 text-right">C543212</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Price & Key Specs — Zolo-style */}
-            <div className="border-b border-gray-100 pb-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                <div>
-                  <span className="text-3xl font-bold text-gray-900">
-                    {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(listing.price)}
-                  </span>
-                  <span className="text-gray-500 text-sm ml-2">
-                    est. <span className="font-medium">${monthlyPayment.toLocaleString()}</span> /mo
-                  </span>
-                  <span className="ml-3 text-sm text-emerald-600 font-medium hover:underline cursor-pointer">
-                    Get pre-qualified
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span className="font-semibold">{listing.bedrooms} bed</span>
-                  <span className="font-semibold">{listing.bathrooms} bath</span>
-                  {listing.squareFeet && <span className="font-semibold">{listing.squareFeet.toLocaleString()} sqft</span>}
-                </div>
+            {/* Key Facts Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Key <span className="text-amber-600">Facts</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
               </div>
-
-              <div className="flex items-center gap-4 text-sm">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="font-medium text-gray-900">For Sale</span>
-                </span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-500">Added {hoursAgo} hours ago</span>
-              </div>
-            </div>
-
-            {/* Property Details Table — Zolo-style */}
-            <div className="border-b border-gray-100 pb-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-4 gap-x-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-12 p-8 bg-white rounded-[40px] border border-slate-200">
                 {[
-                  { label: 'Type', value: listing.propertyType.replace('_', ' ') },
-                  { label: 'Added', value: addedDate.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) },
-                  { label: 'Style', value: 'Modern' },
-                  { label: 'Updated', value: new Date(listing.updatedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }) },
-                  { label: 'Size', value: listing.squareFeet ? `${listing.squareFeet.toLocaleString()} sqft` : 'No Data' },
-                  { label: 'Last Checked', value: 'Just now' },
-                  { label: 'Lot Size', value: listing.lotSize ? `${listing.lotSize} acres` : 'No Data' },
-                  { label: 'MLS®#', value: listing.externalId || 'N/A' },
-                  { label: 'Year Built', value: listing.yearBuilt || 'N/A' },
-                  { label: 'Listed By', value: 'EXP REALTY' },
-                  { label: 'Taxes', value: 'No Data' },
-                  { label: 'Walk Score', value: '7' },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="text-sm font-semibold text-gray-900 min-w-[80px]">{item.label}:</span>
-                    <span className="text-sm text-gray-600">{item.value}</span>
+                  { label: 'Property Type', value: listing.propertyType.replace('_', ' ') },
+                  { label: 'Parking', value: '4 Spaces (2 Garage)' },
+                  { label: 'Tax / Year', value: '$14,240.22 / 2024' },
+                  { label: 'Bedrooms', value: '4 + 1' },
+                  { label: 'Bathrooms', value: '5 Total' },
+                  { label: 'Basement', value: 'Walk-out, Finished' },
+                  { label: 'Walk Score', value: '72 (Very Walkable)' },
+                  { label: 'MLS® ID', value: listing.externalId },
+                  { label: 'Lot Size', value: '50.00 x 150.00 Ft' },
+                ].map((fact, i) => (
+                  <div key={i} className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{fact.label}</p>
+                    <p className="text-base font-black text-slate-900 tracking-tight">{fact.value}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Description */}
-            <div className="border-b border-gray-100 pb-8">
-              <p className="text-gray-700 leading-relaxed">
-                {listing.description}
-              </p>
-            </div>
-
-            {/* Features & Amenities — Zolo-style */}
-            <div className="border-b border-gray-100 pb-8">
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                See More Facts and Features
-              </button>
-            </div>
-
-            {/* Affordability Section — Zolo-style */}
-            <div className="border-b border-gray-100 pb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Affordability</h2>
-
-              <p className="text-gray-600 mb-4">
-                You can afford a home up to{' '}
-                <span className="text-2xl font-bold text-gray-900">$637,531</span>
-                {' '}or{' '}
-                <span className="text-2xl font-bold text-gray-900">$3,380</span>
-                <span className="text-gray-500 text-sm"> /mo</span>
-              </p>
-
-              <div className="mb-4 text-center">
-                <p className="text-sm text-gray-600 mb-2">
-                  {listing.address.street} at <span className="font-semibold">{new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(listing.price)}</span> is <span className="font-semibold">${monthlyPayment.toLocaleString()}</span> /mo
-                </p>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Key <span className="text-amber-600">Description</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
               </div>
+              <div className="prose prose-slate max-w-none">
+                <p className="text-lg text-slate-600 leading-relaxed font-medium first-letter:text-5xl first-letter:font-black first-letter:mr-3 first-letter:float-left first-letter:text-amber-600 first-letter:mt-1">
+                  {listing.description}
+                </p>
+                <button className="mt-8 px-6 py-3 border border-slate-200 rounded-full text-xs font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all flex items-center gap-2">
+                  See More Facts and Features
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+              </div>
+            </div>
 
-              {/* Affordability Score Bar — Zolo-style gradient */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
-                  <span>Afford Score™ <span className="text-lg font-bold text-gray-900">36</span></span>
-                </div>
-                <div className="relative h-3 rounded-full overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 rounded-full" />
-                  {/* Score indicator */}
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: '36%' }}>
-                    <div className="w-4 h-4 bg-white rounded-full border-2 border-gray-700 shadow-md" />
+            {/* Affordability Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Afford<span className="text-amber-600">ability</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
+              </div>
+              <div className="p-8 bg-slate-900 rounded-[40px] text-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Afford Score™</p>
+                      <div className="text-4xl font-black italic">Excellent <span className="text-emerald-500">8.4</span></div>
+                    </div>
+                    <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                      <div className="h-full bg-red-500 w-[10%]" />
+                      <div className="h-full bg-orange-500 w-[20%]" />
+                      <div className="h-full bg-yellow-500 w-[30%]" />
+                      <div className="h-full bg-emerald-500 w-[40%]" />
+                    </div>
+                    <p className="text-sm text-slate-400 font-medium leading-relaxed">Based on your saved profile, this property fits comfortably within your monthly budget and long-term financial goals.</p>
+                  </div>
+                  <div className="bg-slate-800/50 p-6 rounded-3xl space-y-4">
+                    <div className="flex justify-between items-center pb-4 border-b border-slate-700">
+                      <span className="text-sm font-bold">Estimated Monthly</span>
+                      <span className="text-xl font-black">${monthlyPayment.toLocaleString()}</span>
+                    </div>
+                    <button className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-100 transition-colors">
+                      Full Breakdown
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-between text-[11px] text-gray-400 mt-1.5">
-                  <span>Aggressive</span>
-                  <span>Stretching</span>
-                  <span>Affordable</span>
+              </div>
+            </div>
+
+            {/* Building Section (For Multi-unit or just context) */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">The <span className="text-amber-600">Building</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
+              </div>
+              <div className="bg-white rounded-3xl border border-slate-200 p-8">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center">
+                    <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-xl font-black text-slate-900">Oriole Road Estate</h3>
+                    <p className="text-slate-500 font-medium">12 Units Total • Built in 2018 • Luxury Concierge</p>
+                  </div>
+                  <button className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-colors">
+                    View Building Details
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Calculator Inputs */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Annual Income', value: '$100,000', prefix: '$' },
-                  { label: 'Interest Rate', value: '4.84', suffix: '%' },
-                  { label: 'Monthly Debts', value: '$0', prefix: '$' },
-                  { label: 'Mortgage free in', value: '25 Years' },
-                  { label: 'Down Payment', value: '$50,000', prefix: '$' },
-                  { label: 'Property Price', value: new Intl.NumberFormat('en-CA', { maximumFractionDigits: 0 }).format(listing.price), prefix: '$' },
-                ].map((field, i) => (
-                  <div key={i}>
-                    <label className="text-xs text-gray-500 mb-1 block">{field.label}</label>
-                    <div className="relative">
-                      {field.prefix && (
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{field.prefix}</span>
-                      )}
-                      <input
-                        type="text"
-                        defaultValue={field.value}
-                        className={`w-full border border-gray-200 rounded-lg py-2.5 text-sm text-gray-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all ${field.prefix ? 'pl-7 pr-3' : 'px-3'}`}
-                      />
-                      {field.suffix && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{field.suffix}</span>
-                      )}
+            {/* Neighbourhood Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Neighbour<span className="text-amber-600">hood</span></h2>
+                <div className="h-px bg-slate-200 flex-1" />
+              </div>
+              <div className="relative h-[400px] w-full bg-slate-100 rounded-[40px] overflow-hidden group">
+                <Image src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" alt="Map Placeholder" fill className="object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button className="px-10 py-5 bg-white shadow-2xl rounded-2xl flex items-center gap-4 hover:scale-105 transition-transform duration-500">
+                    <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center shadow-lg shadow-amber-600/20">
+                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     </div>
+                    <span className="text-sm font-black uppercase tracking-widest text-slate-900">View Map</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Similar Properties */}
+            <div className="space-y-8 pt-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Similar <span className="text-amber-600">to this home</span></h2>
+                <Link href="/listings" className="text-xs font-black uppercase tracking-widest text-amber-600 hover:text-amber-700">See All Listings</Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  { title: 'The Glass Pavilion Mansion', location: '12 Peak View Rd, Toronto', price: '$12,500,000', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800' },
+                  { title: 'Skyline Penthouse Suites', location: '101 Bay St, Toronto', price: '$3,800,000', img: 'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=800' }
+                ].map((item, i) => (
+                  <div key={i} className="group cursor-pointer">
+                    <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                      <Image src={item.img} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-900">Featured</div>
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors mb-1">{item.title}</h3>
+                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mb-2">{item.location}</p>
+                    <div className="text-lg font-black text-slate-900">{item.price}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Location */}
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-900">Location</h3>
-              <div className="relative h-[350px] w-full rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-100" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative">
-                    <div className="absolute -inset-3 bg-emerald-500/20 rounded-full animate-ping" />
-                    <div className="relative h-6 w-6 bg-emerald-600 rounded-full border-3 border-white shadow-lg flex items-center justify-center">
-                      <div className="h-1.5 w-1.5 bg-white rounded-full" />
+            {/* Footer Disclaimer */}
+            <div className="mt-20 pt-10 border-t border-slate-200">
+              <div className="flex items-start gap-4 p-8 bg-white rounded-3xl border border-slate-100 italic">
+                <div className="w-10 h-10 bg-slate-900 rounded-xl flex-shrink-0 flex items-center justify-center font-black text-white text-xs">RE</div>
+                <p className="text-[10px] text-slate-400 leading-relaxed uppercase tracking-widest">
+                  The listing data above is provided under copyright by the Canadian Real Estate Association. The listing data is deemed reliable but is not guaranteed accurate by the Canadian Real Estate Association nor by this platform.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Sticky Lead Capture */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-28 space-y-6">
+              <Suspense fallback={<div className="h-[600px] bg-slate-200/50 animate-pulse rounded-[40px]" />}>
+                <div className="bg-slate-900 rounded-[40px] p-2 overflow-hidden shadow-2xl border border-slate-800">
+                  <div className="p-8 pb-4">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Available Now</span>
+                    </div>
+                    <h3 className="text-3xl font-black text-white italic mb-2">Private <span className="text-amber-600">Viewing</span></h3>
+                    <p className="text-slate-400 text-sm font-medium leading-relaxed">Book a tailored walk-through of this architectural masterpiece with our elite concierge team.</p>
+                  </div>
+                  <LeadCaptureForm
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                    tenantId={websiteId}
+                  />
+                  <div className="p-8 pt-0 mt-4 space-y-4">
+                    <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700/50 text-center group cursor-pointer hover:bg-slate-800 transition-colors">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Direct Concierge</p>
+                      <p className="text-lg font-black text-white">+1 (888) 450-9284</p>
                     </div>
                   </div>
                 </div>
-                <div className="absolute bottom-4 left-4 right-4 p-3 bg-white shadow-lg rounded-lg border border-gray-100 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Neighborhood</p>
-                    <p className="text-sm font-medium text-gray-900">{listing.address.city}, {listing.address.province}</p>
+
+                {/* Mini Calculator Sidebar */}
+                <div className="p-8 bg-white rounded-[40px] border border-slate-200 shadow-xl shadow-slate-200/20">
+                  <h4 className="text-lg font-black text-slate-900 italic mb-6">Quick <span className="text-amber-600">Calculator</span></h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-50">
+                      <span>Monthly Payment</span>
+                      <span className="text-slate-900">${monthlyPayment.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-50">
+                      <span>Down Payment</span>
+                      <span className="text-slate-900">20% ($850,000)</span>
+                    </div>
+                    <button className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">
+                      Open Mortgage Center
+                    </button>
                   </div>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${listing.address.street} ${listing.address.city}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
-                  >
-                    Get Directions
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
                 </div>
-              </div>
-            </div>
-
-            {/* DDF Disclaimer */}
-            <div className="mt-10 pt-8 border-t border-gray-100">
-              <p className="text-[11px] text-gray-400 leading-relaxed">
-                The listing data above is provided under copyright by the Canadian Real Estate Association. The listing data is deemed reliable but is not guaranteed accurate by the Canadian Real Estate Association nor by this platform. The information provided on this page, including the Affordability, Afford Score™, and Affordability Coach, are provided for informational purposes only and should not be used or relied upon as professional financial advice.
-              </p>
-            </div>
-          </div>
-
-          {/* Right Column: Sidebar */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-28 space-y-6">
-              <Suspense fallback={<div className="h-[400px] bg-gray-100 animate-pulse rounded-xl" />}>
-                <LeadCaptureForm
-                  listingId={listing.id}
-                  listingTitle={`${listing.address.street}, ${listing.address.city}`}
-                  tenantId={websiteId}
-                />
               </Suspense>
             </div>
           </div>
+
         </div>
       </div>
     </div>

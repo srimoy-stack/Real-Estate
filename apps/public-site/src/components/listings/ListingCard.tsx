@@ -26,14 +26,35 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                     blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                 />
 
-                {/* Status Badge */}
-                <div className="absolute top-3 left-3">
-                    <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${listing.status === 'ACTIVE'
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-amber-500 text-white'
-                        }`}>
-                        {listing.status === 'ACTIVE' ? 'For Sale' : listing.status}
-                    </span>
+                {/* Status Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    {listing.status === 'ACTIVE' && (
+                        <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur-md text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
+                            For Sale
+                        </span>
+                    )}
+                    {listing.status === 'SOLD' && (
+                        <span className="px-3 py-1 bg-rose-500/90 backdrop-blur-md text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20">
+                            Sold Out
+                        </span>
+                    )}
+                    {listing.status === 'PENDING' && (
+                        <span className="px-3 py-1 bg-amber-500/90 backdrop-blur-md text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/20">
+                            Pending
+                        </span>
+                    )}
+                    {listing.status === 'OFF_MARKET' && (
+                        <span className="px-3 py-1 bg-slate-500/90 backdrop-blur-md text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-500/20">
+                            Off Market
+                        </span>
+                    )}
+
+                    {/* New Listing Badge - based on ID for demo or createdAt if available */}
+                    {(new Date().getTime() - new Date(listing.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000) && (
+                        <span className="px-3 py-1 bg-indigo-600/90 backdrop-blur-md text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20">
+                            New
+                        </span>
+                    )}
                 </div>
 
                 {/* Photo Count Badge */}

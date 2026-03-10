@@ -14,14 +14,14 @@ function buildModernBrokerage(): WebsiteConfig {
     tenantId: 'tenant_brokerage_001',
     domain: 'brokerage.local',
     brandName: 'Skyline Estates',
-    templateId: 'modern',
+    templateId: 'modern-realty',
     logoUrl: '/images/brokerage-logo.png',
   });
   config.status = 'ACTIVE';
   config.websiteId = 'ws_brokerage_001';
   config.branding = {
     ...config.branding,
-    mode: 'modern',
+    mode: 'modern-realty',
     primaryColor: '#0F172A',
     accentColor: '#2563EB',
     fontHeading: 'Inter',
@@ -53,14 +53,14 @@ function buildLuxuryAgent(): WebsiteConfig {
     tenantId: 'tenant_agent_001',
     domain: 'agent.local',
     brandName: 'Julianne Reed Luxury',
-    templateId: 'luxury',
+    templateId: 'luxury-estate',
     logoUrl: '/images/agent-logo.png',
   });
   config.status = 'ACTIVE';
   config.websiteId = 'ws_agent_001';
   config.branding = {
     ...config.branding,
-    mode: 'luxury',
+    mode: 'luxury-estate',
     primaryColor: '#0F172A',
     luxuryAccent: '#C8A951',
     fontHeading: 'Playfair Display',
@@ -79,7 +79,7 @@ function buildSuspendedTenant(): WebsiteConfig {
     tenantId: 'tenant_suspended_666',
     domain: 'suspended.local',
     brandName: 'Restricted Realty',
-    templateId: 'modern',
+    templateId: 'modern-realty',
   });
   config.status = 'SUSPENDED';
   config.websiteId = 'ws_suspended_666';
@@ -99,6 +99,21 @@ const websiteRegistry: Record<string, WebsiteConfig> = {
 export async function getWebsiteByDomain(
   domain: string
 ): Promise<WebsiteConfig | null> {
-  const key = domain === 'localhost' ? 'brokerage.local' : domain;
-  return websiteRegistry[key] ?? null;
+  // 1. Exact match in registry
+  if (websiteRegistry[domain]) {
+    return websiteRegistry[domain];
+  }
+
+  // 2. Fallback for Localhost
+  if (domain === 'localhost' || domain === '127.0.0.1') {
+    return websiteRegistry['brokerage.local'];
+  }
+
+  // 3. Fallback for Netlify Previews / Production
+  if (domain.endsWith('.netlify.app')) {
+    return websiteRegistry['brokerage.local'];
+  }
+
+  // 4. Final fallback for demo/testing
+  return websiteRegistry['brokerage.local'] ?? null;
 }

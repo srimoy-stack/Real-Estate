@@ -20,11 +20,11 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
     allowedRoles,
     fallbackUrl = '/403'
 }) => {
-    const { user, isAuthenticated, isLoading, isImpersonating } = useAuth();
+    const { user, isAuthenticated, isLoading, isImpersonating, hasHydrated } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!isLoading) {
+        if (hasHydrated && !isLoading) {
             if (!isAuthenticated) {
                 // Not authenticated -> redirect to login (convention: /login)
                 router.push('/login' as any);
@@ -43,13 +43,13 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
                 return;
             }
         }
-    }, [isLoading, isAuthenticated, user, isImpersonating, allowedRoles, router, fallbackUrl]);
+    }, [hasHydrated, isLoading, isAuthenticated, user, isImpersonating, allowedRoles, router, fallbackUrl]);
 
-    // Prevent flicker while loading auth state
-    if (isLoading) {
+    // Prevent flicker while loading auth state or hydrating
+    if (!hasHydrated || isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="flex h-screen items-center justify-center bg-slate-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
         );
     }

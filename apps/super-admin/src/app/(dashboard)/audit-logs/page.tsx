@@ -145,15 +145,15 @@ export default function AuditLogsPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="p-8 space-y-8 animate-in fade-in duration-500 bg-slate-50">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter">System <span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-8">Audit Streams</span></h1>
-                    <p className="mt-2 text-slate-400 font-medium">Immutably tracking {logs.length} administrative actions across the platform</p>
+                    <h1 className="text-3xl font-black text-slate-900 italic tracking-tighter">System <span className="text-indigo-600 underline decoration-indigo-200 underline-offset-8">Audit Streams</span></h1>
+                    <p className="mt-2 text-slate-500 font-medium">Immutably tracking {logs.length} administrative actions across the platform</p>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 bg-slate-900 border border-white/5 rounded-2xl flex items-center gap-2">
+                    <div className="px-4 py-2 bg-white border border-slate-200 rounded-2xl flex items-center gap-2 shadow-sm">
                         <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Stream Active</span>
                     </div>
@@ -161,9 +161,9 @@ export default function AuditLogsPage() {
             </div>
 
             {/* Premium Filters Bar */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 rounded-[32px] border border-white/5 bg-slate-900/50 backdrop-blur-3xl shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 rounded-[32px] border border-slate-200 bg-white shadow-sm">
                 <div className="relative group col-span-1 md:col-span-1">
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
@@ -171,14 +171,14 @@ export default function AuditLogsPage() {
                         placeholder="Search logs..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 bg-slate-800/40 border border-white/5 rounded-2xl text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500/50 transition-all font-medium"
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-indigo-500 transition-all font-bold"
                     />
                 </div>
 
                 <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    className="bg-slate-800/40 border border-white/5 rounded-2xl text-sm text-white px-5 py-3 outline-none focus:border-indigo-500/50 transition-all cursor-pointer font-bold appearance-none hover:bg-slate-800/60"
+                    className="bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 px-5 py-3 outline-none focus:border-indigo-500 transition-all cursor-pointer font-bold appearance-none hover:bg-slate-100"
                 >
                     <option value="ALL">All Actions</option>
                     {Object.values(AuditEventType).map(type => (
@@ -189,7 +189,7 @@ export default function AuditLogsPage() {
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-slate-800/40 border border-white/5 rounded-2xl text-sm text-white px-5 py-3 outline-none focus:border-indigo-500/50 transition-all cursor-pointer font-bold appearance-none hover:bg-slate-800/60"
+                    className="bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 px-5 py-3 outline-none focus:border-indigo-500 transition-all cursor-pointer font-bold appearance-none hover:bg-slate-100"
                 >
                     <option value="ALL">All Statuses</option>
                     <option value="SUCCESS">Success</option>
@@ -197,19 +197,19 @@ export default function AuditLogsPage() {
                     <option value="WARNING">Warning</option>
                 </select>
 
-                <div className="bg-slate-800/40 border border-white/5 rounded-2xl p-1 flex">
-                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 rounded-xl">24 Hours</button>
-                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300">7 Days</button>
-                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-300">Custom</button>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-1 flex">
+                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-white border border-slate-200/50 rounded-xl shadow-sm">24 Hours</button>
+                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">7 Days</button>
+                    <button className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Custom</button>
                 </div>
             </div>
 
             {/* Audit Table */}
-            <div className="rounded-[40px] border border-white/5 bg-slate-900/50 overflow-hidden backdrop-blur-3xl shadow-2xl">
-                <div className="overflow-x-auto overflow-y-auto max-h-[650px] scrollbar-hide">
+            <div className="rounded-[40px] border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="overflow-x-auto overflow-y-auto max-h-[650px]">
                     <table className="w-full text-left border-collapse min-w-[1200px]">
                         <thead>
-                            <tr className="bg-white/5 border-b border-white/5 sticky top-0 z-10 backdrop-blur-md">
+                            <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Timestamp</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Actor</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Action Type</th>
@@ -218,7 +218,7 @@ export default function AuditLogsPage() {
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-center">Result</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100 font-medium">
                             {loading ? (
                                 [1, 2, 3, 4, 5, 6, 7].map((i) => (
                                     <tr key={i}>
@@ -250,16 +250,16 @@ export default function AuditLogsPage() {
                                     </td>
                                 </tr>
                             ) : logs.map((log) => (
-                                <tr key={log.id} className="group hover:bg-white/5 transition-all duration-300">
+                                <tr key={log.id} className="group hover:bg-slate-50 transition-all duration-300">
                                     <td className="px-8 py-6">
                                         <p className="text-xs font-mono text-slate-400">{formatTimestamp(log.timestamp)}</p>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-[10px] font-black text-white border border-white/10">
+                                            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[10px] font-black text-slate-700 border border-slate-200">
                                                 {log.actorName.split(' ').map(n => n[0]).join('')}
                                             </div>
-                                            <p className="text-sm font-bold text-white tracking-tight">{log.actorName}</p>
+                                            <p className="text-sm font-black text-slate-900 tracking-tight">{log.actorName}</p>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
@@ -268,7 +268,7 @@ export default function AuditLogsPage() {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <p className="text-sm text-slate-300 font-medium italic">{log.targetName || 'Global System'}</p>
+                                        <p className="text-sm text-slate-600 font-bold italic">{log.targetName || 'Global System'}</p>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="space-y-1">
@@ -293,16 +293,16 @@ export default function AuditLogsPage() {
                 </div>
 
                 {/* Secure Pagination Metadata */}
-                <div className="px-8 py-5 bg-white/5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
+                <div className="px-8 py-5 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic font-mono">
                         Logs are cryptographically signed. Unauthorized modifications are detected.
                     </p>
                     <div className="flex items-center gap-4">
-                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 border border-white/5 transition-all">
+                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-slate-900 disabled:opacity-30 border border-slate-200 transition-all shadow-sm">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
                         </button>
                         <span className="text-xs font-black text-white px-4 py-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-500/20">1</span>
-                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:text-white border border-white/5 transition-all">
+                        <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-slate-900 border border-slate-200 transition-all shadow-sm">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>

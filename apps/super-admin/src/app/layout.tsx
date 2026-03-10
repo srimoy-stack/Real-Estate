@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { AuthProvider } from '@repo/auth';
 import './globals.css';
 
 
@@ -41,9 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col bg-slate-950 text-white antialiased">
-        {/* <AuthProvider> */}
-        {children}
-        {/* </AuthProvider> */}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

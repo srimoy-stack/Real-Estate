@@ -19,25 +19,25 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     color = 'from-indigo-500 to-blue-600'
 }) => {
     return (
-        <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-slate-900/50 p-6 transition-all hover:border-white/10 hover:bg-slate-900/80">
-            <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${color} opacity-10 blur-2xl transition-opacity group-hover:opacity-20`} />
+        <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-indigo-300 hover:shadow-lg">
+            <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${color} opacity-5 blur-2xl transition-opacity group-hover:opacity-10`} />
 
             <div className="flex justify-between items-start">
-                <div>
-                    <p className="text-sm font-medium text-slate-400 capitalize">{label}</p>
-                    <p className="mt-2 text-3xl font-bold text-white tracking-tight">{value}</p>
+                <div className="relative z-10">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900 tracking-tighter italic">{value}</p>
                     {trend && (
-                        <p className={`mt-1 text-xs font-medium flex items-center gap-1 ${trend.type === 'positive' ? 'text-emerald-400' :
-                                trend.type === 'negative' ? 'text-rose-400' : 'text-slate-400'
+                        <p className={`mt-2 text-[10px] font-black flex items-center gap-1 uppercase tracking-widest ${trend.type === 'positive' ? 'text-emerald-600' :
+                            trend.type === 'negative' ? 'text-rose-600' : 'text-slate-400'
                             }`}>
                             {trend.type === 'positive' && (
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                 </svg>
                             )}
                             {trend.type === 'negative' && (
                                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                 </svg>
                             )}
                             {trend.value}
@@ -45,7 +45,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                     )}
                 </div>
                 {icon && (
-                    <div className={`p-2 rounded-xl bg-gradient-to-br ${color} bg-opacity-10 text-white shadow-lg`}>
+                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${color} text-white shadow-lg shadow-indigo-100 relative z-10`}>
                         {icon}
                     </div>
                 )}

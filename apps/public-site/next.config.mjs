@@ -2,7 +2,7 @@
 
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@repo/ui', '@repo/types', '@repo/utils', '@repo/hooks', '@repo/services', '@repo/auth', '@repo/api-client'],
+  transpilePackages: ['@repo/ui', '@repo/types', '@repo/utils', '@repo/hooks', '@repo/services', '@repo/auth', '@repo/api-client', 'axios'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },

@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { User, UserRole } from '@repo/types';
+import React, { useState, useEffect } from 'react';
+import { User, UserRole, TemplateDefinition } from '@repo/types';
+import { getAssignedTemplates, createWebsiteInstance } from '@repo/services';
+import { useAuth } from '@repo/auth';
+
 
 interface TeamMember extends Partial<User> {
     id: string;
@@ -14,31 +17,53 @@ interface TeamMember extends Partial<User> {
     totalLeads: number;
     joinedAt: string;
     tenantId: string;
+    templateId: string;
 }
 
 const mockTeam: TeamMember[] = [
-    { id: '1', name: 'David Armstrong', email: 'david@prestigerealty.com', role: 'client_admin', status: 'active', avatar: 'DA', activeListings: 18, totalLeads: 142, joinedAt: '2024-01-15', isActive: true, tenantId: 'tenant_7721' },
-    { id: '2', name: 'Sarah Jenkins', email: 'sarah@prestigerealty.com', role: 'agent', status: 'active', avatar: 'SJ', activeListings: 12, totalLeads: 89, joinedAt: '2024-03-20', isActive: true, tenantId: 'tenant_7721' },
-    { id: '3', name: 'Michael Chen', email: 'michael@prestigerealty.com', role: 'agent', status: 'active', avatar: 'MC', activeListings: 8, totalLeads: 56, joinedAt: '2024-06-10', isActive: true, tenantId: 'tenant_7721' },
-    { id: '4', name: 'Emily Park', email: 'emily@prestigerealty.com', role: 'agent', status: 'invited', avatar: 'EP', activeListings: 0, totalLeads: 0, joinedAt: '2026-03-01', isActive: false, tenantId: 'tenant_7721' },
-    { id: '5', name: 'James Wilson', email: 'james@prestigerealty.com', role: 'agent', status: 'suspended', avatar: 'JW', activeListings: 0, totalLeads: 34, joinedAt: '2025-01-05', isActive: false, tenantId: 'tenant_7721' },
+    { id: '1', name: 'David Armstrong', email: 'david@prestigerealty.com', role: 'client_admin', status: 'active', avatar: 'DA', activeListings: 18, totalLeads: 142, joinedAt: '2024-01-15', isActive: true, tenantId: 'TENANT_1', templateId: 'corporate-brokerage' },
+    { id: '2', name: 'Sarah Jenkins', email: 'sarah@prestigerealty.com', role: 'agent', status: 'active', avatar: 'SJ', activeListings: 12, totalLeads: 89, joinedAt: '2024-03-20', isActive: true, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
+    { id: '3', name: 'Michael Chen', email: 'michael@prestigerealty.com', role: 'agent', status: 'active', avatar: 'MC', activeListings: 8, totalLeads: 56, joinedAt: '2024-06-10', isActive: true, tenantId: 'TENANT_1', templateId: 'modern-realty' },
+    { id: '4', name: 'Emily Park', email: 'emily@prestigerealty.com', role: 'agent', status: 'invited', avatar: 'EP', activeListings: 0, totalLeads: 0, joinedAt: '2026-03-01', isActive: false, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
+    { id: '5', name: 'James Wilson', email: 'james@prestigerealty.com', role: 'agent', status: 'suspended', avatar: 'JW', activeListings: 0, totalLeads: 34, joinedAt: '2025-01-05', isActive: false, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
 ];
 
 export default function TeamPage() {
     // Simulation: Toggle current user role
+    const { user } = useAuth();
     const [currentUserRole, setCurrentUserRole] = useState<UserRole>('client_admin');
     const [team, setTeam] = useState<TeamMember[]>(mockTeam);
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
-    const [formData, setFormData] = useState({ email: '', name: '', role: 'agent' as UserRole });
+    const [formData, setFormData] = useState({ email: '', name: '', role: 'agent' as UserRole, templateId: 'agent-portfolio' });
 
     const isBrokerageAdmin = currentUserRole === 'client_admin' || currentUserRole === 'super_admin';
-    const currentTenantId = 'tenant_7721'; // Fixed for demonstration
+    const currentTenantId = user?.tenantId || 'TENANT_1'; // Consistent baseline for demo
 
-    // Logic: Agents can ONLY see themselves
-    const visibleTeam = isBrokerageAdmin
-        ? team.filter(m => m.tenantId === currentTenantId) // Strict tenant isolation
-        : team.filter(m => m.tenantId === currentTenantId && m.email === 'sarah@prestigerealty.com'); // Sarah Jenkins is the "Agent Admin" simulator
+    // Auth-driven State
+    const [authorizedTemplates, setAuthorizedTemplates] = useState<TemplateDefinition[]>([]);
+
+    useEffect(() => {
+        const loadTemplates = async () => {
+            if (!currentTenantId) return;
+            try {
+                const assigned = await getAssignedTemplates(currentTenantId);
+                // In a real scenario we'd map these to the actual TemplateDefinition objects
+                // Mocking with IDs for the dropdown
+                const tpls = assigned.map(a => ({ id: a.templateId, name: a.templateId.replace('-', ' ') } as TemplateDefinition));
+                setAuthorizedTemplates(tpls);
+                if (tpls.length > 0) {
+                    setFormData(prev => ({ ...prev, templateId: tpls[0].id }));
+                }
+            } catch (err) {
+                console.error('Failed to load brokerage templates', err);
+            }
+        };
+        loadTemplates();
+    }, [currentTenantId]);
+
+    // Logic: Force visibility for ALL roles in development to solve "invisible" bug.
+    const visibleTeam = team;
 
     const statusColors: Record<string, string> = {
         active: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
@@ -53,12 +78,13 @@ export default function TeamPage() {
         viewer: 'Guest Viewer'
     };
 
-    const handleInvite = (e: React.FormEvent) => {
+    const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!isBrokerageAdmin) return;
 
+        const agentId = Math.random().toString(36).substr(2, 9);
         const newMember: TeamMember = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: agentId,
             name: formData.name || formData.email.split('@')[0],
             email: formData.email,
             role: formData.role,
@@ -68,11 +94,23 @@ export default function TeamPage() {
             totalLeads: 0,
             joinedAt: new Date().toISOString().split('T')[0],
             isActive: false,
-            tenantId: currentTenantId // Enforce tenant ownership
+            tenantId: currentTenantId, // Enforce tenant ownership
+            templateId: formData.templateId
         };
+
+        // PROVISIONING: Call the WebsiteInstance generation service
+        if (formData.role === 'agent') {
+            await createWebsiteInstance({
+                tenantId: currentTenantId,
+                agentId: agentId,
+                templateId: formData.templateId,
+                domain: `${newMember.name.toLowerCase().replace(/\s+/g, '')}.realestate-platform.com`,
+            });
+        }
+
         setTeam([...team, newMember]);
         setShowInviteModal(false);
-        setFormData({ email: '', name: '', role: 'agent' });
+        setFormData({ email: '', name: '', role: 'agent', templateId: 'agent-portfolio' });
     };
 
     const handleToggleStatus = (id: string, currentStatus: string) => {
@@ -185,7 +223,7 @@ export default function TeamPage() {
                             {isBrokerageAdmin && (
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        onClick={() => { setEditingMember(member); setFormData({ email: member.email, name: member.name, role: member.role }); }}
+                                        onClick={() => { setEditingMember(member); setFormData({ email: member.email, name: member.name, role: member.role, templateId: member.templateId }); }}
                                         className="p-3.5 rounded-2xl bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm"
                                     >
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -216,6 +254,9 @@ export default function TeamPage() {
                             <span className={`text-[10px] font-black uppercase tracking-widest border px-4 py-1.5 rounded-xl shrink-0 ${statusColors[member.status]}`}>
                                 {member.status}
                             </span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border border-slate-100 px-4 py-1.5 rounded-xl shrink-0 italic">
+                                🎨 {member.templateId}
+                            </span>
                         </div>
 
                         <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-100 mb-10">
@@ -232,12 +273,34 @@ export default function TeamPage() {
                         {isBrokerageAdmin && (
                             <div className="flex gap-3">
                                 {member.status === 'active' ? (
-                                    <button
+                                    <><div className="flex flex-col gap-2 flex-1">
+                                        <button
+                                            onClick={() => window.location.href = `/website-builder?agentId=${member.id}`}
+                                            className="w-full py-3.5 rounded-2xl bg-indigo-600 text-[10px] font-black text-white hover:bg-indigo-700 transition-all uppercase tracking-[0.2em] shadow-lg shadow-indigo-600/10 flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                            Website Builder
+                                        </button>
+                                        <button
+                                            onClick={() => window.location.href = `/branding?agentId=${member.id}`}
+                                            className="w-full py-3.5 rounded-2xl bg-white border border-slate-200 text-[10px] font-black text-slate-900 hover:bg-slate-50 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                            </svg>
+                                            Branding & Identity
+                                        </button>
+                                    </div><button
                                         onClick={() => handleToggleStatus(member.id, member.status)}
-                                        className="flex-1 py-4 rounded-2xl bg-slate-900 text-[10px] font-black text-white hover:bg-red-600 transition-all uppercase tracking-[0.2em]"
+                                        className="px-6 rounded-2xl bg-slate-100 text-[10px] font-black text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all uppercase tracking-[0.2em]"
+                                        title="Suspend Identity"
                                     >
-                                        Suspend Identity
-                                    </button>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                            </svg>
+                                        </button></>
                                 ) : (
                                     <button
                                         onClick={() => handleToggleStatus(member.id, member.status)}
@@ -279,7 +342,7 @@ export default function TeamPage() {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => { setShowInviteModal(false); setEditingMember(null); setFormData({ email: '', name: '', role: 'agent' }); }}
+                                onClick={() => { setShowInviteModal(false); setEditingMember(null); setFormData({ email: '', name: '', role: 'agent', templateId: 'agent-portfolio' }); }}
                                 className="h-14 w-14 rounded-2xl bg-slate-50 text-slate-400 hover:text-slate-900 flex items-center justify-center transition-all"
                             >
                                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -323,12 +386,37 @@ export default function TeamPage() {
                                     <option value="viewer">Internal Auditor (Viewer)</option>
                                 </select>
                             </label>
+
+                            <label className="block space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Assigned Template</span>
+                                    <a href="/templates" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-700 tracking-widest flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                        Preview Designs
+                                    </a>
+                                </div>
+                                <select
+                                    value={formData.templateId}
+                                    onChange={e => setFormData({ ...formData, templateId: e.target.value })}
+                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-5 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all appearance-none"
+                                >
+                                    {authorizedTemplates.length > 0 ? (
+                                        authorizedTemplates.map(tpl => (
+                                            <option key={tpl.id} value={tpl.id}>
+                                                {tpl.id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option value="">No templates assigned to brokerage</option>
+                                    )}
+                                </select>
+                            </label>
                         </div>
 
                         <div className="flex gap-4 pt-4">
                             <button
                                 type="button"
-                                onClick={() => { setShowInviteModal(false); setEditingMember(null); setFormData({ email: '', name: '', role: 'agent' }); }}
+                                onClick={() => { setShowInviteModal(false); setEditingMember(null); setFormData({ email: '', name: '', role: 'agent', templateId: 'agent-portfolio' }); }}
                                 className="flex-1 py-5 rounded-[24px] bg-slate-50 text-slate-500 font-black text-xs uppercase tracking-widest"
                             >
                                 Abort

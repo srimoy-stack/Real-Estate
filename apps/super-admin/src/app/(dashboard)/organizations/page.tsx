@@ -11,14 +11,20 @@ import {
     SubscriptionPlan,
     updateOrgStatus,
     deleteOrganization,
+    updateOrganization,
     createAuditLog,
-    AuditEventType
+    AuditEventType,
+    assignTemplateToTenant
 } from '@repo/services';
+
 import { useAuth } from '@repo/auth';
 import { useDebounce } from '@repo/hooks';
+import { useRouter } from 'next/navigation';
+import { TemplatePreviewPopup } from '@/components/TemplatePreviewPopup';
 
 export default function OrganizationsPage() {
-    const { startImpersonation, user: superAdmin } = useAuth();
+    const { startImpersonation, user: superAdmin, hasHydrated } = useAuth();
+    const router = useRouter();
 
     // State
     const [items, setItems] = useState<Organization[]>([]);
@@ -27,6 +33,9 @@ export default function OrganizationsPage() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
 
     // Filters
     const [search, setSearch] = useState('');
@@ -61,16 +70,23 @@ export default function OrganizationsPage() {
 
     // Handle clicks outside dropdowns
     useEffect(() => {
-        const handleClickOutside = () => setOpenMenuId(null);
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.actions-menu-container')) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleImpersonate = async (org: Organization) => {
         try {
             await startImpersonation(org.id);
             // PRD: Redirect to client-admin
-            window.location.href = 'http://localhost:3002/dashboard';
+            // CRITICAL: We pass a flag/sid in local dev because sessionStorage is not shared between 3001/3002
+            const newAccessToken = "mock-impersonation-token"; // Should ideally come from service
+            window.location.href = `http://localhost:3002/dashboard?token=${newAccessToken}&impersonating=true`;
         } catch (error) {
             alert('Impersonation failed');
         }
@@ -113,6 +129,21 @@ export default function OrganizationsPage() {
         }
     };
 
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingOrg) return;
+        setSaving(true);
+        try {
+            await updateOrganization(editingOrg.id, editingOrg);
+            setEditingOrg(null);
+            fetchOrgs();
+        } catch (error) {
+            alert('Update failed');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     // Visual Helpers reflecting PRD Section 4.1.3
     const getStatusBadge = (status: OrgStatus): { label: string; type: BadgeType } => {
         switch (status) {
@@ -130,15 +161,17 @@ export default function OrganizationsPage() {
         return { label: 'HEALTHY', type: 'success' };
     };
 
+    if (!hasHydrated) return null; // Prevent hydration mismatch errors
+
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="p-8 space-y-10 animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Organization Management</h1>
-                    <p className="mt-1 text-slate-400">Manage {total} organizations across the platform</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Organization Management</h1>
+                    <p className="mt-1 text-slate-500 font-medium">Manage {total} organizations across the platform</p>
                 </div>
                 <button
-                    onClick={() => window.location.href = '/super-admin/onboarding'}
+                    onClick={() => router.push('/super-admin/onboarding')}
                     className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 group"
                 >
                     <svg className="h-5 w-5 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,9 +182,9 @@ export default function OrganizationsPage() {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-6 rounded-3xl border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-6 rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-200/40">
                 <div className="relative group col-span-1 md:col-span-2">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
@@ -159,14 +192,14 @@ export default function OrganizationsPage() {
                         placeholder="Search name/domain..."
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/5 rounded-xl text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500/50 transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-indigo-500 transition-all"
                     />
                 </div>
 
                 <select
                     value={typeFilter}
                     onChange={(e) => { setTypeFilter(e.target.value as OrgType); setPage(1); }}
-                    className="bg-slate-800/50 border border-white/5 rounded-xl text-sm text-white px-4 py-2 outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 px-4 py-2 outline-none focus:border-indigo-500 transition-all cursor-pointer"
                 >
                     <option value="">All Types</option>
                     <option value={OrgType.BROKERAGE}>Brokerage</option>
@@ -176,7 +209,7 @@ export default function OrganizationsPage() {
                 <select
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value as OrgStatus); setPage(1); }}
-                    className="bg-slate-800/50 border border-white/5 rounded-xl text-sm text-white px-4 py-2 outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 px-4 py-2 outline-none focus:border-indigo-500 transition-all cursor-pointer"
                 >
                     <option value="">All Statuses</option>
                     <option value={OrgStatus.ACTIVE}>Active</option>
@@ -186,7 +219,7 @@ export default function OrganizationsPage() {
                 <select
                     value={subFilter}
                     onChange={(e) => { setSubFilter(e.target.value as SubscriptionPlan); setPage(1); }}
-                    className="bg-slate-800/50 border border-white/5 rounded-xl text-sm text-white px-4 py-2 outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 px-4 py-2 outline-none focus:border-indigo-500 transition-all cursor-pointer"
                 >
                     <option value="">All Plans</option>
                     <option value={SubscriptionPlan.BASIC}>Basic</option>
@@ -195,24 +228,24 @@ export default function OrganizationsPage() {
                 </select>
             </div>
 
-            {/* Table Area */}
-            <div className="rounded-3xl border border-white/5 bg-slate-900/50 overflow-hidden backdrop-blur-xl">
+            {/* Table Area - Removed overflow-hidden to prevent clipping actions menu */}
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm z-10">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse min-w-[1000px]">
                         <thead>
-                            <tr className="bg-white/5 border-b border-white/5">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Type</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Template</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Domain</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">DDF Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Leads (30d)</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Subscription</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            <tr className="bg-white border-b border-slate-100">
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Name</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Template</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Domain</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">DDF Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Leads (30d)</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Subscription</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 [1, 2, 3, 4, 5].map((i) => (
                                     <tr key={i} className="animate-pulse">
@@ -228,22 +261,22 @@ export default function OrganizationsPage() {
                                 const status = getStatusBadge(org.status);
 
                                 return (
-                                    <tr key={org.id} className="group hover:bg-white/5 transition-colors">
-                                        <td className="px-6 py-4 font-semibold text-white">{org.name}</td>
+                                    <tr key={org.id} className="group hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-4 font-semibold text-slate-900">{org.name}</td>
                                         <td className="px-6 py-4">
-                                            <span className="text-xs text-slate-400">{org.type}</span>
+                                            <span className="text-xs text-slate-500">{org.type}</span>
                                         </td>
-                                        <td className="px-6 py-4 text-xs text-slate-300">{org.template}</td>
-                                        <td className="px-6 py-4 text-xs text-indigo-400 font-mono tracking-tighter">{org.domain}</td>
+                                        <td className="px-6 py-4 text-xs text-slate-600">{org.template}</td>
+                                        <td className="px-6 py-4 text-xs text-indigo-600 font-mono tracking-tighter">{org.domain}</td>
                                         <td className="px-6 py-4 text-center">
                                             <StatusBadge label={ddf.label} type={ddf.type} />
                                         </td>
-                                        <td className="px-6 py-4 text-right font-mono text-xs text-white">
+                                        <td className="px-6 py-4 text-right font-mono text-xs text-slate-900">
                                             {org.leads30d.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${org.subscriptionPlan === SubscriptionPlan.ENTERPRISE ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                                                org.subscriptionPlan === SubscriptionPlan.PREMIUM ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-700/30 text-slate-400 border-slate-700/20'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${org.subscriptionPlan === SubscriptionPlan.ENTERPRISE ? 'bg-purple-50 text-purple-600 border-purple-200' :
+                                                org.subscriptionPlan === SubscriptionPlan.PREMIUM ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-slate-50 text-slate-600 border-slate-200'
                                                 }`}>
                                                 {org.subscriptionPlan}
                                             </span>
@@ -251,10 +284,14 @@ export default function OrganizationsPage() {
                                         <td className="px-6 py-4 text-center">
                                             <StatusBadge label={status.label} type={status.type} />
                                         </td>
-                                        <td className="px-6 py-4 text-right relative">
+                                        <td className="px-6 py-4 text-right relative actions-menu-container">
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === org.id ? null : org.id); }}
-                                                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setOpenMenuId(openMenuId === org.id ? null : org.id);
+                                                }}
+                                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-900"
                                             >
                                                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -262,34 +299,34 @@ export default function OrganizationsPage() {
                                             </button>
 
                                             {openMenuId === org.id && (
-                                                <div className="absolute right-6 top-12 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 py-1 flex flex-col items-start text-sm overflow-hidden backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-100">
-                                                    <button onClick={() => alert('Edit modal coming soon')} className="w-full text-left px-4 py-2 hover:bg-white/5 text-slate-300 hover:text-white transition-colors flex items-center gap-2">
+                                                <div className="absolute right-6 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-1 flex flex-col items-start text-sm overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                                    <button onClick={() => setEditingOrg(org)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                        Edit
+                                                        Edit / Configuration
                                                     </button>
-                                                    <button onClick={() => handleToggleStatus(org)} className="w-full text-left px-4 py-2 hover:bg-white/5 text-slate-300 hover:text-white transition-colors flex items-center gap-2">
+                                                    <button onClick={() => handleToggleStatus(org)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                                         </svg>
                                                         {org.status === OrgStatus.ACTIVE ? 'Suspend' : 'Activate'}
                                                     </button>
-                                                    <button onClick={() => window.open(`http://${org.domain}`, '_blank')} className="w-full text-left px-4 py-2 hover:bg-white/5 text-slate-300 hover:text-white transition-colors flex items-center gap-2">
+                                                    <button onClick={() => window.open(`http://${org.domain}`, '_blank')} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                         </svg>
                                                         View Website
                                                     </button>
-                                                    <div className="h-px bg-white/5 w-full my-1" />
-                                                    <button onClick={() => handleImpersonate(org)} className="w-full text-left px-4 py-2 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2 font-semibold">
+                                                    <div className="h-px bg-slate-100 w-full my-1" />
+                                                    <button onClick={() => handleImpersonate(org)} className="w-full text-left px-4 py-2 hover:bg-indigo-50 text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-2 font-semibold">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                                         </svg>
-                                                        Impersonate
+                                                        Access Admin
                                                     </button>
-                                                    <div className="h-px bg-white/5 w-full my-1" />
-                                                    <button onClick={() => handleDelete(org)} className="w-full text-left px-4 py-2 hover:bg-rose-500/20 text-rose-500 hover:text-rose-400 transition-colors flex items-center gap-2">
+                                                    <div className="h-px bg-slate-100 w-full my-1" />
+                                                    <button onClick={() => handleDelete(org)} className="w-full text-left px-4 py-2 hover:bg-rose-50 text-rose-600 hover:text-rose-700 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
@@ -306,17 +343,17 @@ export default function OrganizationsPage() {
                 </div>
 
                 {/* Pagination Controls */}
-                <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-white/5 gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-6 bg-white border-t border-slate-50 gap-4">
                     <div className="flex items-center gap-4">
                         <p className="text-xs text-slate-500">
-                            Showing <span className="text-white">{(page - 1) * limit + 1}</span> to <span className="text-white">{Math.min(page * limit, total)}</span> of <span className="text-white">{total}</span>
+                            Showing <span className="text-slate-900 font-bold">{(page - 1) * limit + 1}</span> to <span className="text-slate-900 font-bold">{Math.min(page * limit, total)}</span> of <span className="text-slate-900 font-bold">{total}</span>
                         </p>
-                        <div className="flex items-center gap-2 ml-4 border-l border-white/10 pl-4">
-                            <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Page Size</span>
+                        <div className="flex items-center gap-2 ml-4 border-l border-slate-200 pl-4">
+                            <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Page Size</span>
                             <select
                                 value={limit}
                                 onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-                                className="bg-slate-800 border border-white/5 rounded-md text-[10px] text-white px-2 py-1 outline-none"
+                                className="bg-white border border-slate-200 rounded-md text-[10px] text-slate-900 px-2 py-1 outline-none font-bold"
                             >
                                 <option value={10}>10</option>
                                 <option value={25}>25</option>
@@ -330,23 +367,23 @@ export default function OrganizationsPage() {
                         <button
                             disabled={page === 1}
                             onClick={() => setPage(page - 1)}
-                            className="p-2 rounded-xl border border-white/5 hover:bg-white/5 text-slate-400 disabled:opacity-20 transition-all"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-white text-slate-400 disabled:opacity-20 transition-all shadow-sm"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                         <div className="flex items-center gap-1">
-                            <span className="text-xs font-bold text-white px-3 py-1 bg-white/5 rounded-lg border border-white/10">
+                            <span className="text-xs font-black text-slate-900 px-3 py-1 bg-white rounded-lg border border-slate-200 shadow-sm">
                                 {page}
                             </span>
-                            <span className="text-xs text-slate-500 px-1">/</span>
-                            <span className="text-xs text-slate-500 px-1">{Math.ceil(total / limit) || 1}</span>
+                            <span className="text-xs text-slate-400 px-1 font-bold">/</span>
+                            <span className="text-xs text-slate-400 px-1 font-bold">{Math.ceil(total / limit) || 1}</span>
                         </div>
                         <button
                             disabled={page * limit >= total}
                             onClick={() => setPage(page + 1)}
-                            className="p-2 rounded-xl border border-white/5 hover:bg-white/5 text-slate-400 disabled:opacity-20 transition-all"
+                            className="p-2 rounded-xl border border-slate-200 hover:bg-white text-slate-400 disabled:opacity-20 transition-all shadow-sm"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -355,6 +392,186 @@ export default function OrganizationsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            {editingOrg && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Edit <span className="text-indigo-600">Organization</span></h2>
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">ID: {editingOrg.id}</p>
+                            </div>
+                            <button onClick={() => setEditingOrg(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdate} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Display Name</label>
+                                    <input
+                                        type="text"
+                                        value={editingOrg.name}
+                                        onChange={(e) => setEditingOrg({ ...editingOrg, name: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Primary Domain</label>
+                                    <input
+                                        type="text"
+                                        value={editingOrg.domain}
+                                        onChange={(e) => setEditingOrg({ ...editingOrg, domain: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-mono"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Subscription Plan</label>
+                                    <select
+                                        value={editingOrg.subscriptionPlan}
+                                        onChange={(e) => setEditingOrg({ ...editingOrg, subscriptionPlan: e.target.value as SubscriptionPlan })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                                    >
+                                        <option value={SubscriptionPlan.BASIC}>Basic Plan</option>
+                                        <option value={SubscriptionPlan.PREMIUM}>Premium Plan</option>
+                                        <option value={SubscriptionPlan.ENTERPRISE}>Enterprise Plan</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Template</label>
+                                    <select
+                                        value={editingOrg.template}
+                                        onChange={(e) => setEditingOrg({ ...editingOrg, template: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                                    >
+                                        <option value="modern-realty">Modern Realty</option>
+                                        <option value="luxury-estate">Luxury Estate</option>
+                                        <option value="corporate-brokerage">Corporate Brokerage</option>
+                                        <option value="agent-portfolio">Agent Portfolio</option>
+                                        <option value="minimal-realty">Minimal Realty</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-4">
+                                    Allowed Templates
+                                    <div className="h-px bg-slate-100 flex-1" />
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {[
+                                        { id: 'modern-realty', name: 'Modern Realty' },
+                                        { id: 'luxury-estate', name: 'Luxury Estate' },
+                                        { id: 'corporate-brokerage', name: 'Corporate' },
+                                        { id: 'agent-portfolio', name: 'Portfolio' },
+                                        { id: 'minimal-realty', name: 'Minimal' },
+                                    ].map((tpl) => {
+                                        const isAllowed = editingOrg.allowedTemplates?.includes(tpl.id);
+                                        return (
+                                            <div key={tpl.id} className="relative group/tpl">
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={async () => {
+                                                        const isNowAllowed = !isAllowed;
+
+                                                        // Call explicit assignment service as requested
+                                                        if (isNowAllowed) {
+                                                            await assignTemplateToTenant(
+                                                                editingOrg.id,
+                                                                tpl.id,
+                                                                superAdmin?.name || 'Super Admin'
+                                                            );
+                                                        }
+
+                                                        const current = editingOrg.allowedTemplates || [];
+                                                        const next = isNowAllowed
+                                                            ? [...current, tpl.id]
+                                                            : current.filter(id => id !== tpl.id);
+
+                                                        setEditingOrg({ ...editingOrg, allowedTemplates: next });
+                                                    }}
+                                                    className={`w-full px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isAllowed
+                                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm'
+                                                        : 'bg-white border-slate-200 text-slate-400 grayscale'
+                                                        }`}
+                                                >
+                                                    {isAllowed ? '✓ Assigned' : `Assign ${tpl.name}`}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPreviewTemplateId(tpl.id)}
+                                                    className="absolute -top-2 -right-2 h-6 w-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-600 shadow-sm opacity-0 group-hover/tpl:opacity-100 transition-opacity"
+                                                    title="Preview Template"
+                                                >
+                                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-4">
+                                    Enabled Modules
+                                    <div className="h-px bg-slate-100 flex-1" />
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {editingOrg.modules && Object.entries(editingOrg.modules).map(([key, enabled]) => (
+                                        <button
+                                            key={key}
+                                            type="button"
+                                            onClick={() => setEditingOrg({
+                                                ...editingOrg,
+                                                modules: { ...editingOrg.modules!, [key]: !enabled }
+                                            })}
+                                            className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${enabled
+                                                ? 'bg-indigo-50 border-indigo-200 text-indigo-600 shadow-sm'
+                                                : 'bg-white border-slate-200 text-slate-400 grayscale'
+                                                }`}
+                                        >
+                                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingOrg(null)}
+                                    className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-black shadow-lg shadow-indigo-100 disabled:opacity-50 transition-all flex items-center gap-2"
+                                >
+                                    {saving && <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Template Preview Popup */}
+            {previewTemplateId && (
+                <TemplatePreviewPopup
+                    templateId={previewTemplateId}
+                    onClose={() => setPreviewTemplateId(null)}
+                />
+            )}
         </div>
     );
 }

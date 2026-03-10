@@ -4,12 +4,20 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-@layer base {
-  :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-  }
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a; /* slate-900 */
+}
 
+/* Custom UI Overrides with standard CSS */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@layer base {
   * {
     box-sizing: border-box;
     margin: 0;
