@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "cd ../.. && npx turbo build --filter=super-admin"
   publish = ".next"
 
 [[plugins]]
