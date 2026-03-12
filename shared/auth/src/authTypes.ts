@@ -1,7 +1,8 @@
 export enum Role {
     SUPER_ADMIN = "SUPER_ADMIN",
-    BROKERAGE_ADMIN = "BROKERAGE_ADMIN",
-    AGENT_ADMIN = "AGENT_ADMIN",
+    CLIENT_ADMIN = "CLIENT_ADMIN",
+    AGENT = "AGENT",
+    VIEWER = "VIEWER",
 }
 
 export interface User {
@@ -9,8 +10,8 @@ export interface User {
     name: string
     email: string
     role: Role
-    tenantId?: string;
-    tenantStatus?: "ACTIVE" | "SUSPENDED" | "INACTIVE";
+    organizationId?: string;
+    organizationStatus?: "ACTIVE" | "SUSPENDED" | "INACTIVE";
 }
 
 export interface AuthState {

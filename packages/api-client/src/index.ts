@@ -7,7 +7,7 @@ import axios from 'axios';
  */
 export const apiAuthConfig = {
     getToken: () => null as string | null,
-    getTenantId: () => null as string | null,
+    getOrganizationId: () => null as string | null,
     onLogout: () => { },
     setToken: (_token: string) => { },
 };
@@ -20,17 +20,17 @@ const apiClient = axios.create({
     withCredentials: true, // Required for secure cookies (refresh tokens)
 });
 
-// Request interceptor: Inject access token and tenant ID
+// Request interceptor: Inject access token and organization ID
 apiClient.interceptors.request.use((config) => {
     const token = apiAuthConfig.getToken();
-    const tenantId = apiAuthConfig.getTenantId();
+    const organizationId = apiAuthConfig.getOrganizationId();
 
     if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (tenantId && config.headers) {
-        config.headers['x-tenant-id'] = tenantId;
+    if (organizationId && config.headers) {
+        config.headers['x-organization-id'] = organizationId;
     }
 
     return config;
@@ -140,7 +140,7 @@ export interface AuditLog {
     actorName: string;
     targetId?: string;
     targetName?: string;
-    tenantId?: string;
+    organizationId?: string;
     metadata?: Record<string, any>;
     status: 'SUCCESS' | 'FAILURE' | 'WARNING';
     ipAddress?: string;

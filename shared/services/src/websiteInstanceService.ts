@@ -4,8 +4,8 @@ import { WebsiteInstance, TEMPLATE_REGISTRY } from '@repo/types';
 let mockWebsiteInstances: WebsiteInstance[] = [
     {
         id: 'ws-1',
-        tenantId: 'TENANT_1',
-        agentId: '1',
+        organizationId: 'org-1',
+        agentId: 'agent-1',
         templateId: 'corporate-brokerage',
         domain: 'david.prestigerealty.com',
         layoutConfig: {
@@ -13,8 +13,9 @@ let mockWebsiteInstances: WebsiteInstance[] = [
             footer: 'columns',
             sections: [
                 { id: 'hero-1', type: 'hero', title: 'Find Your Future', isVisible: true, isLocked: true, content: { headline: 'Find Your Future', subheadline: 'Trust the brokerage with 40 years of local expertise.', buttonText: 'Find Home' }, order: 0 },
-                { id: 'featured-1', type: 'featured_listings', title: 'Premium Listings', isVisible: true, isLocked: true, content: { title: 'Premium Listings', subtitle: 'Hand-picked for quality.' }, order: 1 },
-                { id: 'stats-1', type: 'stats', title: 'Performance Metrics', isVisible: true, isLocked: false, content: { title: 'Local Presence', stats: [{ label: 'Homes Sold', value: '500+' }, { label: 'Agents', value: '45' }] } },
+                { id: 'featured-1', type: 'listings', title: 'Premium Listings', isVisible: true, isLocked: true, content: { title: 'Premium Listings', subtitle: 'Hand-picked for quality.' }, order: 1 },
+                { id: 'about-1', type: 'about', title: 'About Us', isVisible: true, isLocked: false, content: { title: 'About Our Brokerage' } },
+                { id: 'contact-1', type: 'contact', title: 'Contact', isVisible: true, isLocked: false, content: { title: 'Get In Touch', buttonLabel: 'Contact Now' } },
             ],
         },
         brandingConfig: { primaryColor: '#1e293b', secondaryColor: '#ffffff' },
@@ -23,8 +24,8 @@ let mockWebsiteInstances: WebsiteInstance[] = [
     },
     {
         id: 'ws-2',
-        tenantId: 'TENANT_1',
-        agentId: '2',
+        organizationId: 'org-1',
+        agentId: 'agent-2',
         templateId: 'agent-portfolio',
         domain: 'sarah.prestigerealty.com',
         layoutConfig: {
@@ -32,8 +33,8 @@ let mockWebsiteInstances: WebsiteInstance[] = [
             footer: 'minimal',
             sections: [
                 { id: 'hero-2', type: 'hero', title: 'Sarah Jenkins Real Estate', isVisible: true, isLocked: true, content: { headline: 'Sarah Jenkins Real Estate', subheadline: 'Selling the dream lifestyle.', buttonText: 'View Properties' }, order: 0 },
-                { id: 'about-2', type: 'about_banner', title: 'About Sarah', isVisible: true, isLocked: false, content: { title: 'Bespoke Advisory', description: 'With over 12 years of luxury experience...' } },
-                { id: 'featured-2', type: 'featured_listings', title: 'Exclusive Active Listings', isVisible: true, isLocked: true, content: { title: 'The Portfolio', subtitle: 'Active listings in the Greater Area' } },
+                { id: 'featured-2', type: 'listings', title: 'Exclusive Active Listings', isVisible: true, isLocked: true, content: { title: 'The Portfolio', subtitle: 'Active listings in the Greater Area' } },
+                { id: 'contact-2', type: 'contact', title: 'Contact', isVisible: true, isLocked: false, content: { title: 'Schedule a Meeting', buttonLabel: 'Book Now' } },
             ],
         },
         brandingConfig: { primaryColor: '#4f46e5', secondaryColor: '#ffffff' },
@@ -42,16 +43,17 @@ let mockWebsiteInstances: WebsiteInstance[] = [
     },
     {
         id: 'ws-3',
-        tenantId: 'TENANT_1',
-        agentId: '3',
-        templateId: 'modern-realty',
-        domain: 'michael.prestigerealty.com',
+        organizationId: 'org-1',
+        agentId: '1',
+        templateId: 'corporate-brokerage',
+        domain: 'david-team.prestigerealty.com',
         layoutConfig: {
             header: 'solid',
             footer: 'columns',
             sections: [
                 { id: 'hero-3', type: 'hero', title: 'Modern Living Redefined', isVisible: true, isLocked: true, content: { headline: 'Modern Living Redefined', subheadline: 'Tech-forward real estate solutions.', buttonText: 'Search MLS' }, order: 0 },
-                { id: 'stats-3', type: 'stats', title: 'Proven Results', isVisible: true, isLocked: false, content: { title: 'Proven Results', stats: [{ label: 'Sales Volume', value: '$45M' }, { label: 'Reviews', value: '4.9/5' }] } },
+                { id: 'listings-3', type: 'listings', title: 'Top Properties', isVisible: true, isLocked: false, content: { title: 'Proven Results' } },
+                { id: 'contact-3', type: 'contact', title: 'Contact', isVisible: true, isLocked: false, content: { title: 'Connect', buttonLabel: 'Reach Out' } },
             ],
         },
         brandingConfig: { primaryColor: '#0f172a', secondaryColor: '#ffffff' },
@@ -60,8 +62,9 @@ let mockWebsiteInstances: WebsiteInstance[] = [
     },
 ];
 
+
 export const createWebsiteInstance = async (params: {
-    tenantId: string;
+    organizationId: string;
     agentId: string;
     templateId: string;
     domain: string;
@@ -75,7 +78,7 @@ export const createWebsiteInstance = async (params: {
 
     const newInstance: WebsiteInstance = {
         id: `ws-${Math.random().toString(36).substr(2, 9)}`,
-        tenantId: params.tenantId,
+        organizationId: params.organizationId,
         agentId: params.agentId,
         templateId: params.templateId,
         domain: params.domain,
@@ -108,9 +111,8 @@ export const createWebsiteInstance = async (params: {
         return newInstance;
     }
 };
-
-export const getAgentWebsites = async (tenantId: string): Promise<WebsiteInstance[]> => {
-    return mockWebsiteInstances.filter(ws => ws.tenantId === tenantId);
+export const getAgentWebsites = async (organizationId: string): Promise<WebsiteInstance[]> => {
+    return mockWebsiteInstances.filter(ws => ws.organizationId === organizationId);
 };
 
 export const getWebsiteByAgentId = async (agentId: string): Promise<WebsiteInstance | null> => {
@@ -134,5 +136,12 @@ export const updateWebsiteInstance = async (id: string, data: Partial<WebsiteIns
     } catch (error) {
         throw new Error(`Instance ${id} not found`);
     }
+};
+
+export const websiteInstanceService = {
+    createWebsiteInstance,
+    getAgentWebsites,
+    getWebsiteByAgentId,
+    updateWebsiteInstance
 };
 

@@ -47,7 +47,9 @@ export type SectionType =
     | 'newsletter'
     | 'about_banner'
     | 'gallery'
-    | 'communities';
+    | 'communities'
+    | 'listings'
+    | 'agents';
 
 export interface SectionConfig {
     id: string;
@@ -78,10 +80,13 @@ export type SectionContent =
     | NewsletterContent
     | AboutBannerContent
     | GalleryContent
-    | CommunitiesContent;
+    | CommunitiesContent
+    | ListingsSectionContent
+    | AgentsContent;
 
 export interface HeroContent {
     _type: 'hero';
+    variant?: 'default' | 'luxury' | 'agent' | 'corporate' | 'minimal';
     headline: string;
     subheadline: string;
     buttonText?: string;
@@ -185,6 +190,25 @@ export interface CommunitiesContent {
         imageUrl?: string;
         link?: string;
     }>;
+}
+
+export interface ListingsSectionContent {
+    _type: 'listings';
+    title: string;
+    subtitle?: string;
+    /** Reference to the ListingSectionConfig ID */
+    configId: string;
+    /** Breadcrumb label used in listing sections */
+    breadcrumbLabel?: string;
+}
+
+export interface AgentsContent {
+    _type: 'agents';
+    title: string;
+    subtitle?: string;
+    /** If empty, fetches all agents in the organization */
+    agentIds?: string[];
+    layout: 'grid' | 'carousel';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -397,22 +421,3 @@ export interface WebsiteConfig extends BaseEntity {
     seo: WebsiteSeoConfig;
 }
 
-export interface TenantTemplate {
-    id: string;
-    tenantId: string;
-    templateId: string;
-    assignedBy: string;
-    createdAt: string;
-}
-
-export interface WebsiteInstance {
-    id: string;
-    tenantId: string;
-    agentId: string;
-    templateId: string;
-    domain: string;
-    layoutConfig: any; // Copy of defaultLayoutConfig
-    brandingConfig: any;
-    createdAt: string;
-    updatedAt: string;
-}

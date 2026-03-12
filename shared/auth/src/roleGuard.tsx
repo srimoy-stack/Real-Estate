@@ -37,8 +37,8 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
                 return;
             }
 
-            // Tenant Suspension Enforcement (Bypassed by impersonating Super Admins)
-            if (user?.tenantStatus === 'SUSPENDED' && !isImpersonating) {
+            // Organization Suspension Enforcement (Bypassed by impersonating Super Admins)
+            if (user?.organizationStatus === 'SUSPENDED' && !isImpersonating) {
                 router.push('/suspended' as any);
                 return;
             }

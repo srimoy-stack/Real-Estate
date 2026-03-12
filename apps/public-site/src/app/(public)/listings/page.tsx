@@ -1,173 +1,158 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
-import type { Metadata } from 'next';
-import { listingService } from '@repo/services';
-import { ListingFilters, PropertyType } from '@repo/types';
+import { Metadata } from 'next';
+import { listingQueryApi } from '@repo/services';
+import { InternalListingStatus } from '@repo/types';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { ListingFilters as FilterSidebar } from '@/components/listings/ListingFilters';
+import { SaveSearchButton } from '@/components/listings/SaveSearchButton';
 import { ListingGridSkeleton } from '@/components/listings/ListingSkeleton';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const MapWithNoSSR = dynamic(
+  () => import('@/components/listings/ListingsMap').then((mod) => mod.ListingsMap),
+  { ssr: false, loading: () => <div className="h-[750px] w-full bg-slate-100 rounded-[40px] animate-pulse"></div> }
+);
 
 export const metadata: Metadata = {
-  title: 'Real Estate Listings | Property Search',
-  description: 'Explore properties and homes. Filter by price, location, and amenities.',
+  title: 'Search Real Estate Listings | Skyline Estates',
+  description: 'Find your perfect home with our advanced property search. Filter by location, price, property type, and more.',
 };
 
-import { mockListings } from '@/templates/shared/mock-data';
-
-async function getListings(searchParams: any) {
-  const filters: ListingFilters = {
-    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-    bedrooms: searchParams.bedrooms ? Number(searchParams.bedrooms.replace('+', '')) : undefined,
-    bathrooms: searchParams.bathrooms ? Number(searchParams.bathrooms.replace('+', '')) : undefined,
-    propertyType: searchParams.propertyType ? [searchParams.propertyType as PropertyType] : undefined,
-    city: searchParams.city,
-    postalCode: searchParams.postalCode,
-    keyword: searchParams.keyword,
-    page: searchParams.page ? Number(searchParams.page) : 1,
-    limit: 12,
-  };
-
-  try {
-    const response = await listingService.search(filters);
-    return response;
-  } catch (error) {
-    console.warn('Listing API failed, using mock data for demo');
-
-    let filtered = [...mockListings];
-    if (filters.keyword) {
-      filtered = filtered.filter(l =>
-        l.title.toLowerCase().includes(filters.keyword!.toLowerCase()) ||
-        l.address.city.toLowerCase().includes(filters.keyword!.toLowerCase())
-      );
-    }
-    if (filters.minPrice) filtered = filtered.filter(l => l.price >= filters.minPrice!);
-    if (filters.maxPrice) filtered = filtered.filter(l => l.price <= filters.maxPrice!);
-
-    return {
-      data: filtered,
-      success: true,
-      pagination: {
-        page: filters.page,
-        pageSize: filters.limit,
-        total: filtered.length,
-        totalPages: 1
-      }
-    };
-  }
-}
-
+/**
+ * Enhanced Listings Search Page
+ * Integrates with listingQueryApi for rich mock data and real filtering logic
+ */
 export default async function ListingsPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const results = await getListings(searchParams);
+  // 1. Prepare Query Parameters
+  const page = Number(searchParams.page) || 1;
+  const limit = 12;
   const view = searchParams.view === 'map' ? 'map' : 'grid';
 
+  const queryParams = {
+    city: searchParams.city as string,
+    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
+    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+    bedrooms: searchParams.bedrooms ? (searchParams.bedrooms === '5+' ? 5 : Number(searchParams.bedrooms)) : undefined,
+    bathrooms: searchParams.bathrooms ? (searchParams.bathrooms === '4+' ? 4 : Number(searchParams.bathrooms)) : undefined,
+    propertyType: searchParams.propertyType ? [searchParams.propertyType as any] : undefined,
+    status: searchParams.status as InternalListingStatus,
+    keyword: searchParams.keyword as string,
+    sort: (searchParams.sort as any) || 'latest',
+    page,
+    limit,
+  };
+
+  // 2. Fetch Data
+  const { listings, totalCount } = await listingQueryApi.searchListings(queryParams);
+  const totalPages = Math.ceil(totalCount / limit);
+
   return (
-    <div className="min-h-screen bg-white pt-24 pb-20">
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
-        {/* Header — Zolo-style */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Real Estate Listings
+    <main className="min-h-screen bg-slate-50/30 pt-24 pb-20">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+
+        {/* Search Header */}
+        <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
+              <span className="w-8 h-px bg-amber-600"></span>
+              Property Search
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">
+              Discover Your <span className="text-amber-600">Domain</span>.
             </h1>
-            <p className="text-sm text-gray-500">
-              Showing {results.pagination.total} properties
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+              {totalCount} Properties found in {searchParams.city || 'Canada'}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/listings?${new URLSearchParams({ ...searchParams, view: view === 'grid' ? 'map' : 'grid' } as any).toString()}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
-            >
-              {view === 'grid' ? (
-                <>
-                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L16 4m0 13V4m0 0L9 7" />
-                  </svg>
-                  Map View
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  Grid View
-                </>
-              )}
-            </Link>
+          <div className="flex items-center gap-4">
+            {/* Sort Dropdown Placeholder */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black uppercase tracking-widest text-slate-600">
+              <span>Sort: {queryParams.sort === 'latest' ? 'Newest' : queryParams.sort === 'price_asc' ? 'Price Low' : 'Price High'}</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </div>
+
+            {/* View Toggle */}
+            <div className="bg-slate-200/50 p-1 rounded-xl flex">
+              <Link
+                href={`/listings?${new URLSearchParams({ ...searchParams as any, view: 'grid' }).toString()}`}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Grid
+              </Link>
+              <Link
+                href={`/listings?${new URLSearchParams({ ...searchParams as any, view: 'map' }).toString()}`}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'map' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Map
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-10">
           {/* Sidebar Filters */}
-          <aside className="lg:w-72 flex-shrink-0">
+          <aside className="lg:w-80 flex-shrink-0">
             <div className="sticky top-28">
-              <FilterSidebar />
+              <Suspense fallback={<div className="h-[600px] bg-white rounded-3xl border border-slate-100 animate-pulse" />}>
+                <FilterSidebar />
+              </Suspense>
+
+              <SaveSearchButton filters={queryParams} />
             </div>
           </aside>
 
-          {/* Listing Grid / Map */}
-          <div className="flex-1">
+          {/* Listing Content */}
+          <div className="flex-1 min-w-0">
             <Suspense fallback={<ListingGridSkeleton count={6} />}>
               {view === 'grid' ? (
-                results.data.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {results.data.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing} />
+                listings.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {listings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing as any} />
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-16 rounded-xl bg-gray-50 border border-gray-200">
-                    <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                      <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  <div className="flex flex-col items-center justify-center py-20 rounded-[40px] bg-white border border-slate-100 shadow-xl shadow-slate-200/50">
+                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6">
+                      <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">No properties found</h3>
-                    <p className="text-gray-500 mt-1 text-sm">Try adjusting your filters or search terms.</p>
-                    <button className="mt-4 px-5 py-2 rounded-lg bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 transition-colors">Clear all filters</button>
+                    <h3 className="text-2xl font-black text-slate-900 italic mb-2">No matching homes</h3>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Try adjusting your filters for more results</p>
+                    <Link href="/listings" className="mt-8 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 transition-all">Clear All Filters</Link>
                   </div>
                 )
               ) : (
-                <div className="h-[700px] w-full bg-gray-100 rounded-xl overflow-hidden relative border border-gray-200">
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-100" />
-                  {results.data.slice(0, 5).map((l, i) => (
-                    <div
-                      key={l.id}
-                      className="absolute cursor-pointer transition-transform hover:scale-110"
-                      style={{ top: `${30 + (i * 12)}%`, left: `${20 + (i * 18)}%` }}
-                    >
-                      <div className="bg-white px-3 py-1.5 rounded-lg shadow-lg border border-gray-200">
-                        <span className="text-xs font-bold text-gray-900">${(l.price / 1000000).toFixed(1)}M</span>
-                      </div>
-                      <div className="w-0.5 h-2 bg-gray-400 mx-auto" />
-                    </div>
-                  ))}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-white rounded-lg shadow-lg border border-gray-200 text-xs font-medium text-gray-700 flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Interactive Map
-                  </div>
-                </div>
+                <MapWithNoSSR initialListings={listings} />
               )}
 
               {/* Pagination */}
-              {view === 'grid' && results.pagination.totalPages > 1 && (
-                <div className="mt-10 flex items-center justify-center gap-2">
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-400 cursor-not-allowed">Previous</button>
-                  <button className="h-9 w-9 rounded-lg bg-emerald-600 text-white text-sm font-semibold">1</button>
-                  <button className="h-9 w-9 rounded-lg bg-white border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">2</button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Next</button>
+              {view === 'grid' && totalPages > 1 && (
+                <div className="mt-16 flex items-center justify-center gap-3">
+                  <button className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed transition-all">Prev</button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <Link
+                      key={i}
+                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (i + 1).toString() }).toString()}`}
+                      className={`h-12 w-12 rounded-2xl flex items-center justify-center text-[10px] font-black transition-all ${page === i + 1 ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'bg-white text-slate-400 hover:text-slate-900 border border-slate-100'}`}
+                    >
+                      {i + 1}
+                    </Link>
+                  ))}
+                  <button className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all">Next</button>
                 </div>
               )}
             </Suspense>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -436,7 +436,7 @@ const Step5Review = () => {
         });
     };
 
-    if (provisioning.isProcessing || provisioning.currentStep?.step === 'complete') {
+    if (provisioning.isProcessing || provisioning.currentStep?.status === 'complete') {
         return (
             <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-700">
                 <div className="relative mb-8">

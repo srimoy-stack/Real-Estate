@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { TemplateRenderer, TemplateName } from '@/templates/TemplateRenderer';
+import { TemplateRenderer, TemplateName } from '@/templates';
 import { TEMPLATE_REGISTRY, createWebsiteConfig } from '@repo/types';
 import { WebsiteProvider } from '@/lib/tenant/website-context';
 

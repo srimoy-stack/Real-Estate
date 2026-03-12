@@ -75,9 +75,9 @@ export const useAuth = () => {
                     id: `impersonated-${userId}`,
                     name: `Admin @ ${userId}`,
                     email: `admin@${userId}.demo`,
-                    role: Role.BROKERAGE_ADMIN,
-                    tenantId: userId,
-                    tenantStatus: "ACTIVE"
+                    role: Role.CLIENT_ADMIN,
+                    organizationId: userId,
+                    organizationStatus: "ACTIVE"
                 };
                 newAccessToken = "mock-impersonation-token";
             }
@@ -95,7 +95,7 @@ export const useAuth = () => {
                     actorName: currentOriginalUser.name,
                     targetId: impersonatedUser.id,
                     targetName: impersonatedUser.name,
-                    tenantId: impersonatedUser.tenantId,
+                    organizationId: impersonatedUser.organizationId,
                     status: 'SUCCESS',
                     metadata: {
                         orgId: userId,
@@ -134,7 +134,7 @@ export const useAuth = () => {
                     actorName: currentActor.name,
                     targetId: currentImpersonatedUser.id,
                     targetName: currentImpersonatedUser.name,
-                    tenantId: currentImpersonatedUser.tenantId,
+                    organizationId: currentImpersonatedUser.organizationId,
                     status: 'SUCCESS'
                 });
             }
@@ -156,7 +156,7 @@ export const useAuth = () => {
     return {
         user,
         role: user?.role,
-        tenantId: user?.tenantId,
+        organizationId: user?.organizationId,
         isAuthenticated: !!user,
         accessToken,
         isImpersonating,

@@ -121,8 +121,7 @@
             "npm:next@>=14.0.0",
             "npm:react@>=18.0.0",
             "npm:typescript@^5.4.0",
-            "npm:zustand-persist@0.4",
-            "npm:zustand@^4.5.0"
+            "npm:zustand@^5.0.11"
           ]
         }
       },

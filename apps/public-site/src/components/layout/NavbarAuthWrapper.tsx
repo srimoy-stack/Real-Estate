@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Navbar, Button } from '@repo/ui';
+import Link from 'next/link';
+import { Navbar, Button, AuthModal } from '@repo/ui';
 import { useAuth } from '@repo/auth';
-import { AuthModal } from './AuthModal';
 
 interface NavbarAuthWrapperProps {
     brand: string;
@@ -29,7 +29,10 @@ export const NavbarAuthWrapper: React.FC<NavbarAuthWrapperProps> = ({ brand, ite
         <div className="flex items-center gap-3">
             {isAuthenticated ? (
                 <>
-                    <span className="text-sm font-bold text-slate-700 hidden lg:inline">
+                    <Link href="/dashboard" className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-emerald-600 transition-all px-4">
+                        Dashboard
+                    </Link>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 hidden lg:inline border-l border-slate-200 pl-4 py-1">
                         Hi, {user?.name.split(' ')[0]}
                     </span>
                     <Button variant="secondary" size="sm" onClick={() => logout()}>

@@ -1,0 +1,141 @@
+import { Listing, ListingStatus, PropertyType } from '@repo/types';
+
+export const mockListings: Listing[] = [
+    {
+        id: '1', tenantId: 't1', slug: 'waterfront-penthouse',
+        title: 'Waterfront Penthouse', description: 'Stunning corner penthouse with panoramic harbour views.',
+        price: 4250000, currency: 'CAD', bedrooms: 3, bathrooms: 4, squareFootage: 3200, yearBuilt: 2022,
+        propertyType: PropertyType.CONDO, status: ListingStatus.ACTIVE,
+        address: '88 Queens Quay W', city: 'Toronto', province: 'ON', postalCode: 'M5J 0B8',
+        mainImage: '/images/templates/prop1.jpg', images: ['/images/templates/prop1.jpg'],
+        features: ['Private Elevator'], amenities: ['Pool'],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: 'premium-1', tenantId: 't1', slug: 'premium-property-1',
+        title: 'Premium Property 1', description: 'Architectural masterpiece with panoramic city views and bespoke interior design.',
+        price: 5250000, currency: 'CAD', bedrooms: 4, bathrooms: 5, squareFootage: 4200, yearBuilt: 2023,
+        propertyType: PropertyType.DETACHED, status: ListingStatus.ACTIVE,
+        address: '12 Peak View Rd', city: 'Toronto', province: 'ON', postalCode: 'M5V 2N8',
+        mainImage: '/images/templates/prop1.jpg', images: ['/images/templates/prop1.jpg'],
+        features: ['Wine Cellar', 'Infinity Pool', 'Home Cinema'], amenities: ['Private Security', 'Valet Parking'],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: 'oriole-24', tenantId: 't1', slug: '24-oriole-road',
+        title: '24 Oriole Road', description: 'Iconic architectural masterpiece featuring a stunning open-concept design.',
+        price: 4250000, currency: 'CAD', bedrooms: 4, bathrooms: 5, squareFootage: 3524, yearBuilt: 2018,
+        propertyType: PropertyType.DETACHED, status: ListingStatus.ACTIVE,
+        address: '24 Oriole Road', city: 'Toronto', province: 'ON', postalCode: 'M4V 2E8',
+        mainImage: '/images/templates/prop2.jpg', images: ['/images/templates/prop2.jpg'],
+        features: ['Walk-out Basement'], amenities: ['Top Schools'],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '2', tenantId: 't1', slug: 'modern-family-home',
+        title: 'Modern Family Estate', description: 'Architecturally designed home with open-concept living.',
+        price: 2890000, currency: 'CAD', bedrooms: 5, bathrooms: 4, squareFootage: 4800, yearBuilt: 2021,
+        propertyType: PropertyType.DETACHED, status: ListingStatus.ACTIVE,
+        address: '24 Oriole Rd', city: 'Toronto', province: 'ON', postalCode: 'M4V 2E5',
+        mainImage: '/images/templates/prop2.jpg', images: ['/images/templates/prop2.jpg'],
+        features: ['Pool'], amenities: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '3', tenantId: 't1', slug: 'downtown-loft',
+        title: 'Industrial-Chic Loft', description: 'Converted warehouse loft with soaring 16ft ceilings.',
+        price: 1150000, currency: 'CAD', bedrooms: 2, bathrooms: 2, squareFootage: 1800, yearBuilt: 2019,
+        propertyType: PropertyType.CONDO, status: ListingStatus.PENDING,
+        address: '55 Niagara St', city: 'Toronto', province: 'ON', postalCode: 'M5V 1C3',
+        mainImage: '/images/templates/prop3.jpg', images: ['/images/templates/prop3.jpg'],
+        features: ['Exposed Brick'], amenities: ['Rooftop Terrace'],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '4', tenantId: 't1', slug: 'lakeside-cottage',
+        title: 'Lakeside Heritage Cottage', description: 'Charming lakefront property with private dock.',
+        price: 1750000, currency: 'CAD', bedrooms: 4, bathrooms: 3, squareFootage: 3100, yearBuilt: 1998,
+        propertyType: PropertyType.DETACHED, status: ListingStatus.ACTIVE,
+        address: '12 Lakeshore Blvd', city: 'Muskoka', province: 'ON', postalCode: 'P1B 8G4',
+        mainImage: '/images/templates/prop4.jpg', images: ['/images/templates/prop4.jpg'],
+        features: ['Private Dock'], amenities: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '5', tenantId: 't1', slug: 'urban-townhouse',
+        title: 'Urban Designer Townhouse', description: 'Sleek 3-storey townhouse in a vibrant neighbourhood.',
+        price: 1495000, currency: 'CAD', bedrooms: 3, bathrooms: 3, squareFootage: 2200, yearBuilt: 2023,
+        propertyType: PropertyType.TOWNHOUSE, status: ListingStatus.ACTIVE,
+        address: '190 Dovercourt Rd', city: 'Toronto', province: 'ON', postalCode: 'M6J 3C8',
+        mainImage: '/images/templates/prop5.jpg', images: ['/images/templates/prop5.jpg'],
+        features: ['Rooftop Patio'], amenities: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '6', tenantId: 't1', slug: 'luxury-condo-yorkville',
+        title: 'Yorkville Luxury Condo', description: 'Ultra-premium condo in Torontos most prestigious neighbourhood.',
+        price: 5600000, currency: 'CAD', bedrooms: 2, bathrooms: 3, squareFootage: 2600, yearBuilt: 2024,
+        propertyType: PropertyType.CONDO, status: ListingStatus.ACTIVE,
+        address: '1 Bloor St E', city: 'Toronto', province: 'ON', postalCode: 'M4W 1A9',
+        mainImage: '/images/templates/prop6.jpg', images: ['/images/templates/prop6.jpg'],
+        features: ['Private Terrace'], amenities: ['Spa'],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '7', tenantId: 't1', slug: 'commercial-space-king',
+        title: 'King West Commercial Space', description: 'Prime retail/office space in King West.',
+        price: 3200000, currency: 'CAD', bedrooms: 0, bathrooms: 2, squareFootage: 5000, yearBuilt: 2020,
+        propertyType: PropertyType.COMMERCIAL, status: ListingStatus.ACTIVE,
+        address: '400 King St W', city: 'Toronto', province: 'ON', postalCode: 'M5V 1K2',
+        mainImage: '/images/templates/prop7.jpg', images: ['/images/templates/prop7.jpg'],
+        features: ['Street Level'], amenities: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+    {
+        id: '8', tenantId: 't1', slug: 'forest-hill-mansion',
+        title: 'Forest Hill Grand Mansion', description: 'An architectural masterpiece on a private 1-acre lot.',
+        price: 12500000, currency: 'CAD', bedrooms: 7, bathrooms: 9, squareFootage: 12000, yearBuilt: 2023,
+        propertyType: PropertyType.DETACHED, status: ListingStatus.SOLD,
+        address: '100 Old Forest Hill Rd', city: 'Toronto', province: 'ON', postalCode: 'M5P 2R5',
+        mainImage: '/images/templates/prop8.jpg', images: ['/images/templates/prop8.jpg'],
+        features: ['Indoor Pool'], amenities: [],
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        organizationId: '',
+        mlsNumber: '',
+        agentName: ''
+    },
+];
+
+export const mockAgents = [
+    { id: '1', name: 'Sarah Mitchell', title: 'Senior Agent', phone: '(416) 555-0101', email: 'sarah@realty.com', image: '/images/templates/agent1.jpg', listings: 45 },
+    { id: '2', name: 'James Chen', title: 'Luxury Specialist', phone: '(416) 555-0102', email: 'james@realty.com', image: '/images/templates/agent2.jpg', listings: 38 },
+    { id: '3', name: 'Maria Rodriguez', title: 'Broker of Record', phone: '(416) 555-0103', email: 'maria@realty.com', image: '/images/templates/agent3.jpg', listings: 62 },
+    { id: '4', name: 'David Park', title: 'Commercial Division', phone: '(416) 555-0104', email: 'david@realty.com', image: '/images/templates/agent4.jpg', listings: 29 },
+];

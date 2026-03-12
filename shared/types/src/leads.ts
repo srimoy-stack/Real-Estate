@@ -1,14 +1,16 @@
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'closed_won' | 'closed_lost';
+export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Closed';
 
 export interface Lead {
     id: string;
+    websiteId: string;
+    agentId?: string; // Assigned agent
     name: string;
     email: string;
     phone: string;
+    message: string;
+    mlsNumber?: string;
     source: string;
-    listingReference?: string;
     status: LeadStatus;
-    assignedTo?: string; // Team Member Name/ID
     notes: { id: string; text: string; author: string; createdAt: string }[];
     createdAt: string;
     updatedAt: string;

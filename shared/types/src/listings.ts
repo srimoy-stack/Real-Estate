@@ -17,7 +17,13 @@ export enum PropertyType {
 }
 
 export interface Listing extends BaseEntity {
-    tenantId: string;
+    organizationId: string;
+    tenantId?: string; // Some data uses tenantId instead of organizationId
+    mlsNumber: string;
+    agentName: string;
+    agentPhone?: string;
+    agentEmail?: string;
+    brokerageName?: string;
     externalId?: string; // e.g. CREA DDF ID
     slug: string;
     title: string;
@@ -26,24 +32,21 @@ export interface Listing extends BaseEntity {
     currency: string;
     bedrooms: number;
     bathrooms: number;
-    squareFeet?: number;
+    squareFootage?: number;
+    squareFeet?: number; // Alias used in templates
     lotSize?: number;
     yearBuilt?: number;
     propertyType: PropertyType;
     status: ListingStatus;
+    isFeatured?: boolean;
 
     // Address
-    address: {
-        unit?: string;
-        street: string;
-        city: string;
-        province: string;
-        postalCode: string;
-        coordinates?: {
-            lat: number;
-            lng: number;
-        };
-    };
+    address: string; // Simplified string representation for quick rendering
+    city: string;
+    province: string;
+    postalCode: string;
+    latitude?: number;
+    longitude?: number;
 
     // Media
     mainImage: string;

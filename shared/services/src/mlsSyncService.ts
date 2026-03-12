@@ -75,6 +75,7 @@ export class MlsSyncService {
         const metrics: SyncMetrics = { newListings: 0, updatedListings: 0, removedListings: 0 };
 
         const activeMlsNumbers = new Set<string>();
+        const newListingsMatchedAlerts: InternalListing[] = [];
 
         // Process Incoming Feed
         for (const raw of rawListings) {
@@ -87,13 +88,16 @@ export class MlsSyncService {
 
             // 3. Insert new listings if the MLS number does not exist
             if (!existingListing) {
-                this.insertListing({
+                const newListing = {
                     ...parsed,
                     id: `local-${parsed.mlsNumber}`,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     isFeatured: false,
-                } as InternalListing);
+                } as InternalListing;
+
+                this.insertListing(newListing);
+                newListingsMatchedAlerts.push(newListing);
                 metrics.newListings++;
                 continue;
             }
@@ -118,6 +122,11 @@ export class MlsSyncService {
             }
         }
 
+        // 6. Alert Users for New Matches
+        if (newListingsMatchedAlerts.length > 0) {
+            await this.processPropertyAlerts(newListingsMatchedAlerts);
+        }
+
         // 7. Log sync results
         console.log('[MLS Sync] Sync Job Complete.');
         console.log(`[MLS Sync] New Listings: ${metrics.newListings}`);
@@ -130,6 +139,41 @@ export class MlsSyncService {
         }
 
         return metrics;
+    }
+
+    /**
+     * Matches new listings against all saved searches and triggers notifications.
+     */
+    private async processPropertyAlerts(newListings: InternalListing[]) {
+        const { userSavedItemService } = await import('./userSavedItemService');
+        const allSavedSearches = userSavedItemService.getAllSavedSearches();
+
+        console.log(`[MLS Alerts] Processing alerts for ${newListings.length} new listings against ${allSavedSearches.length} saved searches...`);
+
+        for (const search of allSavedSearches) {
+            const matches = newListings.filter(listing => {
+                const f = search.filters;
+
+                if (f.city && listing.city.toLowerCase() !== f.city.toLowerCase()) return false;
+                if (f.minPrice && listing.price < f.minPrice) return false;
+                if (f.maxPrice && listing.price > f.maxPrice) return false;
+                if (f.bedrooms && listing.bedrooms < f.bedrooms) return false;
+                if (f.bathrooms && listing.bathrooms < f.bathrooms) return false;
+                if (f.propertyType && f.propertyType.length > 0 && !f.propertyType.map(t => t.toString().toLowerCase()).includes(listing.propertyType.toLowerCase())) return false;
+
+                return true;
+            });
+
+            if (matches.length > 0) {
+                console.log(`[MLS Alerts] NOTIFY USER ${search.userId}: ${matches.length} matches found for search "${search.name}"`);
+                matches.forEach(m => {
+                    console.log(`   - MATCH: ${m.mlsNumber} (${m.address}) - $${m.price}`);
+                });
+
+                // Simulate SMTP / SendGrid call
+                console.log(`[EMAIL] Sending "New Listings Match Your Search" email to user ${search.userId}...`);
+            }
+        }
     }
 
     /**

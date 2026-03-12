@@ -1,16 +1,18 @@
 import { apiClient } from '@repo/api-client';
 import { useNotificationStore } from './notificationStore';
-
-export enum OrgType {
-    // ... existing enums ...
-    BROKERAGE = 'BROKERAGE',
-    AGENT = 'AGENT'
-}
+import { Organization, OrganizationType, TenantTemplate } from '@repo/types';
+import { templateAssignmentService } from './templateAssignmentService';
 
 export enum SubscriptionPlan {
     BASIC = 'BASIC',
     PREMIUM = 'PREMIUM',
     ENTERPRISE = 'ENTERPRISE'
+}
+
+export enum OrgType {
+    BROKERAGE = 'BROKERAGE',
+    INDIVIDUAL_AGENT = 'INDIVIDUAL_AGENT',
+    AGENT = 'INDIVIDUAL_AGENT' // Support for legacy references
 }
 
 export enum OrgStatus {
@@ -25,91 +27,45 @@ export enum DDFStatus {
     ERROR = 'ERROR'
 }
 
-export interface Organization {
-    id: string;
-    name: string;
-    type: OrgType;
-    template: string;
+export interface OrganizationDashboardItem extends Organization {
     domain: string;
+    template: string;
     ddfStatus: DDFStatus;
     leads30d: number;
     subscriptionPlan: SubscriptionPlan;
     status: OrgStatus;
-    createdAt: string;
-    modules?: {
-        listings: boolean;
-        mapSearch: boolean;
-        blog: boolean;
-        leadCRM: boolean;
-        emailNotifications: boolean;
-        sms: boolean;
-        analytics: boolean;
-        teamManagement: boolean;
-        neighborhoodPages: boolean;
-    };
     adminEmail?: string;
-    legalName?: string;
-    allowedTemplates: string[];
+    allowedTemplates?: string[];
+    modules?: Record<string, boolean>;
 }
 
-// Mock Table: TenantTemplates
-// In a real app this would be a DB table.
-export interface TenantTemplate {
-    id: string;
-    tenantId: string;
-    templateId: string;
-    assignedBy: string;
-    createdAt: string;
-}
-
-let mockTenantTemplates: TenantTemplate[] = [
-    { id: 'tt-1', tenantId: 'org-1', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2023-10-15T10:00:00Z' },
-    { id: 'tt-2', tenantId: 'org-1', templateId: 'minimal-realty', assignedBy: 'super-admin', createdAt: '2023-10-15T10:00:00Z' },
-    { id: 'tt-3', tenantId: 'org-2', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2023-11-02T14:30:00Z' },
-    { id: 'tt-4', tenantId: 'TENANT_1', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-    { id: 'tt-5', tenantId: 'TENANT_1', templateId: 'luxury-estate', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-    { id: 'tt-6', tenantId: 'tenant_7721', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-    { id: 'tt-7', tenantId: 'tenant_7721', templateId: 'modern-realty', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-    { id: 'tt-8', tenantId: 'TENANT_1', templateId: 'agent-portfolio', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-    { id: 'tt-9', tenantId: 'TENANT_1', templateId: 'corporate-brokerage', assignedBy: 'super-admin', createdAt: '2024-03-10T10:00:00Z' },
-];
-
-export const getAssignedTemplates = async (tenantId: string): Promise<TenantTemplate[]> => {
-    return mockTenantTemplates.filter(t => t.tenantId === tenantId);
+export const getAssignedTemplates = async (organizationId: string): Promise<TenantTemplate[]> => {
+    return templateAssignmentService.getTemplatesByTenant(organizationId);
 };
 
-export const assignTemplateToTenant = async (tenantId: string, templateId: string, assignedBy: string): Promise<TenantTemplate> => {
-    const newEntry: TenantTemplate = {
-        id: `tt-${Math.random().toString(36).substr(2, 9)}`,
-        tenantId,
-        templateId,
-        assignedBy,
-        createdAt: new Date().toISOString()
-    };
-    mockTenantTemplates.push(newEntry);
-
-    // Also update the Organization allowedTemplates for legacy compatibility if needed
-    // In a real app, allowedTemplates might be a computed field from this table
-    return newEntry;
+export const assignTemplateToOrganization = async (organizationId: string, templateId: string, assignedBy: string): Promise<TenantTemplate> => {
+    return templateAssignmentService.assignTemplate({ organizationId, templateId, adminId: assignedBy });
 };
-
 
 export interface GetOrgsParams {
     page: number;
     limit: number;
     search?: string;
-    type?: OrgType;
+    type?: OrganizationType;
     status?: OrgStatus;
     subscription?: SubscriptionPlan;
 }
 
 export interface GetOrgsResponse {
-    items: Organization[];
+    items: OrganizationDashboardItem[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
 }
+
+// ─── Onboarding Wizard Payload ────────────────────────
+
 
 export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsResponse> => {
     try {
@@ -117,94 +73,156 @@ export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsRe
         return response.data;
     } catch (error) {
         // Mock data for demo/onboarding
-        const items: Organization[] = [
+        const items: OrganizationDashboardItem[] = [
             {
                 id: 'org-1',
                 name: 'Skyline Real Estate',
-                type: OrgType.BROKERAGE,
-                template: 'modern-realty',
-                domain: 'skyline-demo.realestate.com',
+                type: 'BROKERAGE',
+                email: 'contact@skyline.com',
+                phone: '555-0101',
+                timezone: 'America/New_York',
                 ddfStatus: DDFStatus.HEALTHY,
                 leads30d: 452,
                 subscriptionPlan: SubscriptionPlan.ENTERPRISE,
                 status: OrgStatus.ACTIVE,
                 createdAt: '2023-10-15T10:00:00Z',
+                updatedAt: '2024-03-01T12:00:00Z',
                 adminEmail: 'admin@skyline.com',
-                allowedTemplates: ['modern-realty', 'minimal-realty', 'corporate-brokerage'],
-                modules: {
-                    listings: true, mapSearch: true, blog: true, leadCRM: true,
-                    emailNotifications: true, sms: true, analytics: true,
-                    teamManagement: true, neighborhoodPages: true
-                }
+                isActive: true,
+                domain: 'skyline.realty',
+                template: 'modern-realty',
+                allowedTemplates: ['modern-realty', 'luxury-estate', 'corporate-brokerage'],
+                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
             },
             {
                 id: 'org-2',
-                name: 'Jane Doe Properties',
-                type: OrgType.AGENT,
-                template: 'agent-portfolio',
-                domain: 'janedoe.com',
+                name: 'John Smith Realty',
+                type: 'INDIVIDUAL_AGENT',
+                email: 'john@smithrealty.com',
+                phone: '555-0102',
+                timezone: 'America/Toronto',
                 ddfStatus: DDFStatus.WARNING,
                 leads30d: 87,
                 subscriptionPlan: SubscriptionPlan.PREMIUM,
                 status: OrgStatus.ACTIVE,
                 createdAt: '2023-11-02T14:30:00Z',
-                adminEmail: 'jane@properties.com',
-                allowedTemplates: ['agent-portfolio', 'minimal-realty'],
-                modules: {
-                    listings: true, mapSearch: true, blog: false, leadCRM: true,
-                    emailNotifications: true, sms: false, analytics: true,
-                    teamManagement: false, neighborhoodPages: false
-                }
+                updatedAt: '2024-03-11T09:00:00Z',
+                adminEmail: 'john@smithrealty.com',
+                isActive: true,
+                domain: 'johnsmith.agent',
+                template: 'agent-portfolio',
+                allowedTemplates: ['agent-portfolio'],
+                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: false, agentPortals: false }
             },
             {
                 id: 'org-3',
-                name: 'Metro Listings',
-                type: OrgType.BROKERAGE,
-                template: 'corporate-brokerage',
-                domain: 'metro.realestate.ca',
-                ddfStatus: DDFStatus.ERROR,
-                leads30d: 312,
-                subscriptionPlan: SubscriptionPlan.BASIC,
-                status: OrgStatus.SUSPENDED,
-                createdAt: '2023-09-20T08:15:00Z',
-                adminEmail: 'support@metro.ca',
-                allowedTemplates: ['corporate-brokerage', 'minimal-realty'],
-                modules: {
-                    listings: true, mapSearch: false, blog: true, leadCRM: false,
-                    emailNotifications: false, sms: false, analytics: true,
-                    teamManagement: true, neighborhoodPages: false
-                }
+                name: 'Coastal Properties',
+                type: 'BROKERAGE',
+                email: 'info@coastalprop.com',
+                phone: '555-0103',
+                timezone: 'America/Los_Angeles',
+                ddfStatus: DDFStatus.HEALTHY,
+                leads30d: 1240,
+                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
+                status: OrgStatus.ACTIVE,
+                createdAt: '2023-08-20T10:00:00Z',
+                updatedAt: '2024-03-10T15:00:00Z',
+                adminEmail: 'admin@coastalprop.com',
+                isActive: true,
+                domain: 'coastal.properties',
+                template: 'luxury-estate',
+                allowedTemplates: ['modern-realty', 'luxury-estate'],
+                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
             },
             {
                 id: 'org-4',
-                name: 'Coastal Homes',
-                type: OrgType.BROKERAGE,
-                template: 'luxury-estate',
-                domain: 'coastalhomes.com',
+                name: 'Urban Living',
+                type: 'BROKERAGE',
+                email: 'hello@urbanliving.com',
+                phone: '555-0104',
+                timezone: 'America/Chicago',
+                ddfStatus: DDFStatus.ERROR,
+                leads30d: 56,
+                subscriptionPlan: SubscriptionPlan.BASIC,
+                status: OrgStatus.SUSPENDED,
+                createdAt: '2024-01-10T09:00:00Z',
+                updatedAt: '2024-03-05T11:00:00Z',
+                adminEmail: 'support@urbanliving.com',
+                isActive: false,
+                domain: 'urbanliving.site',
+                template: 'minimal-realty',
+                allowedTemplates: ['minimal-realty'],
+                modules: { ddfSync: true, leadCRM: false, advancedAnalytics: false, agentPortals: false }
+            },
+            {
+                id: 'org-5',
+                name: 'Sarah Miller',
+                type: 'INDIVIDUAL_AGENT',
+                email: 'sarah@millerrealty.ca',
+                phone: '555-0105',
+                timezone: 'America/Vancouver',
                 ddfStatus: DDFStatus.HEALTHY,
-                leads30d: 156,
+                leads30d: 210,
                 subscriptionPlan: SubscriptionPlan.PREMIUM,
+                status: OrgStatus.ACTIVE,
+                createdAt: '2023-12-05T14:00:00Z',
+                updatedAt: '2024-03-12T08:00:00Z',
+                adminEmail: 'sarah@millerrealty.ca',
+                isActive: true,
+                domain: 'sarahmiller.realtor',
+                template: 'agent-portfolio',
+                allowedTemplates: ['agent-portfolio', 'minimal-realty'],
+                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: false, agentPortals: false }
+            },
+            {
+                id: 'org-6',
+                name: 'Summit Estates',
+                type: 'BROKERAGE',
+                email: 'contact@summitestates.com',
+                phone: '555-0106',
+                timezone: 'America/Denver',
+                ddfStatus: DDFStatus.WARNING,
+                leads30d: 890,
+                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
+                status: OrgStatus.ACTIVE,
+                createdAt: '2023-09-15T11:00:00Z',
+                updatedAt: '2024-03-11T16:00:00Z',
+                adminEmail: 'admin@summitestates.com',
+                isActive: true,
+                domain: 'summit.estates',
+                template: 'corporate-brokerage',
+                allowedTemplates: ['corporate-brokerage', 'modern-realty'],
+                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
+            },
+            {
+                id: 'org-7',
+                name: 'Lakeside Realty',
+                type: 'BROKERAGE',
+                email: 'office@lakesiderea.com',
+                phone: '555-0107',
+                timezone: 'America/Detroit',
+                ddfStatus: DDFStatus.HEALTHY,
+                leads30d: 342,
+                subscriptionPlan: SubscriptionPlan.BASIC,
                 status: OrgStatus.INACTIVE,
-                createdAt: '2024-01-10T12:00:00Z',
-                adminEmail: 'office@coastal.com',
-                allowedTemplates: ['luxury-estate', 'modern-realty', 'agent-portfolio'],
-                modules: {
-                    listings: true, mapSearch: true, blog: true, leadCRM: true,
-                    emailNotifications: true, sms: false, analytics: true,
-                    teamManagement: true, neighborhoodPages: true
-                }
+                createdAt: '2024-02-01T10:00:00Z',
+                updatedAt: '2024-02-01T10:00:00Z',
+                adminEmail: 'manager@lakesiderea.com',
+                isActive: false,
+                domain: 'lakeside.realty',
+                template: 'modern-realty',
+                allowedTemplates: ['modern-realty'],
+                modules: { ddfSync: true, leadCRM: false, advancedAnalytics: false, agentPortals: false }
             }
         ];
 
-        // Filter by search
         let filtered = items;
         if (params.search) {
             const s = params.search.toLowerCase();
-            filtered = filtered.filter(o => o.name.toLowerCase().includes(s) || o.domain.toLowerCase().includes(s));
+            filtered = filtered.filter(o => o.name.toLowerCase().includes(s));
         }
         if (params.type) filtered = filtered.filter(o => o.type === params.type);
         if (params.status) filtered = filtered.filter(o => o.status === params.status);
-        if (params.subscription) filtered = filtered.filter(o => o.subscriptionPlan === params.subscription);
 
         return {
             items: filtered,
@@ -231,24 +249,6 @@ export const updateOrgStatus = async (id: string, status: OrgStatus): Promise<vo
             message: 'Could not update organization status'
         });
         throw error;
-    }
-};
-
-export const updateOrganization = async (id: string, data: Partial<Organization>): Promise<void> => {
-    try {
-        await apiClient.put(`/super-admin/organizations/${id}`, data);
-        useNotificationStore.getState().addNotification({
-            type: 'success',
-            title: 'Organization Updated',
-            message: 'All changes have been saved successfully.'
-        });
-    } catch (error) {
-        // Mock success for demo
-        useNotificationStore.getState().addNotification({
-            type: 'success',
-            title: 'Organization Updated (Mock)',
-            message: 'Changes saved locally (Mock API).'
-        });
     }
 };
 

@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+import { LeadForm } from '@repo/ui';
+import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
 
 export const metadata: Metadata = {
     title: 'Contact Us | Get in Touch with Our Real Estate Experts',
@@ -6,6 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+    const website = getWebsiteFromHeaders();
+
     return (
         <div className="min-h-screen bg-white">
             {/* Top Accent Strip */}
@@ -25,72 +29,11 @@ export default function ContactPage() {
                             </p>
                         </div>
 
-                        <form className="space-y-6">
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div className="space-y-1.5">
-                                    <label htmlFor="first-name" className="text-xs font-black uppercase tracking-widest text-gray-400">First Name</label>
-                                    <input
-                                        type="text"
-                                        id="first-name"
-                                        autoComplete="given-name"
-                                        className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-gray-900 font-bold focus:bg-white focus:border-emerald-500 outline-none transition-all"
-                                        placeholder="Julianne"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label htmlFor="last-name" className="text-xs font-black uppercase tracking-widest text-gray-400">Last Name</label>
-                                    <input
-                                        type="text"
-                                        id="last-name"
-                                        autoComplete="family-name"
-                                        className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-gray-900 font-bold focus:bg-white focus:border-emerald-500 outline-none transition-all"
-                                        placeholder="Reed"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-gray-400">Email Address</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    autoComplete="email"
-                                    className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-gray-900 font-bold focus:bg-white focus:border-emerald-500 outline-none transition-all"
-                                    placeholder="julianne@example.com"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label htmlFor="subject" className="text-xs font-black uppercase tracking-widest text-gray-400">Subject</label>
-                                <select
-                                    id="subject"
-                                    className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-gray-900 font-bold focus:bg-white focus:border-emerald-500 outline-none transition-all appearance-none"
-                                >
-                                    <option>General Inquiry</option>
-                                    <option>Buying a Home</option>
-                                    <option>Selling a Home</option>
-                                    <option>Careers</option>
-                                    <option>Media & Press</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label htmlFor="message" className="text-xs font-black uppercase tracking-widest text-gray-400">Message</label>
-                                <textarea
-                                    id="message"
-                                    rows={6}
-                                    className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-5 py-4 text-gray-900 font-bold focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none"
-                                    placeholder="Tell us what you're looking for..."
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-[0.98]"
-                            >
-                                Send Message
-                            </button>
-                        </form>
+                        <LeadForm
+                            websiteId={website?.id || 'ws-1'}
+                            source="Contact Page"
+                            title="Send us a Message"
+                        />
                     </div>
 
                     {/* Right Column: Info */}

@@ -2,5 +2,3 @@
   command = "cd ../.. && npx turbo build --filter=client-admin"
   publish = ".next"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"

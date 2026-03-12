@@ -1,715 +1,1134 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { SectionConfig, SectionType, WebsiteInstance, ShortcodeConfig } from '@repo/types';
-import { SectionRenderer, Navbar, Footer } from '@repo/ui';
-import { getWebsiteByAgentId, updateWebsiteInstance, shortcodeConfigService } from '@repo/services';
+import React from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Editor, Frame, Element, useEditor } from '@craftjs/core';
+import {
+    HeroSection,
+    ListingsSection,
+    AgentProfilesSection,
+    ContactSection,
+    TextSection,
+    ImageSection,
+    HeadingSection,
+    SpacerSection,
+    DividerSection,
+    ButtonSection,
+    VideoSection,
+    TestimonialsSection,
+    StatsSection,
+    FAQSection,
+    NewsletterSection,
+    GallerySection,
+    MapSection,
+} from '@/components/builder/CraftSections';
+import { websiteInstanceService, PLATFORM_TEMPLATES, useNotificationStore, orgWebsiteService } from '@repo/services';
+import { TemplateProvider } from '@repo/ui';
 
-// Field labels/descriptions logic for builder
-const FIELD_PROFILES: Record<string, { label: string; placeholder: string; type: 'text' | 'textarea' | 'image' | 'shortcode' }> = {
-    headline: { label: 'Primary Headline', placeholder: 'Enter a bold headline...', type: 'textarea' },
-    subheadline: { label: 'Supporting Subline', placeholder: 'Add more context...', type: 'textarea' },
-    buttonText: { label: 'Action Button Label', placeholder: 'e.g. Call Now', type: 'text' },
-    bgImage: { label: 'Background Image Path', placeholder: '/images/hero.jpg', type: 'image' },
-    title: { label: 'Section Title', placeholder: 'e.g. Recent Success', type: 'text' },
-    subtitle: { label: 'Section Subtitle', placeholder: 'Small descriptive text...', type: 'text' },
-    maxItems: { label: 'Items to Show', placeholder: '6', type: 'text' },
-    shortcodeName: { label: 'Listing Source (Shortcode)', placeholder: 'Select a filter config...', type: 'shortcode' },
-    shortcode: { label: 'Dynamic Listing Shortcode', placeholder: '[listings city="Toronto"]', type: 'shortcode' },
+// Explicit resolver map for Craft.js — every component must be listed here
+const Sections: Record<string, any> = {
+    HeroSection,
+    ListingsSection,
+    AgentProfilesSection,
+    ContactSection,
+    TextSection,
+    ImageSection,
+    HeadingSection,
+    SpacerSection,
+    DividerSection,
+    ButtonSection,
+    VideoSection,
+    TestimonialsSection,
+    StatsSection,
+    FAQSection,
+    NewsletterSection,
+    GallerySection,
+    MapSection,
 };
 
-const SECTION_TYPES_METADATA: Record<SectionType, { name: string; description: string; icon: string }> = {
-    hero: { name: 'Hero Header', description: 'Impact visual with call-to-action', icon: 'H' },
-    featured_listings: { name: 'Properties', description: 'Dynamic listing showcase', icon: 'L' },
-    how_it_works: { name: 'Workflow', description: 'Process steps for clients', icon: 'W' },
-    testimonials: { name: 'Social Proof', description: 'Client reviews and ratings', icon: 'T' },
-    stats: { name: 'Metrics', description: 'Sales and success counters', icon: 'S' },
-    contact_cta: { name: 'Contact Trigger', description: 'Persistent conversion banner', icon: 'C' },
-    blog_preview: { name: 'Insights', description: 'Latest market news feed', icon: 'B' },
-    newsletter: { name: 'Lead Grab', description: 'Email subscription capture', icon: 'N' },
-    about_banner: { name: 'About', description: 'Professional biography/intro', icon: 'A' },
-    gallery: { name: 'Gallery', description: 'Visual asset showcase', icon: 'G' },
-    communities: { name: 'Communities', description: 'Neighborhood focus areas', icon: 'P' }
+// --- TYPE MAP: template section types → Craft component names ---
+const SECTION_TYPE_MAP: Record<string, string> = {
+    'hero': 'HeroSection',
+    'listings': 'ListingsSection',
+    'about': 'TextSection',
+    'text': 'TextSection',
+    'heading': 'HeadingSection',
+    'contact': 'ContactSection',
+    'team': 'AgentProfilesSection',
+    'agent_profiles': 'AgentProfilesSection',
+    'agents': 'AgentProfilesSection',
+    'testimonials': 'TestimonialsSection',
+    'communities': 'TextSection',
+    'blog': 'TextSection',
+    'footer': 'ContactSection',
+    'image': 'ImageSection',
+    'video': 'VideoSection',
+    'gallery': 'GallerySection',
+    'spacer': 'SpacerSection',
+    'divider': 'DividerSection',
+    'button': 'ButtonSection',
+    'stats': 'StatsSection',
+    'faq': 'FAQSection',
+    'newsletter': 'NewsletterSection',
+    'map': 'MapSection',
 };
 
-export default function WebsiteBuilderPage() {
-    const searchParams = useSearchParams();
-    const agentId = searchParams.get('agentId');
+// --- TOOLBOX ---
+const Toolbox = () => {
+    const { connectors } = useEditor();
 
-    // Website Instance State
-    const [instance, setInstance] = useState<WebsiteInstance | null>(null);
-    const [sections, setSections] = useState<SectionConfig[]>([]);
-    const [branding, setBranding] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const layoutTools = [
+        { type: 'HeadingSection', label: 'Heading', icon: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z', color: 'violet' },
+        { type: 'TextSection', label: 'Text', icon: 'M4 6h16M4 12h16m-7 6h7', color: 'violet' },
+        { type: 'SpacerSection', label: 'Spacer', icon: 'M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4', color: 'violet' },
+        { type: 'DividerSection', label: 'Divider', icon: 'M20 12H4', color: 'violet' },
+        { type: 'ButtonSection', label: 'Button', icon: 'M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5', color: 'violet' },
+    ];
 
-    // UI State
-    const [editingSection, setEditingSection] = useState<SectionConfig | null>(null);
-    const [previewMode, setPreviewMode] = useState(false);
-    const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const contentTools = [
+        { type: 'HeroSection', label: 'Hero', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z', color: 'indigo' },
+        { type: 'ImageSection', label: 'Image', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'indigo' },
+        { type: 'VideoSection', label: 'Video', icon: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'indigo' },
+        { type: 'GallerySection', label: 'Gallery', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', color: 'indigo' },
+        { type: 'ListingsSection', label: 'Listings', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', color: 'indigo' },
+        { type: 'MapSection', label: 'Map', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z', color: 'indigo' },
+    ];
 
-    // Shortcode Management State
-    const [shortcodes, setShortcodes] = useState<ShortcodeConfig[]>([]);
-    const [showShortcodeManager, setShowShortcodeManager] = useState(false);
-    const [editingShortcode, setEditingShortcode] = useState<Partial<ShortcodeConfig> | null>(null);
+    const interactiveTools = [
+        { type: 'AgentProfilesSection', label: 'Agents', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', color: 'emerald' },
+        { type: 'TestimonialsSection', label: 'Reviews', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', color: 'emerald' },
+        { type: 'StatsSection', label: 'Stats', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', color: 'emerald' },
+        { type: 'FAQSection', label: 'FAQ', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'emerald' },
+        { type: 'ContactSection', label: 'Contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', color: 'emerald' },
+        { type: 'NewsletterSection', label: 'Newsletter', icon: 'M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76', color: 'emerald' },
+    ];
 
-    useEffect(() => {
-        const fetchInstance = async () => {
-            if (!agentId) return;
-            try {
-                const ws = await getWebsiteByAgentId(agentId);
-                if (ws) {
-                    setInstance(ws);
-                    setSections(ws.layoutConfig?.sections || []);
-                    setBranding(ws.brandingConfig || {});
-
-                    // Fetch associated shortcodes
-                    const configs = shortcodeConfigService.getConfigs({
-                        websiteId: ws.id,
-                        tenantId: ws.tenantId,
-                        role: 'client_admin'
-                    });
-                    setShortcodes(configs);
-                }
-            } catch (err) {
-                console.error('Failed to load website instance', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchInstance();
-    }, [agentId]);
-
-    const handleSave = async () => {
-        if (!instance) return;
-        setSaving(true);
-        try {
-            await updateWebsiteInstance(instance.id, {
-                layoutConfig: { ...instance.layoutConfig, sections },
-                brandingConfig: branding
-            });
-            alert('Website Synchronized Successfully!');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setSaving(false);
-        }
+    const colorMap: Record<string, { bg: string; hoverBorder: string; hoverBg: string; hoverText: string }> = {
+        violet: { bg: 'bg-violet-50', hoverBorder: 'hover:border-violet-400', hoverBg: 'group-hover:bg-violet-100', hoverText: 'group-hover:text-violet-600' },
+        indigo: { bg: 'bg-indigo-50', hoverBorder: 'hover:border-indigo-400', hoverBg: 'group-hover:bg-indigo-100', hoverText: 'group-hover:text-indigo-600' },
+        emerald: { bg: 'bg-emerald-50', hoverBorder: 'hover:border-emerald-400', hoverBg: 'group-hover:bg-emerald-100', hoverText: 'group-hover:text-emerald-600' },
     };
 
-    const toggleVisibility = (id: string) => {
-        setSections(sections.map(s => s.id === id ? { ...s, isVisible: !s.isVisible } : s));
-    };
-
-    const moveSection = (index: number, direction: 'up' | 'down') => {
-        const newSections = [...sections];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= sections.length) return;
-        [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
-        setSections(newSections.map((s, i) => ({ ...s, order: i })));
-    };
-
-    const updateSectionContent = (id: string, field: string, value: string) => {
-        setSections(sections.map(s => {
-            if (s.id === id) {
-                return { ...s, content: { ...s.content, [field]: value } };
-            }
-            return s;
-        }));
-    };
-
-    if (loading) return <div className="p-20 text-center font-black animate-pulse text-indigo-600">Syncing Architecture...</div>;
-
-    if (!instance) return (
-        <div className="p-20 text-center space-y-4">
-            <h1 className="text-4xl font-black italic">Instance Not Found</h1>
-            <p className="text-slate-400">Ensure the agent has been assigned a template first.</p>
+    const renderToolGroup = (title: string, tools: typeof layoutTools) => (
+        <div className="space-y-3">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
+            <div className="grid grid-cols-3 gap-2">
+                {tools.map((tool) => {
+                    const colors = colorMap[tool.color];
+                    return (
+                        <div
+                            key={tool.type}
+                            ref={(ref) => { if (ref) connectors.create(ref, React.createElement((Sections as any)[tool.type])); }}
+                            className={`p-3 rounded-xl bg-white border border-slate-200 ${colors.hoverBorder} hover:shadow-md transition-all group cursor-grab active:cursor-grabbing text-center space-y-2`}
+                        >
+                            <div className={`h-9 w-9 mx-auto rounded-lg ${colors.bg} flex items-center justify-center text-slate-400 ${colors.hoverBg} ${colors.hoverText} transition-colors`}>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tool.icon} /></svg>
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-tight text-slate-500 group-hover:text-slate-900 block leading-tight">{tool.label}</span>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 
     return (
-        <div className="max-w-6xl mx-auto space-y-12 pb-20">
-            {/* Context Badge */}
-            <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center justify-between shadow-xl shadow-indigo-500/20 animate-in slide-in-from-top duration-500">
-                <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center font-black">
-                        A
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Managing Associate Branding</p>
-                        <p className="font-bold">Agent Identity Engine — {instance.domain}</p>
-                    </div>
+        <div className="p-5 space-y-5">
+            <div className="space-y-1">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Toolbox</h3>
+                <p className="text-[10px] text-slate-500 font-medium">Drag components to your site</p>
+            </div>
+            {renderToolGroup('Layout Blocks', layoutTools)}
+            {renderToolGroup('Content Blocks', contentTools)}
+            {renderToolGroup('Interactive Blocks', interactiveTools)}
+            <div className="pt-3 border-t border-slate-100">
+                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest text-center leading-relaxed">
+                    Drag → Preview to Add • Click → Configure<br />▲▼ → Reorder • ✕ → Remove
+                </p>
+            </div>
+        </div>
+    );
+};
+
+// --- SETTINGS PANEL ---
+const SettingsPanel = () => {
+    const { selected, actions } = useEditor((state) => {
+        const [currentNodeId] = state.events.selected;
+        const node = currentNodeId ? state.nodes[currentNodeId] : null;
+        return {
+            selected: node ? {
+                id: currentNodeId,
+                name: node.data.displayName,
+                props: node.data.props,
+            } : null,
+        };
+    });
+
+    if (!selected) {
+        return (
+            <div className="p-12 text-center space-y-4">
+                <div className="h-16 w-16 mx-auto bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" /></svg>
+                </div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select an element to configure</p>
+            </div>
+        );
+    }
+
+    const updateProp = (key: string, value: any) => {
+        actions.setProp(selected.id, (props: any) => {
+            if (key.includes('.')) {
+                const parts = key.split('.');
+                let current = props;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) current[parts[i]] = {};
+                    current = current[parts[i]];
+                }
+                current[parts[parts.length - 1]] = value;
+            } else {
+                props[key] = value;
+            }
+        });
+    };
+
+    const handleDeleteSelected = () => {
+        if (selected) {
+            actions.delete(selected.id);
+        }
+    };
+
+    return (
+        <div className="p-6 space-y-8 h-full overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Configuration</h3>
+                    <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-widest">{selected.name}</p>
                 </div>
                 <button
-                    onClick={() => window.location.href = '/team'}
-                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    onClick={handleDeleteSelected}
+                    className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-all"
+                    title="Delete this section"
                 >
-                    Return to Team
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
             </div>
 
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                        <div className="h-1.5 w-12 bg-indigo-600 rounded-full" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-600">Enterprise Builder</span>
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
-                        Agent <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600 italic">Architect</span>
-                    </h1>
-                    <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed">
-                        Customize branding and layout for the agent website. Changes will modify the underlying JSON configuration for this specific instance.
-                    </p>
-                </div>
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setPreviewMode(!previewMode)}
-                        className={`px-8 py-4 rounded-2xl text-sm font-black transition-all flex items-center gap-3 ${previewMode ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' : 'bg-white border border-slate-200 text-slate-900 hover:border-slate-400'
-                            }`}
-                    >
-                        {previewMode ? 'Exit Preview' : 'Live Preview'}
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="px-8 py-4 rounded-2xl bg-slate-900 text-white text-sm font-black hover:bg-emerald-600 disabled:bg-slate-300 transition-all shadow-xl shadow-emerald-500/10"
-                    >
-                        {saving ? 'Transmitting...' : 'Sync Identity'}
-                    </button>
-                </div>
-            </div>
+            <div className="space-y-6">
+                {selected.name === 'Hero Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Headline</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.headline || ''}
+                                onChange={e => updateProp('content.headline', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subheadline</span>
+                            <textarea
+                                rows={3}
+                                value={selected.props.content?.subheadline || ''}
+                                onChange={e => updateProp('content.subheadline', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Button Text</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.buttonText || ''}
+                                onChange={e => updateProp('content.buttonText', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Background Image URL</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.bgImage || ''}
+                                onChange={e => updateProp('content.bgImage', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
 
-            {/* Main Builder Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Section List */}
-                <div className="lg:col-span-8 space-y-6">
-                    <div className="flex items-center justify-between mb-4 px-4">
-                        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Active Home Structure</h2>
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 italic">
-                            Instance ID: {instance.id}
-                        </span>
-                    </div>
+                {selected.name === 'Text Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bio / Narrative Text</span>
+                        <textarea
+                            rows={6}
+                            value={selected.props.text || ''}
+                            onChange={e => updateProp('text', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none italic"
+                        />
+                    </label>
+                )}
 
-                    <div className="space-y-4">
-                        {sections.sort((a, b) => (a.order || 0) - (b.order || 0)).map((section, index) => (
-                            <div
-                                key={section.id}
-                                className={`group flex items-center gap-6 p-6 rounded-[32px] bg-white border h-32 transition-all duration-300 ${section.isVisible ? 'border-slate-200 shadow-sm' : 'border-slate-100 bg-slate-50/50 opacity-60'
-                                    } hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5`}
+                {selected.name === 'Image Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Image URL</span>
+                            <input
+                                type="text"
+                                value={selected.props.url || ''}
+                                onChange={e => updateProp('url', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Caption</span>
+                            <input
+                                type="text"
+                                value={selected.props.caption || ''}
+                                onChange={e => updateProp('caption', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
+
+                {selected.name === 'Contact Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Main Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.title || ''}
+                                onChange={e => updateProp('content.title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Button Label</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.buttonLabel || ''}
+                                onChange={e => updateProp('content.buttonLabel', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
+
+                {selected.name === 'Listings Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.title || ''}
+                                onChange={e => updateProp('content.title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtitle</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.subtitle || ''}
+                                onChange={e => updateProp('content.subtitle', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target City</span>
+                            <input
+                                type="text"
+                                value={selected.props.filters?.city || ''}
+                                onChange={e => updateProp('filters.city', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Property Type</span>
+                            <select
+                                value={selected.props.filters?.propertyType || ''}
+                                onChange={e => updateProp('filters.propertyType', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
                             >
-                                <div className="flex flex-col gap-2">
-                                    <button
-                                        disabled={index === 0}
-                                        onClick={() => moveSection(index, 'up')}
-                                        className="p-2 rounded-xl text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-0 transition-all"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" /></svg>
-                                    </button>
-                                    <button
-                                        disabled={index === sections.length - 1}
-                                        onClick={() => moveSection(index, 'down')}
-                                        className="p-2 rounded-xl text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-0 transition-all"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                                    </button>
-                                </div>
+                                <option value="">All Types</option>
+                                <option value="Condo">Condo</option>
+                                <option value="Detached">Detached</option>
+                                <option value="Townhouse">Townhouse</option>
+                            </select>
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</span>
+                            <input
+                                type="number"
+                                value={selected.props.limit || 3}
+                                onChange={e => updateProp('limit', parseInt(e.target.value) || 0)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
 
-                                <div className="flex-1 flex items-center gap-6">
-                                    <div className={`h-16 w-16 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${section.isLocked ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white'
-                                        }`}>
-                                        {SECTION_TYPES_METADATA[section.type]?.icon || '?'}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <h3 className="text-xl font-black text-slate-900">{section.title}</h3>
-                                            {section.isLocked && (
-                                                <span className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
-                                                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v2a2 2 0 012 2v5a2 2 0 01-2-2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-                                                    Locked
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm font-medium text-slate-400">{SECTION_TYPES_METADATA[section.type]?.name || 'Custom Section'}</p>
-                                    </div>
-                                </div>
+                {selected.name === 'Agents Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                        <input
+                            type="text"
+                            value={selected.props.content?.title || ''}
+                            onChange={e => updateProp('content.title', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                        />
+                    </label>
+                )}
 
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => toggleVisibility(section.id)}
-                                        className={`relative w-12 h-6 rounded-full transition-all duration-500 ${section.isVisible ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-slate-200'}`}
-                                    >
-                                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all transform duration-500 ${section.isVisible ? 'left-7' : 'left-1'}`} />
-                                    </button>
-                                    <button
-                                        onClick={() => setEditingSection(section)}
-                                        className="px-6 py-3 rounded-2xl bg-slate-50 text-xs font-black text-slate-600 hover:bg-slate-900 hover:text-white transition-all uppercase tracking-widest shadow-sm"
-                                    >
-                                        Edit
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                {/* ─── NEW COMPONENT SETTINGS ─── */}
 
-                {/* Branding Sidebar */}
-                <div className="lg:col-span-4 space-y-6">
-                    <div className="p-8 rounded-[40px] bg-white border border-slate-200 shadow-sm space-y-8">
-                        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Branding Configuration</h2>
+                {selected.name === 'Heading Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Heading Text</span>
+                            <input
+                                type="text"
+                                value={selected.props.text || ''}
+                                onChange={e => updateProp('text', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Heading Level</span>
+                            <select
+                                value={selected.props.level || 'h2'}
+                                onChange={e => updateProp('level', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            >
+                                <option value="h1">H1 — Page Title</option>
+                                <option value="h2">H2 — Section Title</option>
+                                <option value="h3">H3 — Subsection</option>
+                                <option value="h4">H4 — Small Heading</option>
+                            </select>
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alignment</span>
+                            <select
+                                value={selected.props.align || 'center'}
+                                onChange={e => updateProp('align', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            >
+                                <option value="left">Left</option>
+                                <option value="center">Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </label>
+                    </>
+                )}
 
-                        <div className="space-y-4">
-                            <label className="block space-y-2">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Primary Identity Color</span>
-                                <div className="flex gap-4 items-center">
-                                    <input
-                                        type="color"
-                                        value={branding?.primaryColor || '#4f46e5'}
-                                        onChange={e => setBranding({ ...branding, primaryColor: e.target.value })}
-                                        className="h-12 w-12 rounded-xl outline-none cursor-pointer"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={branding?.primaryColor || '#4f46e5'}
-                                        onChange={e => setBranding({ ...branding, primaryColor: e.target.value })}
-                                        className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold uppercase"
-                                    />
-                                </div>
-                            </label>
+                {selected.name === 'Spacer Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Height (px)</span>
+                        <input
+                            type="range"
+                            min={10}
+                            max={200}
+                            value={selected.props.height || 60}
+                            onChange={e => updateProp('height', parseInt(e.target.value))}
+                            className="w-full accent-indigo-600"
+                        />
+                        <span className="text-xs text-slate-500 font-bold">{selected.props.height || 60}px</span>
+                    </label>
+                )}
 
-                            <label className="block space-y-2">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Logo (URL)</span>
+                {selected.name === 'Divider Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Style</span>
+                            <select
+                                value={selected.props.style || 'gradient'}
+                                onChange={e => updateProp('style', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            >
+                                <option value="gradient">Gradient Fade</option>
+                                <option value="solid">Solid Line</option>
+                                <option value="dashed">Dashed Line</option>
+                                <option value="dotted">Dotted Line</option>
+                            </select>
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Line Color</span>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    value={selected.props.color || '#e2e8f0'}
+                                    onChange={e => updateProp('color', e.target.value)}
+                                    className="w-10 h-10 border-none rounded-lg cursor-pointer"
+                                />
                                 <input
                                     type="text"
-                                    placeholder="/logos/agent-logo.png"
-                                    value={branding?.logoUrl || ''}
-                                    onChange={e => setBranding({ ...branding, logoUrl: e.target.value })}
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold bg-slate-50"
+                                    value={selected.props.color || '#e2e8f0'}
+                                    onChange={e => updateProp('color', e.target.value)}
+                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
                                 />
-                            </label>
+                            </div>
+                        </label>
+                    </>
+                )}
 
-                            <label className="block space-y-2">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Global Font Family</span>
-                                <select
-                                    value={branding?.fontHeading || 'Inter'}
-                                    onChange={e => setBranding({ ...branding, fontHeading: e.target.value })}
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold bg-slate-50 appearance-none"
-                                >
-                                    <option value="Inter">Inter (Sans)</option>
-                                    <option value="Playfair Display">Playfair (Serif)</option>
-                                    <option value="Outfit">Outfit (Modern)</option>
-                                </select>
-                            </label>
-                        </div>
+                {selected.name === 'Button Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Button Label</span>
+                            <input
+                                type="text"
+                                value={selected.props.label || ''}
+                                onChange={e => updateProp('label', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Link URL</span>
+                            <input
+                                type="text"
+                                value={selected.props.href || ''}
+                                onChange={e => updateProp('href', e.target.value)}
+                                placeholder="https://example.com"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Button Style</span>
+                            <select
+                                value={selected.props.variant || 'primary'}
+                                onChange={e => updateProp('variant', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            >
+                                <option value="primary">Primary (Indigo)</option>
+                                <option value="secondary">Secondary (Dark)</option>
+                                <option value="outline">Outline</option>
+                                <option value="ghost">Ghost</option>
+                            </select>
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alignment</span>
+                            <select
+                                value={selected.props.align || 'center'}
+                                onChange={e => updateProp('align', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            >
+                                <option value="left">Left</option>
+                                <option value="center">Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </label>
+                    </>
+                )}
 
-                        <div className="pt-4 border-t border-slate-100 space-y-3">
-                            <button
-                                onClick={() => setShowShortcodeManager(true)}
-                                className="w-full py-4 rounded-2xl bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                {selected.name === 'Video Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Video URL</span>
+                            <input
+                                type="text"
+                                value={selected.props.url || ''}
+                                onChange={e => updateProp('url', e.target.value)}
+                                placeholder="YouTube or Vimeo link"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Caption</span>
+                            <input
+                                type="text"
+                                value={selected.props.caption || ''}
+                                onChange={e => updateProp('caption', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
+
+                {selected.name === 'Testimonials Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                        <input
+                            type="text"
+                            value={selected.props.title || ''}
+                            onChange={e => updateProp('title', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                        />
+                    </label>
+                )}
+
+                {selected.name === 'Stats Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                        <input
+                            type="text"
+                            value={selected.props.title || ''}
+                            onChange={e => updateProp('title', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                        />
+                    </label>
+                )}
+
+                {selected.name === 'FAQ Section' && (
+                    <label className="block space-y-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                        <input
+                            type="text"
+                            value={selected.props.title || ''}
+                            onChange={e => updateProp('title', e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                        />
+                    </label>
+                )}
+
+                {selected.name === 'Newsletter Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.title || ''}
+                                onChange={e => updateProp('title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtitle</span>
+                            <input
+                                type="text"
+                                value={selected.props.subtitle || ''}
+                                onChange={e => updateProp('subtitle', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Button Text</span>
+                            <input
+                                type="text"
+                                value={selected.props.buttonText || ''}
+                                onChange={e => updateProp('buttonText', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Background Color</span>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    value={selected.props.bgColor || '#4f46e5'}
+                                    onChange={e => updateProp('bgColor', e.target.value)}
+                                    className="w-10 h-10 border-none rounded-lg cursor-pointer"
+                                />
+                                <input
+                                    type="text"
+                                    value={selected.props.bgColor || '#4f46e5'}
+                                    onChange={e => updateProp('bgColor', e.target.value)}
+                                    className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                                />
+                            </div>
+                        </label>
+                    </>
+                )}
+
+                {selected.name === 'Gallery Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.title || ''}
+                                onChange={e => updateProp('title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Columns</span>
+                            <select
+                                value={selected.props.columns || 3}
+                                onChange={e => updateProp('columns', parseInt(e.target.value))}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
                             >
-                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                                Configure Listing Sources
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                className="w-full py-4 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
-                            >
-                                Commit All Architecture
-                            </button>
-                        </div>
+                                <option value={2}>2 Columns</option>
+                                <option value={3}>3 Columns</option>
+                                <option value={4}>4 Columns</option>
+                            </select>
+                        </label>
+                    </>
+                )}
+
+                {selected.name === 'Map Section' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Address</span>
+                            <input
+                                type="text"
+                                value={selected.props.address || ''}
+                                onChange={e => updateProp('address', e.target.value)}
+                                placeholder="40 King Street West, Toronto"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.title || ''}
+                                onChange={e => updateProp('title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtitle</span>
+                            <input
+                                type="text"
+                                value={selected.props.subtitle || ''}
+                                onChange={e => updateProp('subtitle', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// --- TOPBAR ---
+const Topbar = ({ onSave, agentId, templateName }: { onSave: (data: string) => void; agentId: string; templateName: string }) => {
+    const searchParams = useSearchParams();
+    const websiteId = searchParams.get('websiteId');
+    const pageId = searchParams.get('pageId');
+    const { query, actions } = useEditor();
+    const [saving, setSaving] = React.useState(false);
+    const [saved, setSaved] = React.useState(false);
+
+    const handleSave = async () => {
+        setSaving(true);
+        const json = query.serialize();
+        await onSave(json);
+        setSaving(false);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+    };
+
+    return (
+        <div className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-50">
+            <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black italic">W</div>
+                <div>
+                    <h1 className="text-sm font-black text-slate-900 uppercase tracking-tight">Website Builder <span className="text-indigo-600 italic">v1.0</span></h1>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        Context: <span className="text-indigo-600">{agentId ? `Agent ${agentId}` : `Web ${websiteId} / Page ${pageId}`}</span> • Template: <span className="text-emerald-600">{templateName}</span>
+                    </p>
+                </div>
+            </div>
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => actions.history.undo()}
+                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all"
+                    title="Undo"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                </button>
+                <button
+                    onClick={() => actions.history.redo()}
+                    className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-all"
+                    title="Redo"
+                >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2m18-8l-6 6m6-6l-6-6" /></svg>
+                </button>
+                <div className="w-px h-6 bg-slate-200 mx-2" />
+                <button
+                    onClick={() => {
+                        const url = agentId
+                            ? `http://localhost:3001/preview/${agentId}`
+                            : `http://localhost:3001/preview/org?websiteId=${websiteId}&pageId=${pageId}`;
+                        window.open(url, '_blank');
+                    }}
+                    className="px-6 py-3 border-2 border-slate-200 text-slate-900 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
+                >
+                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    Preview Mode
+                </button>
+                <div className="w-px h-6 bg-slate-200 mx-2" />
+                {saved && (
+                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest animate-pulse">✓ Saved</span>
+                )}
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3 disabled:opacity-50"
+                >
+                    {saving ? 'Synchronizing...' : 'Publish Layout'}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// --- INITIALIZER / LOADER ---
+// --- TEMPLATE CONTENT DEFAULTS ---
+// This ensures that when a template is loaded, it has the specific design seen in previews
+const TEMPLATE_CONTENT_DEFAULTS: Record<string, Record<string, any>> = {
+    'modern-realty': {
+        'HeroSection': {
+            content: {
+                headline: 'Find Your Dream Home',
+                subheadline: 'Explore premium properties curated for modern living.',
+                buttonText: 'Browse Listings',
+                bgImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600'
+            }
+        },
+        'ListingsSection': {
+            content: { title: 'Modern Living', subtitle: 'Our latest inventory' }
+        },
+        'TextSection': {
+            text: 'Redefining the real estate experience with modern technology and personal touch.'
+        },
+        'ContactSection': {
+            content: { title: 'Ready to find your next home?', buttonLabel: 'Get In Touch' }
+        }
+    },
+    'luxury-estate': {
+        'HeroSection': {
+            content: {
+                variant: 'luxury',
+                headline: 'Exclusive Luxury Properties',
+                subheadline: 'Discover premium homes in Canada\'s most desirable locations. Curated for the discerning buyer.',
+                buttonText: 'View Portfolio',
+                bgImage: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1600'
+            }
+        },
+        'ListingsSection': {
+            content: { title: 'Featured Luxury Listings', subtitle: 'Handpicked properties from our exclusive portfolio, representing the pinnacle of real estate.' }
+        },
+        'TextSection': {
+            text: 'Curating unparalleled living experiences for the world\'s most discerning clientele.'
+        }
+    },
+    'corporate-brokerage': {
+        'HeroSection': {
+            content: {
+                variant: 'corporate',
+                headline: 'Your Trusted Real Estate Partner',
+                subheadline: '50+ offices coast-to-coast. 200+ agents serving communities across Canada.',
+                buttonText: 'Find Properties',
+                bgImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1600'
+            }
+        },
+        'ListingsSection': {
+            content: { title: 'Featured Listings', subtitle: 'Explore our curated selection of premier properties.' }
+        },
+        'TextSection': {
+            text: 'Over 25 years of excellence in the Canadian real estate market.'
+        },
+        'ContactSection': {
+            content: { title: 'Connect With Our Experts', buttonLabel: 'Contact Us' }
+        }
+    },
+    'agent-portfolio': {
+        'HeroSection': {
+            content: {
+                variant: 'agent',
+                headline: 'Helping You Find the Perfect Home',
+                subheadline: 'With 12+ years of experience and $40M in sales volume, Sarah Mitchell provides elite real estate services across Toronto\'s most prestigious neighborhoods.',
+                buttonText: 'View My Listings',
+                bgImage: 'https://images.unsplash.com/photo-1560520653-9e0e4c89eb81?auto=format&fit=crop&q=80&w=1600'
+            }
+        }
+    },
+    'minimal-realty': {
+        'HeroSection': {
+            content: {
+                variant: 'minimal',
+                headline: 'Less is more. Find your space.',
+                subheadline: 'A curated approach to discovering properties that match your lifestyle.',
+                buttonText: 'Explore',
+                bgImage: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1600'
+            }
+        }
+    }
+};
+
+const Loader = ({ agentId, websiteId, pageId, templateId }: { agentId?: string | null; websiteId?: string | null; pageId?: string | null; templateId: string }) => {
+    const { actions, query } = useEditor();
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        let cancelled = false;
+
+        const initBuilder = async () => {
+            try {
+                let website: any = null;
+                let sectionsData: { type: string }[] = [];
+
+                if (agentId) {
+                    try {
+                        website = await websiteInstanceService.getWebsiteByAgentId(agentId);
+                    } catch { }
+
+                    if (website?.layoutConfig?.customLayoutJson) {
+                        if (!cancelled) actions.deserialize(website.layoutConfig.customLayoutJson);
+                        return;
+                    }
+                } else if (websiteId && pageId) {
+                    try {
+                        const page = await orgWebsiteService.getPageById('org-1', websiteId, pageId);
+                        if (page?.customLayoutJson) {
+                            if (!cancelled) actions.deserialize(page.customLayoutJson);
+                            return;
+                        }
+                        // Fallback to sections list if no Craft JSON
+                        if (page?.layoutConfig?.sections) {
+                            sectionsData = page.layoutConfig.sections.map(s => ({ type: s.type }));
+                        }
+                    } catch { }
+                }
+
+                // 2) No custom layout saved yet → build sections from template
+
+                // First check the website instance's own sections
+                if (website?.layoutConfig?.sections && Array.isArray(website.layoutConfig.sections)) {
+                    const wsSections = website.layoutConfig.sections as any[];
+                    if (wsSections.length > 0) {
+                        sectionsData = wsSections
+                            .filter((s: any) => s.isVisible !== false && s.type)
+                            .map((s: any) => ({ type: s.type }));
+                    }
+                }
+
+                // Fallback: use the templateId from URL to look up the PLATFORM_TEMPLATES registry
+                if (sectionsData.length === 0 && templateId) {
+                    const template = PLATFORM_TEMPLATES.find(
+                        t => t.templateKey === templateId || t.id === templateId
+                    );
+                    if (template) {
+                        sectionsData = template.defaultLayoutConfig.sections
+                            .filter(s => s.enabled)
+                            .map(s => ({ type: s.type }));
+                    }
+                }
+
+                // 3) Convert template section types into Craft.js nodes and add to canvas
+                if (sectionsData.length > 0 && !cancelled) {
+                    // Look up the template templateKey to get the right defaults
+                    const template = PLATFORM_TEMPLATES.find(
+                        t => t.templateKey === templateId || t.id === templateId
+                    );
+                    const templateKey = template?.templateKey || templateId;
+                    const templateDefaults = TEMPLATE_CONTENT_DEFAULTS[templateKey] || {};
+
+                    // Build each section as a React element and add to the ROOT canvas
+                    for (const section of sectionsData) {
+                        if (cancelled) break;
+                        const componentName = SECTION_TYPE_MAP[section.type];
+                        if (!componentName) continue;
+                        const comp = (Sections as any)[componentName];
+                        if (!comp) continue;
+
+                        try {
+                            // Merge template-specific defaults for this component
+                            const defaultProps = templateDefaults[componentName] || {};
+                            const tree = query.parseReactElement(
+                                React.createElement(comp, defaultProps)
+                            ).toNodeTree();
+                            actions.addNodeTree(tree, 'ROOT');
+                        } catch (e) {
+                            console.warn(`Failed to add section "${section.type}":`, e);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load website configuration:', err);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        // Small delay to ensure the Editor/Frame are fully mounted
+        const timer = setTimeout(initBuilder, 100);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [agentId, templateId, actions, query]);
+
+    if (loading) {
+        return (
+            <div className="absolute inset-0 z-[100] bg-white/80 backdrop-blur-md flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="h-12 w-12 mx-auto border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">Loading Template Sections...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return null;
+};
+
+
+// --- SECTION COUNT INDICATOR ---
+const SectionCounter = () => {
+    const { nodes } = useEditor((state) => ({
+        nodes: state.nodes,
+    }));
+
+    const rootNode = nodes['ROOT'];
+    const sectionCount = rootNode?.data?.nodes?.length || 0;
+
+    return (
+        <div className="px-6 py-3 bg-slate-50 border-b border-slate-100">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Active Sections: <span className="text-indigo-600">{sectionCount}</span>
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 italic">
+                    Click a section to edit • Drag from toolbox to add
+                </span>
+            </div>
+        </div>
+    );
+};
+
+// ══════════════════════════════════════════════════════
+// MAIN PAGE EXPORT
+// ══════════════════════════════════════════════════════
+
+export default function WebsiteBuilderPage() {
+    return (
+        <React.Suspense fallback={<div className="p-20 text-center font-black text-slate-300 uppercase italic">Loading Ecosystem...</div>}>
+            <Editor resolver={{ ...Sections }}>
+                <WebsiteBuilderInternal />
+            </Editor>
+        </React.Suspense>
+    );
+}
+
+function WebsiteBuilderInternal() {
+    const searchParams = useSearchParams();
+    const agentId = searchParams.get('agentId');
+    const websiteId = searchParams.get('websiteId');
+    const pageId = searchParams.get('pageId');
+    const templateId = searchParams.get('templateId');
+
+    // Resolve template name for display
+    const templateName = React.useMemo(() => {
+        if (!templateId) return 'Default';
+        const tpl = PLATFORM_TEMPLATES.find(t => t.templateKey === templateId || t.id === templateId);
+        return tpl?.templateName || templateId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }, [templateId]);
+
+    const handleSave = async (json: string) => {
+        try {
+            if (agentId) {
+                let website = await websiteInstanceService.getWebsiteByAgentId(agentId);
+
+                if (!website) {
+                    // Auto-create a website instance if one doesn't exist
+                    website = await websiteInstanceService.createWebsiteInstance({
+                        organizationId: 'org-1',
+                        agentId: agentId,
+                        templateId: templateId || 'modern-realty',
+                        domain: `agent-${agentId}.realestate.com`,
+                    });
+                }
+
+                await websiteInstanceService.updateWebsiteInstance(website.id, {
+                    layoutConfig: {
+                        ...website.layoutConfig,
+                        customLayoutJson: json,
+                    } as any
+                });
+            } else if (websiteId && pageId) {
+                await orgWebsiteService.savePageLayout('org-1', pageId, json);
+            }
+
+            useNotificationStore.getState().addNotification({
+                type: 'success',
+                title: 'Layout Published Successfully',
+                message: 'Your website design has been saved and published.'
+            });
+        } catch (err) {
+            console.error(err);
+            useNotificationStore.getState().addNotification({
+                type: 'error',
+                title: 'Publish Failed',
+                message: 'Could not save the layout. Please try again.'
+            });
+        }
+    };
+
+    if (!agentId && !(websiteId && pageId)) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-slate-50 min-h-screen">
+                <div className="text-center p-12 bg-white rounded-[3rem] border-2 border-dashed border-slate-200 shadow-2xl max-w-lg">
+                    <div className="h-20 w-20 mx-auto bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-300 mb-6 font-black text-3xl">!</div>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase italic">Missing Context</h2>
+                    <p className="text-slate-500 mt-4 font-medium leading-relaxed">Please navigate to the Website Builder from an agent profile or organization website page to customize its layout.</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-slate-50 flex flex-col font-inter flex-1">
+            <Loader agentId={agentId} websiteId={websiteId} pageId={pageId} templateId={templateId || 'modern-realty'} />
+            <Topbar onSave={handleSave} agentId={agentId || ''} templateName={templateName} />
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Panel */}
+                <div className="w-[400px] bg-white border-r border-slate-200 flex flex-col overflow-y-auto shadow-sm z-40">
+                    <Toolbox />
+                    <div className="border-t border-slate-100 flex-1">
+                        <SettingsPanel />
                     </div>
+                </div>
+
+                {/* Right Panel - Preview */}
+                <div className="flex-1 bg-slate-100 p-8 overflow-y-auto custom-scrollbar relative">
+                    <TemplateProvider templateId={(templateId as any) || 'modern-realty'}>
+                        <div className="max-w-5xl mx-auto min-h-[120vh] bg-white shadow-2xl rounded-[3rem] overflow-hidden border border-slate-200 flex flex-col">
+                            {/* Browser-like Header */}
+                            <div className="bg-slate-50 px-8 py-4 border-b border-slate-100 flex items-center gap-4">
+                                <div className="flex gap-1.5">
+                                    <div className="h-3 w-3 rounded-full bg-red-400" />
+                                    <div className="h-3 w-3 rounded-full bg-amber-400" />
+                                    <div className="h-3 w-3 rounded-full bg-emerald-400" />
+                                </div>
+                                <div className="flex-1 bg-white rounded-lg border border-slate-200 px-4 py-1.5 text-[10px] font-bold text-slate-400 italic">
+                                    {agentId ? `https://agent-${agentId}.realestate.com` : `https://brokerage.realestate.com/${pageId}`}
+                                </div>
+                            </div>
+
+                            <SectionCounter />
+
+                            <div className="flex-1 overflow-y-auto">
+                                <Frame>
+                                    <Element is="div" id="ROOT" canvas />
+                                </Frame>
+                            </div>
+                        </div>
+
+                        {/* Preview Overlay Label */}
+                        <div className="absolute top-12 right-12 px-6 py-3 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl animate-pulse">
+                            Live Preview Mode
+                        </div>
+                    </TemplateProvider>
                 </div>
             </div>
 
-            {/* Content Editor Panel (Overlay) */}
-            {editingSection && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-end p-0 animate-in fade-in slide-in-from-right duration-300">
-                    <div className="bg-white h-full w-full max-w-xl shadow-2xl flex flex-col">
-                        <div className="p-10 border-b border-slate-100 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-3xl font-black text-slate-900 italic tracking-tighter">
-                                    Edit <span className="text-indigo-600">{editingSection.title}</span>
-                                </h3>
-                                <p className="text-slate-400 font-bold mt-2">Section Configuration — {SECTION_TYPES_METADATA[editingSection.type]?.name}</p>
-                            </div>
-                            <button
-                                onClick={() => setEditingSection(null)}
-                                className="h-14 w-14 rounded-2xl bg-slate-50 text-slate-400 hover:text-slate-900 flex items-center justify-center transition-all"
-                            >
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-10 space-y-8">
-                            <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 italic text-slate-500 text-sm font-medium leading-relaxed">
-                                "Updating content for {editingSection.title}. These changes apply the configuration directly to this specific agent's website instance."
-                            </div>
-
-                            {Object.entries(editingSection.content).filter(([k]) => !k.startsWith('_')).map(([field, value]) => {
-                                const profile = FIELD_PROFILES[field];
-                                if (!profile) return null;
-
-                                return (
-                                    <div key={field} className="space-y-3">
-                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                            {profile.label}
-                                            {profile.type === 'shortcode' && <span className="text-[9px] text-amber-500 bg-amber-50 px-2 rounded-md">Dynamic</span>}
-                                        </label>
-
-                                        {profile.type === 'shortcode' ? (
-                                            <div className="space-y-3">
-                                                <select
-                                                    value={value as string}
-                                                    onChange={e => updateSectionContent(editingSection.id, field, e.target.value)}
-                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all appearance-none"
-                                                >
-                                                    <option value="">-- Platform Default --</option>
-                                                    {shortcodes.map(sc => (
-                                                        <option key={sc.id} value={sc.shortcodeName}>{sc.shortcodeName} ({sc.filters.city || 'All Cities'})</option>
-                                                    ))}
-                                                </select>
-                                                <button
-                                                    onClick={() => setShowShortcodeManager(true)}
-                                                    className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
-                                                >
-                                                    + Create New Listing Source
-                                                </button>
-                                            </div>
-                                        ) : profile.type === 'textarea' ? (
-                                            <textarea
-                                                value={value as string}
-                                                onChange={e => updateSectionContent(editingSection.id, field, e.target.value)}
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all min-h-[100px] resize-none"
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                value={value as string}
-                                                onChange={e => updateSectionContent(editingSection.id, field, e.target.value)}
-                                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-sm font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all"
-                                            />
-                                        )}
-                                        <p className="text-[10px] text-slate-400 italic">Field ID: <span className="font-mono">{field}</span></p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="p-10 border-t border-slate-100 flex gap-4 bg-white">
-                            <button
-                                onClick={() => setEditingSection(null)}
-                                className="flex-1 py-5 rounded-[24px] bg-slate-50 text-slate-500 font-black text-xs uppercase tracking-widest"
-                            >
-                                Close Editor
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                className="flex-2 py-5 rounded-[24px] bg-slate-900 text-white font-black text-xs uppercase tracking-widest shadow-2xl"
-                            >
-                                Apply Changes
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Live Preview System */}
-            {previewMode && (
-                <div className="fixed inset-0 bg-slate-900/95 z-[100] flex flex-col items-center animate-in fade-in duration-500">
-                    <div className="w-full h-24 bg-slate-900 border-b border-white/5 flex items-center justify-between px-12 shrink-0">
-                        <div className="flex items-center gap-6">
-                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-white">RE</div>
-                            <div>
-                                <h4 className="text-white font-black uppercase tracking-widest text-[10px]">Live Projection</h4>
-                                <p className="text-slate-500 text-[9px] font-bold italic tracking-wide">Sync: Local Draft • No Active Diffusion</p>
-                            </div>
-                        </div>
-
-                        <div className="flex bg-white/5 p-1 rounded-2xl gap-1">
-                            {[
-                                { id: 'desktop', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 21h6l-.75-4M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /> },
-                                { id: 'tablet', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /> },
-                                { id: 'mobile', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /> }
-                            ].map(device => (
-                                <button
-                                    key={device.id}
-                                    onClick={() => setPreviewDevice(device.id as any)}
-                                    className={`p-3 rounded-xl transition-all ${previewDevice === device.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">{device.icon}</svg>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Preview Mode</span>
-                            <button
-                                onClick={() => setPreviewMode(false)}
-                                className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-sm transition-all border border-white/10 flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                Close Environment
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 w-full overflow-y-auto p-12 flex justify-center scrollbar-hide">
-                        <div className={`bg-white shadow-2xl transition-all duration-700 overflow-hidden relative ${previewDevice === 'desktop' ? 'w-full' :
-                            previewDevice === 'tablet' ? 'w-[768px]' : 'w-[414px]'
-                            } h-fit min-h-full rounded-[48px]`}
-                        >
-                            <Navbar />
-                            <div className="animate-in fade-in zoom-in-95 duration-1000">
-                                <SectionRenderer sections={sections} />
-                            </div>
-                            <Footer />
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Shortcode Management Modal */}
-            {showShortcodeManager && (
-                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[48px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-white/20">
-                        <div className="p-10 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div>
-                                <h3 className="text-3xl font-black text-slate-900 leading-none mb-2">Listing <span className="text-indigo-600 italic">Architect</span></h3>
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Configure Dynamic MLS Filtering Patterns</p>
-                            </div>
-                            <button
-                                onClick={() => setShowShortcodeManager(false)}
-                                className="h-14 w-14 rounded-2xl bg-white text-slate-400 hover:text-slate-900 flex items-center justify-center transition-all border border-slate-200 shadow-sm"
-                            >
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-12 grid grid-cols-1 md:grid-cols-2 gap-12">
-                            {/* List of existing */}
-                            <div className="space-y-6">
-                                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Active Configuration Patterns</h4>
-                                {shortcodes.length === 0 ? (
-                                    <div className="p-8 border-2 border-dashed border-slate-100 rounded-3xl text-center text-slate-300 italic">
-                                        No custom filter sets defined yet.
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {shortcodes.map(sc => (
-                                            <div key={sc.id} className="p-5 rounded-3xl border border-slate-100 hover:border-indigo-200 bg-slate-50/30 transition-all flex items-center justify-between group">
-                                                <div>
-                                                    <p className="font-black text-slate-900">{sc.shortcodeName}</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold">{sc.filters.city || 'All'} • {sc.filters.propertyType || 'Any'}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => setEditingShortcode(sc)}
-                                                    className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-indigo-600 text-white text-[9px] font-black rounded-xl transition-all"
-                                                >
-                                                    Modify
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={() => setEditingShortcode({
-                                        shortcodeName: 'newFilterset',
-                                        filters: {},
-                                        limit: 6,
-                                        isActive: true,
-                                        createdByRole: 'client_admin',
-                                        tenantId: instance.tenantId,
-                                        websiteId: instance.id
-                                    })}
-                                    className="w-full py-4 rounded-2xl border-2 border-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                >
-                                    + Define New listing set
-                                </button>
-                            </div>
-
-                            {/* Editor Form */}
-                            {editingShortcode ? (
-                                <div className="space-y-6 animate-in slide-in-from-right duration-500">
-                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Configuration Profile</h4>
-
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile Name (ID)</label>
-                                            <input
-                                                type="text"
-                                                value={editingShortcode.shortcodeName || ''}
-                                                onChange={e => setEditingShortcode({ ...editingShortcode, shortcodeName: e.target.value })}
-                                                className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                placeholder="e.g. luxuryCondos"
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Preferred City</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingShortcode.filters?.city || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, city: e.target.value } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                    placeholder="Toronto"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingShortcode.filters?.propertyType as string || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, propertyType: e.target.value } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                    placeholder="Condo"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Price</label>
-                                                <input
-                                                    type="number"
-                                                    value={editingShortcode.filters?.minPrice || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, minPrice: parseInt(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Price</label>
-                                                <input
-                                                    type="number"
-                                                    value={editingShortcode.filters?.maxPrice || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, maxPrice: parseInt(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Bedrooms</label>
-                                                <input
-                                                    type="number"
-                                                    value={editingShortcode.filters?.bedrooms || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, bedrooms: parseInt(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Bathrooms</label>
-                                                <input
-                                                    type="number"
-                                                    value={editingShortcode.filters?.bathrooms || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, bathrooms: parseInt(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Listing Status</label>
-                                                <select
-                                                    value={editingShortcode.filters?.status as string || ''}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, status: e.target.value as any } })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold appearance-none"
-                                                >
-                                                    <option value="">Any Status</option>
-                                                    <option value="FOR_SALE">Available (Sale)</option>
-                                                    <option value="FOR_LEASE">Available (Lease)</option>
-                                                    <option value="SOLD">Sold Properties</option>
-                                                </select>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort Order</label>
-                                                <select
-                                                    value={editingShortcode.sort || 'latest'}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, sort: e.target.value as any })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold appearance-none"
-                                                >
-                                                    <option value="latest">Newest First</option>
-                                                    <option value="price_asc">Price (Low to High)</option>
-                                                    <option value="price_desc">Price (High to Low)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</label>
-                                                <input
-                                                    type="number"
-                                                    value={editingShortcode.limit || 6}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, limit: parseInt(e.target.value) })}
-                                                    className="w-full rounded-2xl border border-slate-100 px-4 py-3 bg-slate-50 font-bold"
-                                                />
-                                            </div>
-                                            <div className="flex items-end pb-1 gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={editingShortcode.filters?.featured || false}
-                                                    onChange={e => setEditingShortcode({ ...editingShortcode, filters: { ...editingShortcode.filters, featured: e.target.checked } })}
-                                                    className="w-6 h-6 rounded-lg text-indigo-600 border-slate-200"
-                                                />
-                                                <label className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Featured Only</label>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-6 flex gap-3">
-                                            <button
-                                                onClick={() => {
-                                                    if (editingShortcode.id) {
-                                                        const updated = shortcodeConfigService.updateConfig(editingShortcode.id, editingShortcode);
-                                                        if (updated) setShortcodes(shortcodes.map(s => s.id === updated.id ? updated : s));
-                                                    } else {
-                                                        const created = shortcodeConfigService.createConfig(editingShortcode as any);
-                                                        setShortcodes([...shortcodes, created]);
-                                                    }
-                                                    setEditingShortcode(null);
-                                                }}
-                                                className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-200"
-                                            >
-                                                Save Pattern
-                                            </button>
-                                            <button
-                                                onClick={() => setEditingShortcode(null)}
-                                                className="px-6 bg-slate-100 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-[40px] border border-slate-100">
-                                    <div className="h-20 w-20 bg-white rounded-3xl flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                                    </div>
-                                    <p className="text-center text-slate-400 text-sm font-medium leading-relaxed">
-                                        Select a pattern on the left to modify its parameters, or define a new one to use in your listings sections.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="p-10 bg-slate-900 flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="h-8 w-8 bg-emerald-500 rounded-lg flex items-center justify-center font-black text-white text-[10px]">AI</div>
-                                <p className="text-white/60 font-medium text-[10px] uppercase tracking-widest">Neural Shortcode Engine V2.1 — Diffusion Ready</p>
-                            </div>
-                            <button
-                                onClick={() => setShowShortcodeManager(false)}
-                                className="px-8 py-3 bg-white/10 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all"
-                            >
-                                Optimized Return
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
         </div>
     );
 }

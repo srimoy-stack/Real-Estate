@@ -101,7 +101,7 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
                     provisioning: { ...state.provisioning, currentStep: progress }
                 }));
             });
-            set({ provisioning: { isProcessing: false, currentStep: { step: 'complete', label: 'Redirecting...', progress: 100 }, error: null } });
+            set({ provisioning: { isProcessing: false, currentStep: { status: 'complete', label: 'Redirecting...', progress: 100 }, error: null } });
             onSuccess();
         } catch (error: any) {
             set({ provisioning: { isProcessing: false, currentStep: null, error: error.message || 'Provisioning failed' } });

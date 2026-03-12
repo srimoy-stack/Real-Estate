@@ -17,11 +17,11 @@ export default function LoginPage() {
             email: email || 'admin@example.com',
             name: 'Demo Admin',
             role: role,
-            tenantId: 'tenant-abc-123'
+            organizationId: 'org-1'
         };
 
         // Use the auth store directly to set mock state.
-        setAuth(mockUser, 'mock-jwt-token');
+        setAuth(mockUser as any, 'mock-jwt-token');
         router.push('/');
     };
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
                     </button>
 
                     <button
-                        onClick={() => handleMockLogin(Role.BROKERAGE_ADMIN)}
+                        onClick={() => handleMockLogin(Role.CLIENT_ADMIN)}
                         className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/5 bg-slate-900/50 p-4 transition-all hover:border-amber-500/30 hover:bg-slate-900"
                     >
                         <div className="flex items-center space-x-4">
@@ -74,8 +74,8 @@ export default function LoginPage() {
                                 </svg>
                             </div>
                             <div className="text-left">
-                                <h3 className="text-lg font-semibold text-white text-opacity-80 group-hover:text-amber-100">Brokerage Admin</h3>
-                                <p className="text-sm text-slate-500 italic">Expected: Access Forbidden (403)</p>
+                                <h3 className="text-lg font-semibold text-white text-opacity-80 group-hover:text-amber-100">Client Admin</h3>
+                                <p className="text-sm text-slate-500 italic">Expected: Access Restricted by Role</p>
                             </div>
                         </div>
                         <div className="opacity-0 transition-opacity group-hover:opacity-100">

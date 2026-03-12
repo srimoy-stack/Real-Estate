@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./components/*": "./src/components/*"
+    "./components/*": "./src/components/*",
+    "./templates/*": "./src/templates/*"
   },
   "scripts": {
     "lint": "eslint src/",

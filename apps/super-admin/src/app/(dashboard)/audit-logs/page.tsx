@@ -15,7 +15,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
         actorName: 'Alex Rivers',
         targetId: 'org-42',
         targetName: 'Prestige Realty',
-        tenantId: 't-42',
+        organizationId: 't-42',
         status: 'SUCCESS',
         ipAddress: '192.168.1.1'
     },
@@ -27,7 +27,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
         actorName: 'Alex Rivers',
         targetId: 'org-12',
         targetName: 'Sunset Estates',
-        tenantId: 't-12',
+        organizationId: 't-12',
         status: 'SUCCESS',
         metadata: { reason: 'Overdue payment' }
     },
@@ -39,7 +39,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
         actorName: 'Sarah Jenkins',
         targetId: 'ddf-5',
         targetName: 'CREA Integration',
-        tenantId: 't-42',
+        organizationId: 't-42',
         status: 'FAILURE',
         metadata: { error: 'Invalid API Key' }
     },
@@ -51,7 +51,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
         actorName: 'Jordan Smith',
         targetId: 'tpl-lux',
         targetName: 'Luxury Modern v2',
-        tenantId: 't-99',
+        organizationId: 't-99',
         status: 'SUCCESS'
     },
     {
@@ -62,7 +62,7 @@ const MOCK_AUDIT_LOGS: AuditLog[] = [
         actorName: 'Alex Rivers',
         targetId: 'u-501',
         targetName: 'Mike Ross',
-        tenantId: 't-42',
+        organizationId: 't-42',
         status: 'SUCCESS',
         metadata: { from: 'AGENT', to: 'BROKER_ADMIN' }
     }

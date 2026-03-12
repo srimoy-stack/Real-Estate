@@ -1,17 +1,46 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Listing } from '@repo/types';
+import { useAuth } from '@repo/auth';
+import { userSavedItemService } from '@repo/services';
 
 interface ListingCardProps {
     listing: Listing;
 }
 
 export const ListingCard = ({ listing }: ListingCardProps) => {
+    const { user } = useAuth();
+    const [isSaved, setIsSaved] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            userSavedItemService.isListingSaved(user.id, listing.mlsNumber).then(setIsSaved);
+        }
+    }, [user, listing.mlsNumber]);
+
+    const handleToggleSave = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (isSaved) {
+            await userSavedItemService.removeSavedListing(user.id, listing.mlsNumber);
+            setIsSaved(false);
+        } else {
+            await userSavedItemService.saveListing(user.id, listing.mlsNumber);
+            setIsSaved(true);
+        }
+    };
+
     return (
         <Link
-            href={`/listings/${listing.slug || listing.id}`}
+            href={`/listing/${listing.mlsNumber}`}
             className="group relative flex flex-col overflow-hidden rounded-xl bg-white border border-gray-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
             {/* Image Container */}
@@ -57,6 +86,17 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                     )}
                 </div>
 
+                {/* Save Button */}
+                <button
+                    onClick={handleToggleSave}
+                    className={`absolute top-3 right-3 h-10 w-10 rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-rose-500 text-white shadow-rose-500/20' : 'bg-white/80 hover:bg-white text-slate-900 border border-slate-200'
+                        } shadow-lg backdrop-blur-sm z-10`}
+                >
+                    <svg className={`w-5 h-5 ${isSaved ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                </button>
+
                 {/* Photo Count Badge */}
                 <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +115,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                         {listing.title}
                     </h3>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        {listing.address.city}, {listing.address.province}
+                        {listing.city}, {listing.province}
                     </p>
                 </div>
 
@@ -90,12 +130,21 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                 </div>
 
                 {/* Specs — Zolo-style inline */}
-                <div className="flex items-center gap-4 text-sm text-gray-600 border-t border-gray-100 pt-3">
+                <div className="flex items-center gap-4 text-sm text-gray-600 border-t border-gray-100 pt-3 mt-auto">
                     <span className="font-medium">{listing.bedrooms} bed</span>
                     <span className="font-medium">{listing.bathrooms} bath</span>
-                    {listing.squareFeet && (
-                        <span className="font-medium">{listing.squareFeet.toLocaleString()} sqft</span>
+                    {listing.squareFootage && (
+                        <span className="font-medium">{listing.squareFootage.toLocaleString()} sqft</span>
                     )}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                        {listing.propertyType.replace('_', ' ')}
+                    </span>
+                    <div className="px-4 py-2 bg-slate-900 group-hover:bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">
+                        View Details
+                    </div>
                 </div>
             </div>
         </Link>

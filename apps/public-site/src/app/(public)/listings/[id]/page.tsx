@@ -23,10 +23,10 @@ function ListingStructuredData({ listing, baseUrl }: { listing: Listing, baseUrl
     'image': `${baseUrl}${listing.mainImage}`,
     'address': {
       '@type': 'PostalAddress',
-      'streetAddress': listing.address.street,
-      'addressLocality': listing.address.city,
-      'addressRegion': listing.address.province,
-      'postalCode': listing.address.postalCode,
+      'streetAddress': listing.address,
+      'addressLocality': listing.city,
+      'addressRegion': listing.province,
+      'postalCode': listing.postalCode,
       'addressCountry': 'CA'
     },
     'offers': {
@@ -46,17 +46,17 @@ function ListingStructuredData({ listing, baseUrl }: { listing: Listing, baseUrl
   );
 }
 
-import { mockListings } from '@/templates/shared/mock-data';
+import { mockListings } from '@repo/ui';
 
 async function getListing(idOrSlug: string, websiteId: string): Promise<Listing | null> {
   try {
     const listing = await listingService.getById(idOrSlug);
-    if (listing && (listing.tenantId === websiteId || websiteId === 'default')) {
+    if (listing && (listing.organizationId === websiteId || websiteId === 'default')) {
       return listing;
     }
   } catch (e) { }
 
-  const found = mockListings.find(l => l.id === idOrSlug || l.slug === idOrSlug);
+  const found = mockListings.find((l: Listing) => l.id === idOrSlug || l.slug === idOrSlug);
   if (found) {
     return found;
   }
@@ -183,7 +183,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   </svg>
-                  <p className="text-lg font-medium">{listing.address.street}, {listing.address.city}, {listing.address.province} {listing.address.postalCode}</p>
+                  <p className="text-lg font-medium">{listing.address}, {listing.city}, {listing.province} {listing.postalCode}</p>
                 </div>
               </div>
 
@@ -223,7 +223,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                 <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
-                <span className="text-xl font-black text-slate-900">{listing.squareFeet?.toLocaleString()}</span>
+                <span className="text-xl font-black text-slate-900">{listing.squareFootage?.toLocaleString()}</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sq. Ft.</span>
               </div>
               <div className="flex-1 flex flex-col items-center gap-2">
@@ -440,8 +440,9 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                   </div>
                   <LeadCaptureForm
                     listingId={listing.id}
+                    mlsNumber={listing.mlsNumber}
                     listingTitle={listing.title}
-                    tenantId={websiteId}
+                    websiteId={websiteId}
                   />
                   <div className="p-8 pt-0 mt-4 space-y-4">
                     <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700/50 text-center group cursor-pointer hover:bg-slate-800 transition-colors">

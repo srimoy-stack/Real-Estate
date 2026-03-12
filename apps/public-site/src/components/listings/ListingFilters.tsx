@@ -183,20 +183,36 @@ export const ListingFilters = () => {
                     </div>
                 </div>
 
-                {/* Property Type */}
-                <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500">Property Type</label>
-                    <select
-                        name="propertyType"
-                        value={filters.propertyType}
-                        onChange={handleInputChange}
-                        className={selectClasses}
-                    >
-                        <option value="">All Types</option>
-                        {Object.values(PropertyType).map(type => (
-                            <option key={type} value={type}>{type.replace('_', ' ')}</option>
-                        ))}
-                    </select>
+                {/* Property Type & Status */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-500">Type</label>
+                        <select
+                            name="propertyType"
+                            value={filters.propertyType}
+                            onChange={handleInputChange}
+                            className={selectClasses}
+                        >
+                            <option value="">All Types</option>
+                            {Object.values(PropertyType).map(type => (
+                                <option key={type} value={type}>{type.replace('_', ' ')}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-500">Status</label>
+                        <select
+                            name="status"
+                            value={(filters as any).status || ''}
+                            onChange={handleInputChange}
+                            className={selectClasses}
+                        >
+                            <option value="">Any Status</option>
+                            <option value="For Sale">For Sale</option>
+                            <option value="Sold">Sold</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

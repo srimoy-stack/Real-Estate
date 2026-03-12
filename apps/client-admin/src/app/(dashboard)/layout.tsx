@@ -8,7 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { isImpersonating, originalUser, user, stopImpersonation } = useAuthStore();
 
     return (
-        <ProtectedLayout allowedRoles={[Role.BROKERAGE_ADMIN, Role.AGENT_ADMIN]}>
+        <ProtectedLayout allowedRoles={[Role.CLIENT_ADMIN, Role.AGENT]}>
             <ImpersonationBanner
                 isImpersonating={isImpersonating}
                 originalUser={originalUser}

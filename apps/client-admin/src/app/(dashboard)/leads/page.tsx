@@ -1,62 +1,92 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Lead, LeadStatus, RoutingMethod, LeadRoutingConfig } from '@repo/types';
-
-const mockLeads: Lead[] = [
-    { id: 'L001', name: 'Alice Thompson', email: 'alice@example.com', phone: '416-555-0101', source: 'Direct Website', listingReference: 'MLS# C123456', status: 'new', assignedTo: 'David Armstrong', createdAt: '2026-03-05T22:30:00Z', updatedAt: '2026-03-05T22:30:00Z', notes: [{ id: '1', text: 'Interested in scheduling a private viewing', author: 'System', createdAt: '2026-03-05T22:30:00Z' }] },
-    { id: 'L002', name: 'Mark Ruffalo', email: 'mark.r@email.com', phone: '416-555-0202', source: 'Referral', listingReference: 'MLS# C882731', status: 'contacted', assignedTo: 'Sarah Jenkins', createdAt: '2026-03-05T21:15:00Z', updatedAt: '2026-03-05T21:15:00Z', notes: [] },
-    { id: 'L003', name: 'Sarah Jenkins', email: 'sarah.j@email.com', phone: '604-555-0303', source: 'Facebook Lead Ad', listingReference: 'MLS# V991223', status: 'qualified', assignedTo: 'David Armstrong', createdAt: '2026-03-05T18:00:00Z', updatedAt: '2026-03-05T18:00:00Z', notes: [] },
-    { id: 'L007', name: 'Priya Sharma', email: 'priya.s@email.com', phone: '416-555-0707', source: 'Direct Website', listingReference: 'MLS# C123456', status: 'new', assignedTo: '', createdAt: '2026-03-04T01:30:00Z', updatedAt: '2026-03-04T01:30:00Z', notes: [] },
-];
+import React, { useState, useEffect } from 'react';
+import { Lead, LeadStatus, RoutingMethod, LeadRoutingConfig, Agent } from '@repo/types';
+import { leadService, agentService, useNotificationStore } from '@repo/services';
 
 export default function LeadsPage() {
-    const [leads, setLeads] = useState<Lead[]>(mockLeads);
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [agents, setAgents] = useState<Agent[]>([]);
     const [tab, setTab] = useState<LeadStatus | 'all'>('all');
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [noteInput, setNoteInput] = useState('');
     const [routingConfig, setRoutingConfig] = useState<LeadRoutingConfig>({
         method: 'round_robin',
         active: true,
     });
-    const [noteInput, setNoteInput] = useState('');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [leadsData, agentsData] = await Promise.all([
+                    leadService.getLeads(),
+                    agentService.getAgentsByOrganization('org-1') // Mock org
+                ]);
+                setLeads(leadsData);
+                setAgents(agentsData);
+            } catch (error) {
+                console.error('Failed to fetch CRM data', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const statusColors: Record<LeadStatus, string> = {
-        new: 'bg-blue-500/10 text-blue-500',
-        contacted: 'bg-amber-500/10 text-amber-500',
-        qualified: 'bg-purple-500/10 text-purple-500',
-        closed_won: 'bg-emerald-500/10 text-emerald-500',
-        closed_lost: 'bg-red-500/10 text-red-500',
+        'New': 'bg-blue-500/10 text-blue-500',
+        'Contacted': 'bg-amber-500/10 text-amber-500',
+        'Qualified': 'bg-purple-500/10 text-purple-500',
+        'Closed': 'bg-emerald-500/10 text-emerald-500',
     };
 
     const statusLabels: Record<LeadStatus, string> = {
-        new: 'Fresh Lead',
-        contacted: 'Active Discovery',
-        qualified: 'High Intent',
-        closed_won: 'Deal Closed',
-        closed_lost: 'Nurture List',
+        'New': 'Fresh Lead',
+        'Contacted': 'Active Discovery',
+        'Qualified': 'High Intent',
+        'Closed': 'Deal Closed',
     };
 
     const filtered = tab === 'all' ? leads : leads.filter(l => l.status === tab);
 
-    const handleAddNote = () => {
+    const handleAddNote = async () => {
         if (!noteInput || !selectedLead) return;
-        const newNote = {
-            id: Date.now().toString(),
-            text: noteInput,
-            author: 'Admin User',
-            createdAt: new Date().toISOString(),
-        };
-        const updatedLead = { ...selectedLead, notes: [...selectedLead.notes, newNote] };
-        setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
-        setSelectedLead(updatedLead);
-        setNoteInput('');
+        try {
+            const updated = await leadService.addLeadNote(selectedLead.id, noteInput, 'Admin User');
+            setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+            setSelectedLead(updated);
+            setNoteInput('');
+        } catch (err) {
+            console.error('Failed to add note', err);
+        }
     };
 
-    const handleStatusUpdate = (status: LeadStatus) => {
+    const handleStatusUpdate = async (status: LeadStatus) => {
         if (!selectedLead) return;
-        const updatedLead = { ...selectedLead, status };
-        setLeads(leads.map(l => l.id === selectedLead.id ? updatedLead : l));
-        setSelectedLead(updatedLead);
+        try {
+            const updated = await leadService.updateLeadStatus(selectedLead.id, status);
+            setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+            setSelectedLead(updated);
+        } catch (err) {
+            console.error('Failed to update status', err);
+        }
+    };
+
+    const handleAssignAgent = async (agentId: string) => {
+        if (!selectedLead) return;
+        try {
+            const updated = await leadService.assignLead(selectedLead.id, agentId);
+            setLeads(leads.map(l => l.id === selectedLead.id ? updated : l));
+            setSelectedLead(updated);
+            useNotificationStore.getState().addNotification({
+                type: 'success',
+                title: 'Lead Re-assigned',
+                message: `Lead has been assigned to ${agents.find(a => a.id === agentId)?.name}.`
+            });
+        } catch (err) {
+            console.error('Failed to assign agent', err);
+        }
     };
 
     return (
@@ -96,8 +126,8 @@ export default function LeadsPage() {
                                 key={method.id}
                                 onClick={() => setRoutingConfig({ ...routingConfig, method: method.id as RoutingMethod })}
                                 className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${routingConfig.method === method.id
-                                        ? 'bg-purple-600 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-white'
+                                    ? 'bg-purple-600 text-white shadow-lg'
+                                    : 'text-slate-400 hover:text-white'
                                     }`}
                             >
                                 {method.label}
@@ -111,13 +141,13 @@ export default function LeadsPage() {
             <div className="space-y-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-                        {['all', 'new', 'contacted', 'qualified', 'closed_won', 'closed_lost'].map((s) => (
+                        {['all', 'New', 'Contacted', 'Qualified', 'Closed'].map((s) => (
                             <button
                                 key={s}
                                 onClick={() => setTab(s as any)}
                                 className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition-all shrink-0 ${tab === s
-                                        ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                                        : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                                    : 'text-slate-400 hover:text-slate-600'
                                     }`}
                             >
                                 {s.replace('_', ' ')} <span className="ml-2 px-2 py-0.5 bg-slate-100 rounded-md text-[9px]">{s === 'all' ? leads.length : leads.filter(l => l.status === s).length}</span>
@@ -138,7 +168,11 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                    {filtered.map((lead) => (
+                    {loading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-32 bg-white rounded-[32px] animate-pulse border border-slate-100" />
+                        ))
+                    ) : filtered.map((lead) => (
                         <div
                             key={lead.id}
                             onClick={() => setSelectedLead(lead)}
@@ -148,25 +182,26 @@ export default function LeadsPage() {
                                 <div className="h-14 w-14 rounded-[20px] bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center font-black text-purple-600">
                                     {lead.name.split(' ').map(n => n[0]).join('')}
                                 </div>
-                                <div>
+                                <div className="space-y-1">
                                     <h4 className="font-black text-slate-900 text-lg leading-none">{lead.name}</h4>
-                                    <div className="flex items-center gap-3 mt-2">
+                                    <div className="flex items-center gap-3">
                                         <p className="text-[11px] font-bold text-slate-400">{lead.email}</p>
                                         <span className="h-1 w-1 bg-slate-200 rounded-full" />
-                                        <p className="text-[11px] font-black text-purple-600">{lead.source}</p>
+                                        <p className="text-[11px] font-black text-purple-600 truncate max-w-[150px]">{lead.mlsNumber || lead.source}</p>
                                     </div>
+                                    <p className="text-[10px] font-medium text-slate-500 truncate max-w-[300px] italic">"{lead.message}"</p>
                                 </div>
                             </div>
 
                             <div className="flex flex-col md:items-end gap-2 shrink-0">
                                 <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-xl ${statusColors[lead.status]}`}>
-                                    {statusLabels[lead.status]}
+                                    {statusLabels[lead.status] || lead.status}
                                 </span>
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Received {new Date(lead.createdAt).toLocaleDateString()}</p>
                             </div>
                         </div>
                     ))}
-                    {filtered.length === 0 && (
+                    {!loading && filtered.length === 0 && (
                         <div className="p-20 text-center space-y-4">
                             <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto">
                                 <svg className="w-10 h-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -192,7 +227,7 @@ export default function LeadsPage() {
                                 </div>
                                 <div>
                                     <p className="font-bold text-slate-900">{selectedLead.name}</p>
-                                    <p className="text-xs text-slate-500 font-medium">Ref: {selectedLead.listingReference || 'General Inquiry'}</p>
+                                    <p className="text-xs text-slate-500 font-medium">Ref: {selectedLead.mlsNumber || 'General Inquiry'}</p>
                                 </div>
                             </div>
                             <button onClick={() => setSelectedLead(null)} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-400 transition-colors">
@@ -204,20 +239,25 @@ export default function LeadsPage() {
 
                         {/* Drawer Content */}
                         <div className="flex-1 overflow-y-auto p-8 space-y-10">
+                            {/* Message Preview */}
+                            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 italic font-medium text-slate-600 text-sm leading-relaxed">
+                                "{selectedLead.message}"
+                            </div>
+
                             {/* Actions & Status */}
                             <div className="space-y-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Pipeline Position</p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                     {Object.keys(statusLabels).map((s) => (
                                         <button
                                             key={s}
                                             onClick={() => handleStatusUpdate(s as LeadStatus)}
                                             className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all border ${selectedLead.status === s
-                                                    ? 'bg-purple-600 text-white border-purple-600 shadow-lg'
-                                                    : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
+                                                ? 'bg-purple-600 text-white border-purple-600 shadow-lg'
+                                                : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
                                                 }`}
                                         >
-                                            {s.replace('_', ' ')}
+                                            {s}
                                         </button>
                                     ))}
                                 </div>
@@ -239,10 +279,18 @@ export default function LeadsPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assigned Agent</p>
-                                    <p className="text-sm font-bold text-purple-600 mt-1 flex items-center gap-2">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-purple-600 animate-pulse" />
-                                        {selectedLead.assignedTo || 'Unassigned'}
-                                    </p>
+                                    <div className="mt-1 relative group">
+                                        <select
+                                            className="text-sm font-bold text-purple-600 bg-transparent outline-none cursor-pointer border-b border-dashed border-purple-200 pb-1 w-full"
+                                            value={selectedLead.agentId || ''}
+                                            onChange={(e) => handleAssignAgent(e.target.value)}
+                                        >
+                                            <option value="">Unassigned</option>
+                                            {agents.map(a => (
+                                                <option key={a.id} value={a.id}>{a.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
@@ -250,7 +298,7 @@ export default function LeadsPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Internal Notes</p>
-                                    <span className="text-[9px] font-bold text-slate-400">Future-Ready Activity Feed</span>
+                                    <span className="text-[9px] font-bold text-slate-400">Activity Feed</span>
                                 </div>
 
                                 <div className="space-y-4">
@@ -290,11 +338,14 @@ export default function LeadsPage() {
                         {/* Drawer Footer */}
                         <div className="p-8 border-t border-slate-100 flex gap-4 bg-slate-50/50">
                             <button className="flex-1 py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all">
-                                Re-assign Agent
+                                Archive Lead
                             </button>
-                            <button className="flex-2 py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20">
+                            <a
+                                href={`mailto:${selectedLead.email}`}
+                                className="flex-[2] py-4 bg-purple-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 text-center"
+                            >
                                 Contact Lead
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

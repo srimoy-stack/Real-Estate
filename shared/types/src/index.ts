@@ -12,20 +12,37 @@ export interface User extends BaseEntity {
   email: string;
   name: string;
   role: UserRole;
-  tenantId?: string;
+  password?: string; // For onboarding/auth purposes
+  organizationId?: string; // Aligned with user request
   avatarUrl?: string;
   isActive: boolean;
 }
 
-// ─── Multi-Tenant ──────────────────────────────────
-export interface Tenant extends BaseEntity {
+// ─── Agent Model ───────────────────────────────────
+export interface Agent extends BaseEntity {
+  organizationId: string;
   name: string;
-  slug: string;
-  domain?: string;
-  logoUrl?: string;
+  email: string;
+  phone: string;
+  profilePhoto?: string;
+  bio?: string;
+  userId?: string; // Optional link to User account
+}
+
+// ─── Multi-Tenant ──────────────────────────────────
+export type OrganizationType = 'BROKERAGE' | 'INDIVIDUAL_AGENT';
+
+export interface Organization extends BaseEntity {
+  name: string;
+  type: OrganizationType;
+  email: string;
+  phone: string;
+  logo?: string;
+  timezone: string;
+  address?: string;
   isActive: boolean;
-  settings: TenantSettings;
-  branding: TenantBranding;
+  settings?: TenantSettings;
+  branding?: TenantBranding;
 }
 
 export interface SocialLinks {
@@ -100,6 +117,21 @@ export interface SeoConfig {
   noIndex?: boolean;
   ogType?: 'website' | 'article' | 'profile';
 }
+// ─── Website ──────────────────────────────────────
+export type WebsiteType = 'BROKERAGE_SITE' | 'AGENT_SITE';
+
+export interface Website extends BaseEntity {
+  organizationId: string;
+  agentId?: string; // Optional (nullable per user request)
+  templateId: string;
+  domain: string;
+  websiteType?: WebsiteType;
+  defaultLanguage?: string;
+  layoutConfig: any; // matches TemplateLayoutConfig
+  brandingConfig: any; // matches BrandingConfig
+}
+
+export type WebsiteInstance = Website;
 
 export * from './listings';
 export * from './ddf';
@@ -112,3 +144,7 @@ export * from './configResolver';
 export * from './notifications';
 export * from './internal-listing';
 export * from './shortcode';
+export * from './template-model';
+export * from './listings-section';
+export * from './saved-items';
+export * from './org-website';

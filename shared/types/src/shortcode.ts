@@ -13,7 +13,7 @@ export interface ShortcodeFilters {
 
 export interface ShortcodeConfig {
     id: string;
-    tenantId: string | null; // For Super Admin created global configs
+    organizationId: string | null; // For Super Admin created global configs
     websiteId: string;       // Target website this shortcode belongs to
     createdByRole: UserRole; // Enforce permissions based on creator role
     shortcodeName: string;   // E.g., "featuredHomes"

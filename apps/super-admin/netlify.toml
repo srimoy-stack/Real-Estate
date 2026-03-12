@@ -1,4 +1,5 @@
 [build]
+  base = "apps/super-admin"
   command = "cd ../.. && npx turbo build --filter=super-admin"
   publish = ".next"
 

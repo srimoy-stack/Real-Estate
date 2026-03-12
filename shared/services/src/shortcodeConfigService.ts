@@ -5,7 +5,7 @@ import { ShortcodeConfig, UserRole } from '@repo/types';
  * 
  * Permissions logic:
  * - Super Admins: Can read/write ANY shortcode config across all tenants and websites.
- * - Client Admins (Brokerage): Can read/write shortcode configs for websites within THEIR tenant (tenantId).
+ * - Client Admins (Brokerage): Can read/write shortcode configs for websites within THEIR organization (organizationId).
  * - Agents: Can READ only (consume) shortcode configs specific to their own websiteId.
  */
 export class ShortcodeConfigService {
@@ -15,7 +15,7 @@ export class ShortcodeConfigService {
     constructor() {
         // Seed some initial data for demonstration
         this.createConfig({
-            tenantId: 'tenant-123',
+            organizationId: 'org-1',
             websiteId: 'website-agent-1',
             createdByRole: 'client_admin',
             shortcodeName: 'featuredHomes',
@@ -54,7 +54,7 @@ export class ShortcodeConfigService {
      * Update an existing shortcode configuration.
      * Must check permissions separately before calling.
      */
-    public updateConfig(id: string, updates: Partial<Omit<ShortcodeConfig, 'id' | 'websiteId' | 'tenantId' | 'createdByRole' | 'createdAt'>>): ShortcodeConfig | null {
+    public updateConfig(id: string, updates: Partial<Omit<ShortcodeConfig, 'id' | 'websiteId' | 'organizationId' | 'createdByRole' | 'createdAt'>>): ShortcodeConfig | null {
         const existing = this.db.get(id);
         if (!existing) return null;
 
@@ -84,7 +84,7 @@ export class ShortcodeConfigService {
     /**
      * Query configurations securely bound by roles.
      */
-    public getConfigs(query: { websiteId?: string; tenantId?: string; role: UserRole }): ShortcodeConfig[] {
+    public getConfigs(query: { websiteId?: string; organizationId?: string; role: UserRole }): ShortcodeConfig[] {
         const results = Array.from(this.db.values());
 
         if (query.role === 'super_admin') {
@@ -92,21 +92,21 @@ export class ShortcodeConfigService {
             if (query.websiteId) {
                 return results.filter(c => c.websiteId === query.websiteId);
             }
-            if (query.tenantId) {
-                return results.filter(c => c.tenantId === query.tenantId);
+            if (query.organizationId) {
+                return results.filter(c => c.organizationId === query.organizationId);
             }
             return results;
         }
 
         if (query.role === 'client_admin') {
-            // Client Admins are locked strictly to their tenant network
-            if (!query.tenantId) throw new Error("tenantId is required for Client Admin queries");
+            // Client Admins are locked strictly to their organization network
+            if (!query.organizationId) throw new Error("organizationId is required for Client Admin queries");
 
-            const tenantConfigs = results.filter(c => c.tenantId === query.tenantId);
+            const organizationConfigs = results.filter(c => c.organizationId === query.organizationId);
             if (query.websiteId) {
-                return tenantConfigs.filter(c => c.websiteId === query.websiteId);
+                return organizationConfigs.filter(c => c.websiteId === query.websiteId);
             }
-            return tenantConfigs;
+            return organizationConfigs;
         }
 
         if (query.role === 'agent') {

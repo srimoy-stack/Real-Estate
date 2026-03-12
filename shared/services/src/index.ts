@@ -12,5 +12,15 @@ export * from './mlsSyncService';
 export * from './listingQueryApi';
 export * from './shortcodeConfigService';
 export * from './websiteInstanceService';
+export * from './templateAssignmentService';
+export * from './listingSectionService';
+export * from './templateRegistry';
+export * from './agentService';
+export * from './websiteService';
+export * from './leadService';
+export * from './userSavedItemService';
+export * from './orgWebsiteService';
+
+
 export { createAuditLog, getAuditLogs, AuditEventType } from '@repo/api-client';
 

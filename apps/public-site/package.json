@@ -12,23 +12,29 @@
     "clean": "rm -rf .next .turbo node_modules"
   },
   "dependencies": {
+    "@craftjs/core": "^0.2.12",
+    "@craftjs/utils": "^0.2.5",
+    "@repo/hooks": "*",
+    "@repo/types": "*",
+    "@repo/ui": "*",
+    "@repo/utils": "*",
+    "leaflet": "^1.9.4",
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@repo/ui": "*",
-    "@repo/types": "*",
-    "@repo/utils": "*",
-    "@repo/hooks": "*"
+    "react-leaflet": "^4.2.1",
+    "react-leaflet-cluster": "^4.0.0"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.4.0",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0"
+    "typescript": "^5.4.0"
   }
 }

@@ -34,9 +34,9 @@ export default function LoginPage() {
                     id: 'user_1',
                     name: 'John Doe',
                     email: email,
-                    role: 'BROKERAGE_ADMIN' as any,
-                    tenantId: 'tenant_1',
-                    tenantStatus: 'ACTIVE' // Explicitly setting active for main demo
+                    role: 'CLIENT_ADMIN' as any,
+                    organizationId: 'org-1',
+                    organizationStatus: 'ACTIVE' // Explicitly setting active for main demo
                 },
                 'mock_access_token_dev'
             );

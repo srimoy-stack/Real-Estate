@@ -16,16 +16,16 @@ interface TeamMember extends Partial<User> {
     activeListings: number;
     totalLeads: number;
     joinedAt: string;
-    tenantId: string;
+    organizationId: string;
     templateId: string;
 }
 
 const mockTeam: TeamMember[] = [
-    { id: '1', name: 'David Armstrong', email: 'david@prestigerealty.com', role: 'client_admin', status: 'active', avatar: 'DA', activeListings: 18, totalLeads: 142, joinedAt: '2024-01-15', isActive: true, tenantId: 'TENANT_1', templateId: 'corporate-brokerage' },
-    { id: '2', name: 'Sarah Jenkins', email: 'sarah@prestigerealty.com', role: 'agent', status: 'active', avatar: 'SJ', activeListings: 12, totalLeads: 89, joinedAt: '2024-03-20', isActive: true, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
-    { id: '3', name: 'Michael Chen', email: 'michael@prestigerealty.com', role: 'agent', status: 'active', avatar: 'MC', activeListings: 8, totalLeads: 56, joinedAt: '2024-06-10', isActive: true, tenantId: 'TENANT_1', templateId: 'modern-realty' },
-    { id: '4', name: 'Emily Park', email: 'emily@prestigerealty.com', role: 'agent', status: 'invited', avatar: 'EP', activeListings: 0, totalLeads: 0, joinedAt: '2026-03-01', isActive: false, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
-    { id: '5', name: 'James Wilson', email: 'james@prestigerealty.com', role: 'agent', status: 'suspended', avatar: 'JW', activeListings: 0, totalLeads: 34, joinedAt: '2025-01-05', isActive: false, tenantId: 'TENANT_1', templateId: 'agent-portfolio' },
+    { id: '1', name: 'David Armstrong', email: 'david@prestigerealty.com', role: 'client_admin', status: 'active', avatar: 'DA', activeListings: 18, totalLeads: 142, joinedAt: '2024-01-15', isActive: true, organizationId: 'org-1', templateId: 'corporate-brokerage' },
+    { id: '2', name: 'Sarah Jenkins', email: 'sarah@prestigerealty.com', role: 'agent', status: 'active', avatar: 'SJ', activeListings: 12, totalLeads: 89, joinedAt: '2024-03-20', isActive: true, organizationId: 'org-1', templateId: 'agent-portfolio' },
+    { id: '3', name: 'Michael Chen', email: 'michael@prestigerealty.com', role: 'agent', status: 'active', avatar: 'MC', activeListings: 8, totalLeads: 56, joinedAt: '2024-06-10', isActive: true, organizationId: 'org-1', templateId: 'modern-realty' },
+    { id: '4', name: 'Emily Park', email: 'emily@prestigerealty.com', role: 'agent', status: 'invited', avatar: 'EP', activeListings: 0, totalLeads: 0, joinedAt: '2026-03-01', isActive: false, organizationId: 'org-1', templateId: 'agent-portfolio' },
+    { id: '5', name: 'James Wilson', email: 'james@prestigerealty.com', role: 'agent', status: 'suspended', avatar: 'JW', activeListings: 0, totalLeads: 34, joinedAt: '2025-01-05', isActive: false, organizationId: 'org-1', templateId: 'agent-portfolio' },
 ];
 
 export default function TeamPage() {
@@ -38,16 +38,16 @@ export default function TeamPage() {
     const [formData, setFormData] = useState({ email: '', name: '', role: 'agent' as UserRole, templateId: 'agent-portfolio' });
 
     const isBrokerageAdmin = currentUserRole === 'client_admin' || currentUserRole === 'super_admin';
-    const currentTenantId = user?.tenantId || 'TENANT_1'; // Consistent baseline for demo
+    const currentOrganizationId = user?.organizationId || 'org-1'; // Consistent baseline for demo
 
     // Auth-driven State
     const [authorizedTemplates, setAuthorizedTemplates] = useState<TemplateDefinition[]>([]);
 
     useEffect(() => {
         const loadTemplates = async () => {
-            if (!currentTenantId) return;
+            if (!currentOrganizationId) return;
             try {
-                const assigned = await getAssignedTemplates(currentTenantId);
+                const assigned = await getAssignedTemplates(currentOrganizationId);
                 // In a real scenario we'd map these to the actual TemplateDefinition objects
                 // Mocking with IDs for the dropdown
                 const tpls = assigned.map(a => ({ id: a.templateId, name: a.templateId.replace('-', ' ') } as TemplateDefinition));
@@ -60,7 +60,7 @@ export default function TeamPage() {
             }
         };
         loadTemplates();
-    }, [currentTenantId]);
+    }, [currentOrganizationId]);
 
     // Logic: Force visibility for ALL roles in development to solve "invisible" bug.
     const visibleTeam = team;
@@ -94,14 +94,14 @@ export default function TeamPage() {
             totalLeads: 0,
             joinedAt: new Date().toISOString().split('T')[0],
             isActive: false,
-            tenantId: currentTenantId, // Enforce tenant ownership
+            organizationId: currentOrganizationId, // Enforce organization ownership
             templateId: formData.templateId
         };
 
         // PROVISIONING: Call the WebsiteInstance generation service
         if (formData.role === 'agent') {
             await createWebsiteInstance({
-                tenantId: currentTenantId,
+                organizationId: currentOrganizationId,
                 agentId: agentId,
                 templateId: formData.templateId,
                 domain: `${newMember.name.toLowerCase().replace(/\s+/g, '')}.realestate-platform.com`,
@@ -152,8 +152,8 @@ export default function TeamPage() {
                     </button>
                 </div>
                 <div className="flex-1 text-right mr-4">
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Tenant: </span>
-                    <span className="text-[9px] font-black text-amber-500 uppercase">{currentTenantId}</span>
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Organization: </span>
+                    <span className="text-[9px] font-black text-amber-500 uppercase">{currentOrganizationId}</span>
                 </div>
             </div>
 
@@ -275,7 +275,7 @@ export default function TeamPage() {
                                 {member.status === 'active' ? (
                                     <><div className="flex flex-col gap-2 flex-1">
                                         <button
-                                            onClick={() => window.location.href = `/website-builder?agentId=${member.id}`}
+                                            onClick={() => window.location.href = `/website-builder?agentId=${member.id}&templateId=${member.templateId}`}
                                             className="w-full py-3.5 rounded-2xl bg-indigo-600 text-[10px] font-black text-white hover:bg-indigo-700 transition-all uppercase tracking-[0.2em] shadow-lg shadow-indigo-600/10 flex items-center justify-center gap-2"
                                         >
                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,7 +337,7 @@ export default function TeamPage() {
                                     {editingMember ? 'Edit' : 'Provision'} <span className="text-indigo-600">Access</span>
                                 </h3>
                                 <p className="text-slate-400 font-bold mt-2">
-                                    Authorized provisioning for <span className="text-indigo-600">{currentTenantId}</span>.
+                                    Authorized provisioning for <span className="text-indigo-600">{currentOrganizationId}</span>.
                                 </p>
                             </div>
                             <button
