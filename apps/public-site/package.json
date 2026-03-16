@@ -14,16 +14,20 @@
   "dependencies": {
     "@craftjs/core": "^0.2.12",
     "@craftjs/utils": "^0.2.5",
+    "@repo/auth": "*",
     "@repo/hooks": "*",
+    "@repo/services": "*",
     "@repo/types": "*",
     "@repo/ui": "*",
     "@repo/utils": "*",
+    "axios": "^1.6.0",
     "leaflet": "^1.9.4",
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1",
-    "react-leaflet-cluster": "^4.0.0"
+    "react-leaflet-cluster": "^4.0.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.21",
