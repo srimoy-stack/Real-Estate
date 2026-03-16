@@ -22,11 +22,19 @@ export interface User extends BaseEntity {
 export interface Agent extends BaseEntity {
   organizationId: string;
   name: string;
+  slug: string;
+  title?: string;
   email: string;
   phone: string;
   profilePhoto?: string;
   bio?: string;
-  userId?: string; // Optional link to User account
+  userId?: string;
+  licenseNumber?: string;
+  city?: string;
+  socialLinks?: SocialLinks;
+  templateId?: string;
+  websiteStatus?: 'ACTIVE' | 'DRAFT' | 'PENDING';
+  domain?: string;
 }
 
 // ─── Multi-Tenant ──────────────────────────────────
@@ -148,3 +156,5 @@ export * from './template-model';
 export * from './listings-section';
 export * from './saved-items';
 export * from './org-website';
+export * from './website-page';
+export * from './communities';

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Role } from '@repo/auth';
+import { authService } from '@repo/services';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -19,22 +19,8 @@ export default function RegisterPage() {
         setIsLoading(true);
 
         try {
-            // Simulated registration for demo
-            if (name && email && password) {
-                const mockUser = {
-                    id: 'user-2',
-                    name: name,
-                    email: email,
-                    role: Role.VIEWER
-                };
-
-                const { useAuthStore } = require('@repo/auth');
-                useAuthStore.getState().setAuth(mockUser, 'mock-jwt-token');
-
-                router.push('/dashboard');
-            } else {
-                setError('Please fill in all fields.');
-            }
+            await authService.register(name, email, password);
+            router.push('/saved-listings');
         } catch (err: any) {
             setError(err.message || 'Registration failed');
         } finally {

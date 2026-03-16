@@ -63,6 +63,7 @@ export default function AgentsPage() {
             } else {
                 await agentService.createAgent({
                     ...formData,
+                    slug: formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
                     organizationId: user.organizationId
                 });
             }

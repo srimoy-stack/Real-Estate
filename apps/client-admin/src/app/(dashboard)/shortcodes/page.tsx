@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShortcodeFilters, UserRole } from '@repo/types';
+import { ListingSectionConfigForm, ListingPreviewComponent } from '@repo/modules/listing-shortcodes';
 
 interface ShortcodeUIModel {
     id: string;
@@ -48,18 +49,7 @@ export default function ShortcodesPage() {
 
     const isBrokerageAdmin = currentUserRole === 'client_admin';
 
-    const handleSave = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!isBrokerageAdmin) return;
 
-        if (editingId) {
-            setShortcodes(shortcodes.map(s => s.id === editingId ? { ...formData, id: editingId } : s));
-        } else {
-            setShortcodes([...shortcodes, { ...formData, id: `config_${Math.random().toString(36).substr(2, 6)}` }]);
-        }
-        setShowModal(false);
-        setEditingId(null);
-    };
 
     const handleDelete = (id: string) => {
         if (!isBrokerageAdmin) return;
@@ -193,117 +183,30 @@ export default function ShortcodesPage() {
             {/* Creation/Edit Modal */}
             {isBrokerageAdmin && showModal && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                    <form onSubmit={handleSave} className="bg-white rounded-[48px] p-12 w-full max-w-2xl space-y-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                        <div>
-                            <h3 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">
-                                {editingId ? 'Edit' : 'Create'} Shortcode
-                            </h3>
-                            <p className="text-slate-500 text-sm">Configure parameters for agent-facing grid embeds.</p>
+                    <div className="bg-white rounded-[48px] p-12 w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-12 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+                        <ListingSectionConfigForm
+                            initialData={formData as any}
+                            onSave={(data) => {
+                                const payload = { ...formData, ...data };
+                                if (editingId) {
+                                    setShortcodes(shortcodes.map(s => s.id === editingId ? { ...payload as any, id: editingId } : s));
+                                } else {
+                                    setShortcodes([...shortcodes, { ...payload as any, id: `config_${Math.random().toString(36).substr(2, 6)}` }]);
+                                }
+                                setShowModal(false);
+                                setEditingId(null);
+                            }}
+                            onCancel={() => { setShowModal(false); resetForm(); }}
+                            title={editingId ? 'Edit Shortcode' : 'Create Shortcode'}
+                        />
+
+                        <div className="hidden md:block">
+                            <ListingPreviewComponent
+                                filters={formData.filters}
+                                limit={formData.limit}
+                            />
                         </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <label className="block space-y-2 col-span-2">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Shortcode Name Identifier</span>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. featuredHomes"
-                                    value={formData.shortcodeName}
-                                    onChange={e => setFormData({ ...formData, shortcodeName: e.target.value.replace(/\s+/g, '') })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none"
-                                />
-                            </label>
-
-                            <label className="block space-y-2 col-span-2">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Target Agent Website ID</span>
-                                <select
-                                    value={formData.websiteId}
-                                    onChange={e => setFormData({ ...formData, websiteId: e.target.value })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none"
-                                >
-                                    <option value="website_sarah">Sarah Jenkins</option>
-                                    <option value="website_michael">Michael Chen</option>
-                                    <option value="website_global">All Agents (Global)</option>
-                                </select>
-                            </label>
-
-                            <h4 className="col-span-2 text-sm font-black text-slate-900 mt-4 pt-4 border-t border-slate-100">Filter Overrides</h4>
-
-                            <label className="block space-y-2 mt-0">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">City Filter</span>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Toronto"
-                                    value={formData.filters.city || ''}
-                                    onChange={e => setFormData({ ...formData, filters: { ...formData.filters, city: e.target.value || undefined } })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none"
-                                />
-                            </label>
-
-                            <label className="block space-y-2 mt-0">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Property Type</span>
-                                <select
-                                    value={(formData.filters.propertyType as string) || ''}
-                                    onChange={e => setFormData({ ...formData, filters: { ...formData.filters, propertyType: e.target.value || undefined } })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none"
-                                >
-                                    <option value="">Any Type</option>
-                                    <option value="Detached">Detached</option>
-                                    <option value="Semi-Detached">Semi-Detached</option>
-                                    <option value="Townhouse">Townhouse</option>
-                                    <option value="Condo">Condo</option>
-                                </select>
-                            </label>
-
-                            <label className="block space-y-2 mt-0">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Min Price</span>
-                                <input
-                                    type="number"
-                                    placeholder="0"
-                                    value={formData.filters.minPrice || ''}
-                                    onChange={e => setFormData({ ...formData, filters: { ...formData.filters, minPrice: Number(e.target.value) || undefined } })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none"
-                                />
-                            </label>
-
-                            <label className="block space-y-2 mt-0">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Max Price</span>
-                                <input
-                                    type="number"
-                                    placeholder="1000000"
-                                    value={formData.filters.maxPrice || ''}
-                                    onChange={e => setFormData({ ...formData, filters: { ...formData.filters, maxPrice: Number(e.target.value) || undefined } })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none"
-                                />
-                            </label>
-
-                            <label className="block space-y-2 mt-0">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Grid Limit</span>
-                                <input
-                                    type="number"
-                                    value={formData.limit}
-                                    onChange={e => setFormData({ ...formData, limit: Number(e.target.value) || 1 })}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none"
-                                />
-                            </label>
-                        </div>
-
-                        <div className="flex gap-4 pt-6">
-                            <button
-                                type="button"
-                                onClick={() => { setShowModal(false); resetForm(); }}
-                                className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-200"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:bg-indigo-700"
-                            >
-                                {editingId ? 'Update Config' : 'Save Config'}
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             )}
         </div>

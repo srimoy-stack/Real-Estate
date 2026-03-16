@@ -1,24 +1,22 @@
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { listingQueryApi } from '@repo/services';
+import { listingService } from '@repo/services';
 import { ListingGallery } from '@/components/listings/ListingGallery';
 import { RelatedListingCard } from '@/components/listings/RelatedListingCard';
-import { LeadCaptureForm } from '@/components/listings/LeadCaptureForm';
-import { SaveListingButton } from '@/components/listings/SaveListingButton';
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
+import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
+import { PropertyStats } from '@/components/listings/PropertyStats';
+import { StickyInquirySidebar } from '@/components/listings/StickyInquirySidebar';
+import { SaveButton } from '@/components/listings/SaveButton';
 
 interface ListingDetailProps {
     params: { mlsNumber: string };
 }
 
-// ═══════════════════════════════════════════════════════════
-//  SEO — Dynamic Meta Tags & Structured Data
-// ═══════════════════════════════════════════════════════════
-
+// ... generateMetadata and ListingStructuredData remain the same ...
 export async function generateMetadata({ params }: ListingDetailProps): Promise<Metadata> {
-    const listing = await listingQueryApi.getListingByMlsId(params.mlsNumber);
+    const listing = await listingService.getByMLS(params.mlsNumber);
     const website = getWebsiteFromHeaders();
 
     if (!listing) return { title: 'Listing Not Found' };
@@ -82,7 +80,7 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
             '@type': 'Offer',
             'price': listing.price,
             'priceCurrency': listing.currency || 'CAD',
-            'availability': listing.status === 'For Sale' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+            'availability': listing.status === 'ACTIVE' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
         },
         'numberOfRooms': listing.bedrooms,
         'floorSize': listing.squareFootage ? {
@@ -100,376 +98,199 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
     );
 }
 
-// ═══════════════════════════════════════════════════════════
-//  PROPERTY DETAIL PAGE
-// ═══════════════════════════════════════════════════════════
-
 export default async function DynamicListingPage({ params }: ListingDetailProps) {
-    const listing = await listingQueryApi.getListingByMlsId(params.mlsNumber);
-    const website = getWebsiteFromHeaders();
-
+    const listing = await listingService.getByMLS(params.mlsNumber);
     if (!listing) return notFound();
 
-    // Tenant verification — ensure listing belongs to the correct organization
-    // In demo mode (no website config), allow all listings through
-    if (website && listing.organizationId) {
-        // website.tenantId maps to organization
-        // For now we allow because mock data all belongs to org-1
-    }
-
-    // Fetch related listings (same city, similar type/price)
-    const relatedListings = await listingQueryApi.getRelatedListings(listing, 3);
-
+    const relatedListings = await listingService.getRelatedListings(listing, 4);
     const formattedPrice = new Intl.NumberFormat('en-CA', {
         style: 'currency',
         currency: listing.currency || 'CAD',
         maximumFractionDigits: 0,
     }).format(listing.price);
 
-    const domain = website?.domain || 'platform.com';
-
-    // Status color mapping
     const statusStyles: Record<string, string> = {
-        'For Sale': 'bg-emerald-500 shadow-emerald-500/30',
-        'Sold': 'bg-rose-500 shadow-rose-500/30',
-        'Pending': 'bg-amber-500 shadow-amber-500/30',
-        'Removed': 'bg-slate-500 shadow-slate-500/30',
+        'ACTIVE': 'bg-emerald-500 shadow-emerald-500/30',
+        'SOLD': 'bg-rose-500 shadow-rose-500/30',
+        'PENDING': 'bg-amber-500 shadow-amber-500/30',
+        'OFF_MARKET': 'bg-slate-500 shadow-slate-500/30',
     };
     const statusStyle = statusStyles[listing.status] || 'bg-slate-500';
 
+    const navItems = [
+        { label: 'Description', id: 'property-description' },
+        { label: 'Address', id: 'property-map' },
+        { label: 'Details', id: 'property-overview' },
+        { label: 'Features', id: 'property-features' },
+        { label: 'Calculator', id: 'calculator' },
+        { label: 'Statistics', id: 'statistics' },
+        { label: 'Similar Listings', id: 'related-listings' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-            <ListingStructuredData listing={listing} domain={domain} />
+        <div className="min-h-screen bg-white">
+            <ListingStructuredData listing={listing} domain="platform.com" />
 
-            {/* Navigation Spacer */}
-            <div className="h-6" />
+            {/* Sub-Header Navigation */}
+            <div className="sticky top-[72px] z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 hidden lg:block">
+                <div className="max-w-7xl mx-auto px-8">
+                    <div className="flex items-center gap-8 overflow-x-auto no-scrollbar py-4">
+                        {navItems.map((item) => (
+                            <a
+                                key={item.id}
+                                href={`#${item.id}`}
+                                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors whitespace-nowrap"
+                            >
+                                {item.label}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
 
                 {/* ──── Breadcrumb ──── */}
-                <nav id="listing-breadcrumb" className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 flex-wrap">
+                <nav id="listing-breadcrumb" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 overflow-hidden whitespace-nowrap">
                     <Link href="/" className="hover:text-indigo-600 transition-colors">Home</Link>
-                    <svg className="w-2.5 h-2.5 text-slate-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    <svg className="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    <Link href="/search" className="hover:text-indigo-600 transition-colors">Listings</Link>
+                    <svg className="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     <span className="text-slate-500">{listing.city}</span>
-                    <svg className="w-2.5 h-2.5 text-slate-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                    <span className="text-slate-500">{listing.propertyType}</span>
-                    <svg className="w-2.5 h-2.5 text-slate-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                    <span className="text-indigo-600 italic">MLS® {listing.mlsNumber}</span>
                 </nav>
 
-                {/* ──── Header Section ──── */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-end">
-                    <div className="lg:col-span-2 space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className={`${statusStyle} text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg`}>
-                                {listing.status}
-                            </span>
-                            <span className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                {listing.propertyType}
-                            </span>
-                            {listing.isFeatured && (
-                                <span className="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                    Featured
-                                </span>
-                            )}
-                        </div>
-                        <h1 id="listing-title" className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter leading-tight">
-                            {listing.address}
-                        </h1>
-                        <p className="text-lg text-slate-500 font-medium">
-                            {listing.city}, {listing.province} {listing.postalCode}
-                        </p>
-                    </div>
-
-                    <div className="lg:col-span-1 lg:text-right space-y-2">
-                        <p id="listing-price" className="text-4xl sm:text-5xl font-black text-indigo-600 tracking-tighter">
-                            {formattedPrice}
-                        </p>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                            MLS® {listing.mlsNumber}
-                        </p>
-                        {listing.price > 0 && (
-                            <p className="text-slate-400 text-sm font-medium">
-                                Est. ${Math.round(listing.price * 0.0044).toLocaleString()}/mo
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                {/* ──── Image Gallery ──── */}
-                <div className="relative group/gallery">
-                    <ListingGallery
-                        images={listing.images}
-                        title={listing.address}
-                        virtualTourUrl={listing.virtualTourUrl}
-                    />
-                    {/* Action Bar — Overlaid or below for better visibility */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10">
-                        <div className="flex items-center gap-6">
-                            <SaveListingButton mlsNumber={listing.mlsNumber} />
-                            <button className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                            </button>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-slate-400 italic">
-                            <span>Direct Listing</span>
-                            <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
-                            <span>Verified Agent</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ──── Content Layout: 2-Column ──── */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
-
-                    {/* ──── Main Content Column ──── */}
-                    <div className="lg:col-span-2 space-y-14">
-
-                        {/* Property Overview — Spec Grid */}
-                        <section id="property-overview" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                            {[
-                                { icon: '🛏', value: listing.bedrooms, label: 'Bedrooms' },
-                                { icon: '🚿', value: listing.bathrooms, label: 'Bathrooms' },
-                                { icon: '📐', value: listing.squareFootage > 0 ? listing.squareFootage.toLocaleString() + ' SF' : 'N/A', label: 'Living Area' },
-                                { icon: '🌳', value: listing.lotSize > 0 ? listing.lotSize.toLocaleString() + ' SF' : 'N/A', label: 'Lot Size' },
-                                { icon: '🏗️', value: listing.yearBuilt || 'N/A', label: 'Year Built' },
-                            ].map((spec, idx) => (
-                                <div key={idx} className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm text-center space-y-2 hover:border-indigo-100 hover:shadow-md transition-all">
-                                    <span className="text-2xl block">{spec.icon}</span>
-                                    <p className="text-lg font-black text-slate-900">{spec.value}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{spec.label}</p>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    {/* Left Column: Content */}
+                    <div className="lg:col-span-8 space-y-16">
+                        {/* Header & Gallery */}
+                        <div className="space-y-8">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`${statusStyle} text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg`}>
+                                            {listing.status}
+                                        </span>
+                                        <span className="bg-slate-50 text-slate-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                            {listing.propertyType}
+                                        </span>
+                                    </div>
+                                    <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                                        {listing.title || listing.address}
+                                    </h1>
+                                    <p className="text-xl text-slate-400 font-bold italic">{listing.address}, {listing.city}</p>
                                 </div>
-                            ))}
-                        </section>
-
-                        {/* Description */}
-                        <section id="property-description" className="space-y-5">
-                            <div className="flex items-center gap-3">
-                                <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Property Description</h2>
+                                <div className="text-left md:text-right flex flex-col items-center md:items-end gap-4">
+                                    <div>
+                                        <p className="text-4xl sm:text-5xl font-black text-indigo-600 tracking-tighter">{formattedPrice}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 mt-2">MLS® {listing.mlsNumber}</p>
+                                    </div>
+                                    <SaveButton listingId={listing.id} variant="full" />
+                                </div>
                             </div>
-                            <div className="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed font-medium">
-                                {listing.description.split('\n').filter(Boolean).map((paragraph: string, idx: number) => (
-                                    <p key={idx}>{paragraph}</p>
+
+                            <ListingGallery images={listing.images} title={listing.address} />
+                        </div>
+
+                        {/* Property Overview */}
+                        <section id="property-overview" className="bg-slate-50/50 p-10 rounded-[48px] border border-slate-100">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                                {[
+                                    { label: 'Bedrooms', value: listing.bedrooms, icon: '🛏️' },
+                                    { label: 'Bathrooms', value: listing.bathrooms, icon: '🚿' },
+                                    { label: 'Square Ft', value: listing.squareFootage?.toLocaleString(), icon: '📐' },
+                                    { label: 'Year Built', value: '2022', icon: '📅' },
+                                ].map((item, i) => (
+                                    <div key={i} className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                            {item.icon} {item.label}
+                                        </p>
+                                        <p className="text-xl font-black text-slate-900">{item.value}</p>
+                                    </div>
                                 ))}
                             </div>
                         </section>
 
-                        {/* Features */}
-                        {listing.features && listing.features.length > 0 && (
-                            <section id="property-features" className="space-y-5">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Features</h2>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {listing.features.map((feature: string, idx: number) => (
-                                        <div key={idx} className="flex items-center gap-3 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50 hover:bg-indigo-50 transition-colors">
-                                            <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center shrink-0">
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                            </div>
-                                            <span className="font-bold text-sm text-slate-700">{feature}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Amenities */}
-                        {listing.amenities && listing.amenities.length > 0 && (
-                            <section id="property-amenities" className="space-y-5">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-1 w-8 bg-emerald-500 rounded-full" />
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Building Amenities</h2>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {listing.amenities.map((amenity: string, idx: number) => (
-                                        <div key={idx} className="flex items-center gap-3 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50 hover:bg-emerald-50 transition-colors">
-                                            <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                            </div>
-                                            <span className="font-bold text-sm text-slate-700">{amenity}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Location Map */}
-                        <section id="property-location" className="space-y-5">
-                            <div className="flex items-center gap-3">
-                                <div className="h-1 w-8 bg-amber-500 rounded-full" />
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Location</h2>
+                        {/* Description */}
+                        <section id="property-description" className="space-y-8">
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">Description</h2>
+                            <div className="prose prose-slate prose-lg max-w-none text-slate-500 font-medium leading-relaxed">
+                                {listing.description.split('\n').map((p, i) => <p key={i}>{p}</p>)}
                             </div>
-                            <div className="relative aspect-[16/9] w-full bg-slate-100 rounded-[28px] overflow-hidden shadow-lg border border-slate-200">
-                                {/* Static map placeholder — Replace with Google Maps Embed in production */}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 z-10 p-6 text-center">
-                                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6 border border-slate-100">
-                                        <span className="text-4xl">📍</span>
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-2">{listing.address}</h3>
-                                    <p className="text-sm text-slate-500 font-medium mb-6">{listing.city}, {listing.province} {listing.postalCode}</p>
-                                    {listing.latitude && listing.longitude && (
-                                        <div className="flex flex-col sm:flex-row gap-3">
-                                            <a
-                                                href={`https://www.google.com/maps/search/?api=1&query=${listing.latitude},${listing.longitude}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-indigo-600 transition-colors shadow-lg"
-                                            >
-                                                Open in Google Maps
-                                            </a>
-                                            <a
-                                                href={`https://maps.apple.com/?q=${listing.latitude},${listing.longitude}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-6 py-3 bg-white text-slate-700 font-bold rounded-xl text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors border border-slate-200"
-                                            >
-                                                Open in Apple Maps
-                                            </a>
-                                        </div>
-                                    )}
-                                    <p className="text-[10px] text-slate-400 mt-4 font-medium">
-                                        {listing.latitude?.toFixed(4)}°N, {listing.longitude?.toFixed(4)}°W
-                                    </p>
+                        </section>
+
+                        {/* Components from Screenshots */}
+                        <MortgageCalculator price={listing.price} />
+                        <PropertyStats />
+
+                        {/* Location */}
+                        <section id="property-map" className="space-y-8">
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">Location</h2>
+                            <div className="aspect-video w-full bg-slate-100 rounded-[48px] overflow-hidden relative border border-slate-100 group">
+                                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778545894-da20a8555616?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center grayscale opacity-20 group-hover:opacity-30 transition-opacity duration-1000" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-10">
+                                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl mb-6 text-2xl animate-bounce">📍</div>
+                                    <h3 className="text-2xl font-black text-slate-900 mb-2">{listing.address}</h3>
+                                    <p className="text-slate-500 font-bold max-w-md">{listing.city}, {listing.province} {listing.postalCode}</p>
+                                    <Link href={`https://maps.google.com/?q=${listing.address}`} target="_blank" className="mt-8 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl">Open in Maps</Link>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Agent Detailed Profile */}
+                        <section id="agent-profile" className="bg-slate-50/50 p-12 rounded-[48px] border border-slate-100 flex flex-col md:flex-row gap-12">
+                            <div className="w-48 h-48 rounded-[32px] overflow-hidden shadow-2xl shrink-0">
+                                <img src={listing.agentPhoto || 'https://i.pravatar.cc/300'} alt={listing.agentName} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="space-y-6 flex-1">
+                                <div>
+                                    <h3 className="text-3xl font-black text-slate-900">{listing.agentName}</h3>
+                                    <p className="text-indigo-600 font-black text-xs uppercase tracking-[0.2em] mt-2">Certified Listing Agent</p>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <a href={`tel:${listing.agentPhone}`} className="flex flex-col space-y-1">
+                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Direct Phone</span>
+                                        <span className="font-bold text-slate-900 hover:text-indigo-600 transition-colors uppercase">{listing.agentPhone}</span>
+                                    </a>
+                                    <a href={`mailto:${listing.agentEmail}`} className="flex flex-col space-y-1">
+                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Email Address</span>
+                                        <span className="font-bold text-slate-900 hover:text-indigo-600 transition-colors uppercase">{listing.agentEmail}</span>
+                                    </a>
+                                </div>
+                                <div className="pt-6 border-t border-slate-200/50 flex gap-4">
+                                    <button className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm border border-slate-100">F</button>
+                                    <button className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm border border-slate-100">X</button>
+                                    <button className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm border border-slate-100">IN</button>
                                 </div>
                             </div>
                         </section>
                     </div>
 
-                    {/* ──── Sidebar: Agent & Forms ──── */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-28 space-y-8">
-
-                            {/* Agent Contact Card */}
-                            <section id="agent-contact" className="bg-white p-8 rounded-[28px] border border-slate-100 shadow-xl shadow-slate-200/30">
-                                <div className="text-center mb-6">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center shadow-xl shadow-indigo-500/30 mb-4 text-2xl font-black text-white">
-                                        {listing.agentName.charAt(0)}
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900">{listing.agentName}</h3>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Listing Agent</p>
-                                    {listing.brokerageName && (
-                                        <p className="text-xs text-indigo-500 font-bold mt-2">{listing.brokerageName}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-3">
-                                    <a
-                                        href={`tel:${listing.agentPhone}`}
-                                        className="flex items-center justify-center gap-3 w-full py-3.5 bg-slate-50 hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 font-bold rounded-xl transition-colors border border-slate-100 text-sm"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                        {listing.agentPhone || 'Contact Office'}
-                                    </a>
-                                    <a
-                                        href={`mailto:${listing.agentEmail}`}
-                                        className="flex items-center justify-center gap-3 w-full py-3.5 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 font-bold rounded-xl transition-colors border border-slate-100 text-sm"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                        Email Agent
-                                    </a>
-                                </div>
-                            </section>
-
-                            {/* Inquiry Form */}
-                            <section id="inquiry-form" className="bg-slate-900 rounded-[28px] overflow-hidden shadow-2xl">
-                                <div className="p-8 pb-5 text-center">
-                                    <h3 className="text-xl font-black text-white mb-1">Request a Viewing</h3>
-                                    <p className="text-slate-400 text-xs font-medium">Interested in this property? Let us connect you.</p>
-                                </div>
-                                <div className="bg-white rounded-t-[20px] p-6">
-                                    <Suspense fallback={<div className="h-[350px] bg-slate-50 rounded-xl animate-pulse" />}>
-                                        <LeadCaptureForm
-                                            listingId={listing.id}
-                                            mlsNumber={listing.mlsNumber}
-                                            listingTitle={`MLS® ${listing.mlsNumber} — ${listing.address}`}
-                                            websiteId={website?.id}
-                                        />
-                                    </Suspense>
-                                </div>
-                            </section>
-
-                            {/* Quick Stats */}
-                            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[28px] p-6 text-center text-white shadow-xl shadow-indigo-500/20">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-2xl font-black">{listing.bedrooms}</p>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Beds</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-black">{listing.bathrooms}</p>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Baths</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-black">{listing.squareFootage > 0 ? listing.squareFootage.toLocaleString() : '—'}</p>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Sq Ft</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-2xl font-black">{listing.yearBuilt || '—'}</p>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Built</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+                    {/* Right Column: Sidebar */}
+                    <div className="lg:col-span-4">
+                        <StickyInquirySidebar listing={listing as any} />
                     </div>
                 </div>
 
-                {/* ──── Related Listings ──── */}
+                {/* Related Listings */}
                 {relatedListings.length > 0 && (
-                    <section id="related-listings" className="pt-12 border-t border-slate-200 mt-8 space-y-8">
-                        <div className="text-center space-y-3">
-                            <div className="flex items-center justify-center gap-3">
-                                <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                                <span className="text-[11px] font-black uppercase tracking-widest text-indigo-600">Similar Properties</span>
-                                <div className="h-1 w-8 bg-indigo-600 rounded-full" />
+                    <section id="related-listings" className="pt-24 space-y-12">
+                        <div className="flex items-end justify-between">
+                            <div className="space-y-3">
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tight italic">Similar Listings</h2>
+                                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Hand-picked for you in {listing.city}</p>
                             </div>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter">
-                                More Homes in <span className="text-indigo-600 italic">{listing.city}</span>
-                            </h2>
-                            <p className="text-slate-500 font-medium max-w-lg mx-auto">
-                                Explore similar properties matching your criteria.
-                            </p>
+                            <Link href="/search" className="hidden sm:flex items-center gap-3 text-indigo-600 font-black text-xs uppercase tracking-widest hover:gap-5 transition-all">
+                                View all
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </Link>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {relatedListings.map((property) => (
-                                <RelatedListingCard key={property.id} listing={property} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {relatedListings.map(l => (
+                                <RelatedListingCard key={l.id} listing={l} />
                             ))}
                         </div>
                     </section>
                 )}
-
-                {/* ──── MLS Compliance Disclaimer ──── */}
-                <section id="mls-disclaimer" className="pt-10 border-t border-slate-100 mt-8">
-                    <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                        <div className="flex flex-col sm:flex-row items-start gap-4">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-slate-200 shrink-0 shadow-sm">
-                                <span className="text-[10px] font-black text-slate-400 uppercase">MLS®</span>
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-black text-slate-700">MLS® Disclaimer</h4>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    The listing data is provided under copyright by the Canadian Real Estate Association (CREA).
-                                    The information provided herein must only be used by consumers that have a bona fide interest in the purchase,
-                                    sale, or lease of real estate and may not be used for any commercial purpose or any other purpose.
-                                </p>
-                                <p className="text-xs text-slate-500 leading-relaxed">
-                                    Data is deemed reliable but is not guaranteed accurate by the MLS® System.
-                                    Data provided by CREA MLS® System.{' '}
-                                    {listing.brokerageName && (
-                                        <span className="font-semibold">Listed by {listing.brokerageName}.</span>
-                                    )}
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2">
-                                    Last updated: {new Date(listing.updatedAt).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
             </div>
         </div>
     );

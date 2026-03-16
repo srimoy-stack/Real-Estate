@@ -1,97 +1,54 @@
 import { Listing, ListingSortOrder, ListingSectionFilters, PaginatedResponse } from '@repo/types';
 import { useNotificationStore } from './notificationStore';
-
-// Mock listings based on requested model
-const mockListings: Listing[] = [
-    {
-        id: 'L1',
-        mlsNumber: 'X123456',
-        agentName: 'John Smith',
-        organizationId: 'org-1',
-        slug: 'luxury-condo-toronto',
-        title: 'Modern Luxury Condo',
-        description: 'Stunning 2-bedroom condo in the heart of Toronto. Floor-to-ceiling windows and premium finishes.',
-        price: 750000,
-        currency: 'CAD',
-        bedrooms: 2,
-        bathrooms: 2,
-        squareFootage: 1100,
-        propertyType: 'CONDO' as any,
-        status: 'ACTIVE' as any,
-        address: '123 Bay St',
-        city: 'Toronto',
-        province: 'ON',
-        postalCode: 'M5J 2R8',
-        mainImage: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800',
-        images: [],
-        features: ['Gym', 'Pool'],
-        amenities: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: 'L2',
-        mlsNumber: 'X654321',
-        agentName: 'Jane Doe',
-        organizationId: 'org-1',
-        slug: 'detached-house-vancouver',
-        title: 'Spacious Family Home',
-        description: 'Large detached home in a quiet neighborhood. Perfect for growing families.',
-        price: 1850000,
-        currency: 'CAD',
-        bedrooms: 4,
-        bathrooms: 3,
-        squareFootage: 2800,
-        propertyType: 'DETACHED' as any,
-        status: 'ACTIVE' as any,
-        address: '456 Oak Ave',
-        city: 'Vancouver',
-        province: 'BC',
-        postalCode: 'V6B 1A1',
-        mainImage: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&q=80&w=800',
-        images: [],
-        features: ['Garden', 'Parking'],
-        amenities: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }
-];
+import { listingsService as mockApi } from '../../mock-api/services/listingsService';
 
 export const listingService = {
-    search: async (_filters: any): Promise<PaginatedResponse<Listing>> => {
-        // Return mock data for now
+    search: async (filters: any): Promise<PaginatedResponse<Listing>> => {
+        const { listings, totalCount } = await mockApi.getListings(filters);
+        const limit = filters.limit || 12;
         return {
             success: true,
-            data: mockListings,
-            pagination: { page: 1, pageSize: 12, total: 2, totalPages: 1 }
+            data: listings,
+            pagination: {
+                page: filters.page || 1,
+                pageSize: limit,
+                total: totalCount,
+                totalPages: Math.ceil(totalCount / limit)
+            }
         };
     },
 
     getById: async (id: string): Promise<Listing | null> => {
-        return mockListings.find(l => l.id === id) || null;
+        const { listings } = await mockApi.getListings();
+        return listings.find(l => l.id === id) || null;
+    },
+
+    getByMLS: async (mlsNumber: string): Promise<Listing | null> => {
+        return await mockApi.getListingByMLS(mlsNumber);
     },
 
     /**
      * Fetch listings based on ListingSectionConfig filters.
-     * Bridged to listingQueryApi for rich data and consistent filtering.
      */
-    getBySectionConfig: async (filters: ListingSectionFilters, limit: number, sort: ListingSortOrder): Promise<any[]> => {
-        const { listingQueryApi } = await import('./listingQueryApi');
-
-        const response = await listingQueryApi.searchListings({
+    getBySectionConfig: async (filters: ListingSectionFilters, limit: number, _sort: ListingSortOrder): Promise<Listing[]> => {
+        const { listings } = await mockApi.getListings({
             city: filters.city,
-            propertyType: filters.propertyType,
+            propertyType: filters.propertyType as any,
             status: filters.status as any,
             minPrice: filters.minPrice,
             maxPrice: filters.maxPrice,
-            bedrooms: filters.bedrooms,
-            bathrooms: filters.bathrooms,
-            featured: filters.featured,
-            limit: limit,
-            sort: sort as any,
+            limit: limit
         });
+        return listings;
+    },
 
-        return response.listings;
+    getRelatedListings: async (listing: Listing, limit: number = 3): Promise<Listing[]> => {
+        const { listings } = await mockApi.getListings({
+            city: listing.city,
+            propertyType: listing.propertyType,
+            limit: limit + 1
+        });
+        return listings.filter(l => l.id !== listing.id).slice(0, limit);
     },
 
     submitLead: async (_listingId: string, leadData: any) => {

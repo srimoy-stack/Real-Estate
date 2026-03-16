@@ -5,10 +5,11 @@ import {
     HeroSection,
     TextSection,
     ImageSection,
-    ListingsSection,
     AgentProfilesSection,
     ContactSection
 } from '@repo/ui';
+import { ListingsSection } from './sections/ListingsSection';
+import { ListingSortOrder } from '@repo/types';
 
 interface SectionConfig {
     type: string;
@@ -16,6 +17,9 @@ interface SectionConfig {
     content?: any;
     filters?: any;
     limit?: number;
+    sort?: ListingSortOrder;
+    title?: string;
+    subtitle?: string;
     text?: string;
     url?: string;
     caption?: string;
@@ -55,9 +59,11 @@ export const ModernSectionRenderer: React.FC<SectionRendererProps> = ({ layoutCo
                         return (
                             <ListingsSection
                                 key={index}
-                                content={section.content || section.props?.content || {}}
-                                filters={section.filters || section.props?.filters}
-                                limit={section.limit || section.props?.limit}
+                                filters={section.filters || section.props?.filters || {}}
+                                limit={section.limit || section.props?.limit || 6}
+                                sort={section.sort || section.props?.sort || 'latest'}
+                                title={section.title || section.content?.title || section.props?.title}
+                                subtitle={section.subtitle || section.content?.subtitle || section.props?.subtitle}
                             />
                         );
 

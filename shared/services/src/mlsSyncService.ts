@@ -159,7 +159,10 @@ export class MlsSyncService {
                 if (f.maxPrice && listing.price > f.maxPrice) return false;
                 if (f.bedrooms && listing.bedrooms < f.bedrooms) return false;
                 if (f.bathrooms && listing.bathrooms < f.bathrooms) return false;
-                if (f.propertyType && f.propertyType.length > 0 && !f.propertyType.map(t => t.toString().toLowerCase()).includes(listing.propertyType.toLowerCase())) return false;
+                if (f.propertyType) {
+                    const types = Array.isArray(f.propertyType) ? f.propertyType : [f.propertyType];
+                    if (types.length > 0 && !types.map(t => t.toString().toLowerCase()).includes(listing.propertyType.toLowerCase())) return false;
+                }
 
                 return true;
             });

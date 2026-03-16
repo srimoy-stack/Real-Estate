@@ -1,27 +1,11 @@
-import type { Metadata } from 'next';
 import './globals.css';
-
 import { getWebsiteFromHeaders } from '../lib/tenant/getWebsiteFromHeaders';
 import { WebsiteProvider } from '../lib/tenant/website-context';
 import { AuthProvider } from '@repo/auth';
-import { getHeaderLinks, getFontUrls, getBrandingCssVars } from '@repo/types';
-import { Footer } from '@repo/ui';
-import { NavbarAuthWrapper } from '../components/layout/NavbarAuthWrapper';
-
-export const dynamic = 'force-dynamic';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const website = getWebsiteFromHeaders();
-  if (!website) return { title: 'Template Preview | Platform Engine' };
-
-  return {
-    title: website.seo.defaultTitle || website.brandName,
-    description: website.seo.defaultDescription || `Premium properties by ${website.brandName}`,
-    icons: {
-      icon: website.branding.faviconUrl || website.branding.logoUrl,
-    },
-  };
-}
+import { getFontUrls, getBrandingCssVars } from '@repo/types';
+import { Header } from '../components/sections/Header';
+import { Footer } from '../components/sections/Footer';
+import { LeadGate } from '../components/auth/LeadGate';
 
 export default function RootLayout({
   children,
@@ -42,15 +26,8 @@ export default function RootLayout({
   }
 
   const { branding } = website;
-  const headerLinks = getHeaderLinks(website);
   const fontUrls = getFontUrls(branding);
   const cssVars = getBrandingCssVars(branding);
-
-  // Convert Website HeaderLinks to NavItems (Navbar expects {label, href})
-  const navItems = headerLinks.map(link => ({
-    label: link.label,
-    href: link.href
-  }));
 
   return (
     <html lang="en" className="scroll-smooth">
@@ -60,7 +37,7 @@ export default function RootLayout({
         ))}
       </head>
       <body
-        className="min-h-screen bg-white antialiased selection:bg-emerald-100 selection:text-emerald-900"
+        className="min-h-screen bg-white antialiased selection:bg-indigo-100 selection:text-indigo-900"
         style={{
           fontFamily: `var(--brand-font-body)`,
           ...cssVars,
@@ -68,15 +45,12 @@ export default function RootLayout({
       >
         <AuthProvider>
           <WebsiteProvider website={website}>
-            <NavbarAuthWrapper
-              brand={website.brandName}
-              items={navItems}
-            />
-            {/* Added a subtle top accent bar that follows the user on scroll (optional, but premium) */}
+            <Header />
+            <LeadGate />
             <main className="min-h-[70vh]">
               {children}
             </main>
-            <Footer brand={website.brandName} />
+            <Footer />
           </WebsiteProvider>
         </AuthProvider>
       </body>

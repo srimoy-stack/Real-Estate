@@ -41,6 +41,15 @@ const config: Config = {
         'premium': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
         'premium-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
       },
+      keyframes: {
+        'slow-zoom': {
+          '0%': { transform: 'scale(1)' },
+          '100%': { transform: 'scale(1.1)' },
+        }
+      },
+      animation: {
+        'slow-zoom': 'slow-zoom 20s ease-in-out infinite alternate',
+      }
 
     },
   },

@@ -1,15 +1,16 @@
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
-import { getVisibleSections } from '@repo/types';
-import { SectionRenderer } from '@repo/ui';
-import { orgWebsiteService } from '@repo/services';
-import { ModernSectionRenderer } from '@/components/section-renderer';
+import { HeroSection } from '@/components/sections/HeroSection';
+import { FeaturedListings } from '@/components/sections/FeaturedListings';
+import { PropertyCategories } from '@/components/sections/PropertyCategories';
+import { CommunitiesSection } from '@/components/sections/CommunitiesSection';
+import { CTASection } from '@/components/sections/CTASection';
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
+import { BlogSection } from '@/components/sections/BlogSection';
+import { ContactSection } from '@/components/sections/ContactSection';
 
 export default async function HomePage() {
   const website = getWebsiteFromHeaders();
   if (!website) return null;
-
-  // Try to fetch dynamic Home page
-  const dynamicHomePage = await orgWebsiteService.getPageBySlug(website.tenantId, website.websiteId, '/');
 
   const { brandName, seo, domain } = website;
 
@@ -26,29 +27,20 @@ export default async function HomePage() {
     },
   };
 
-  // If we have a dynamic home page, render it with placeholders as requested
-  if (dynamicHomePage && dynamicHomePage.isPublished) {
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <ModernSectionRenderer layoutConfig={dynamicHomePage.layoutConfig as any} />
-      </>
-    );
-  }
-
-  // Fallback to existing functionality
-  const visibleSections = getVisibleSections(website);
-
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <SectionRenderer sections={visibleSections} organizationId={website.tenantId} />
+      <HeroSection />
+      <FeaturedListings />
+      <PropertyCategories />
+      <CommunitiesSection />
+      <CTASection />
+      <TestimonialsSection />
+      <BlogSection />
+      <ContactSection />
     </>
   );
 }

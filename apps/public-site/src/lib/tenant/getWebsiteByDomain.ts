@@ -36,9 +36,34 @@ function buildModernBrokerage(): WebsiteConfig {
     ...config.navigation,
     headerLinks: [
       { id: 'nav-home', label: 'Home', href: '/', isExternal: false, order: 0, isVisible: true },
-      { id: 'nav-listings', label: 'Listings', href: '/listings', isExternal: false, order: 1, isVisible: true },
-      { id: 'nav-about', label: 'About Us', href: '/about', isExternal: false, order: 2, isVisible: true },
-      { id: 'nav-contact', label: 'Contact', href: '/contact', isExternal: false, order: 3, isVisible: true },
+      {
+        id: 'nav-properties',
+        label: 'Properties',
+        href: '/search',
+        isExternal: false,
+        order: 1,
+        isVisible: true,
+        children: [
+          { id: 'sub-condos', label: 'Condos', href: '/search?type=CONDO', isExternal: false, order: 0, isVisible: true },
+          { id: 'sub-detached', label: 'Detached', href: '/search?type=DETACHED', isExternal: false, order: 1, isVisible: true },
+        ]
+      },
+      { id: 'nav-map', label: 'Interactive Map', href: '/map-search', isExternal: false, order: 2, isVisible: true },
+      { id: 'nav-agents', label: 'Agents', href: '/agents', isExternal: false, order: 3, isVisible: true },
+      {
+        id: 'nav-communities',
+        label: 'Communities',
+        href: '/communities',
+        isExternal: false,
+        order: 4,
+        isVisible: true,
+        children: [
+          { id: 'sub-toronto', label: 'Toronto', href: '/communities/toronto', isExternal: false, order: 0, isVisible: true },
+          { id: 'sub-brampton', label: 'Brampton', href: '/communities/brampton', isExternal: false, order: 1, isVisible: true },
+        ]
+      },
+      { id: 'nav-blog', label: 'Blog', href: '/blog', isExternal: false, order: 5, isVisible: true },
+      { id: 'nav-contact', label: 'Contact', href: '/contact', isExternal: false, order: 6, isVisible: true },
     ],
     footerLinks: [
       { id: 'foot-privacy', label: 'Privacy Policy', href: '/privacy', isExternal: false, order: 0, isVisible: true },

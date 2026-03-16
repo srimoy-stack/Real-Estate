@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState & AuthActions & { _hasHydrated: boo
         }),
         {
             name: 'auth-storage',
-            storage: createJSONStorage(() => sessionStorage),
+            storage: createJSONStorage(() => localStorage),
             onRehydrateStorage: (state) => {
                 return () => state.setHasHydrated(true);
             },

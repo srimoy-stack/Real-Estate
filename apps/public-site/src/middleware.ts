@@ -71,6 +71,8 @@ export async function middleware(request: NextRequest) {
   // ── Resolve website config ─────────────────────────────────────────
   const website: WebsiteConfig | null = await getWebsiteByDomain(domain);
 
+  console.log(`[Middleware] Resolved tenant: ${tenantId}, Domain: ${domain}, Website Found: ${!!website}`);
+
   if (!website) {
     return new NextResponse('Website not found', { status: 404 });
   }

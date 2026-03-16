@@ -11,22 +11,26 @@ interface SidebarItemProps {
     active?: boolean;
 }
 
-const SidebarItem = ({ href, label, icon, active }: SidebarItemProps) => (
+const SidebarItem = ({ href, label, icon, active, collapsed }: SidebarItemProps & { collapsed?: boolean }) => (
     <Link
         href={href as any}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${active
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${active
             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
             : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
-            }`}
+            } ${collapsed ? 'justify-center px-0' : ''}`}
+        title={collapsed ? label : ''}
     >
         <span className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600'}`}>
             {icon}
         </span>
-        <span className="font-semibold text-sm">{label}</span>
+        {!collapsed && <span className="font-semibold text-sm whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-300">{label}</span>}
+        {collapsed && active && (
+            <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
+        )}
     </Link>
 );
 
-export const Sidebar = () => {
+export const Sidebar = ({ collapsed, onToggle }: { collapsed?: boolean; onToggle?: () => void }) => {
     const pathname = usePathname();
 
     const items = [
@@ -120,89 +124,96 @@ export const Sidebar = () => {
     ];
 
     return (
-        <aside className="fixed left-0 top-0 h-screen w-72 bg-white border-r border-slate-200 flex flex-col z-50">
+        <aside className={`fixed left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-300 ${collapsed ? 'w-20' : 'w-72'}`}>
+            {/* Collapse Toggle */}
+            <button
+                onClick={onToggle}
+                className="absolute -right-3 top-10 h-6 w-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-600 shadow-sm z-50"
+            >
+                <svg className={`w-3 h-3 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
             {/* Logo */}
-            <div className="p-8">
+            <div className={`p-8 ${collapsed ? 'p-4' : ''}`}>
                 <Link href={'/dashboard' as any} className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white shadow-lg shadow-indigo-500/25">
+                    <div className="flex h-10 w-10 min-w-[40px] items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white shadow-lg shadow-indigo-500/25">
                         RE
                     </div>
-                    <span className="text-xl font-black tracking-tight text-slate-900 uppercase">Client Admin</span>
+                    {!collapsed && <span className="text-xl font-black tracking-tight text-slate-900 uppercase whitespace-nowrap animate-in fade-in duration-300">Client Admin</span>}
                 </Link>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-2 overflow-y-auto pt-4 shadow-inner">
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-6">Core Management</p>
+            <nav className={`flex-1 px-4 space-y-2 overflow-y-auto pt-4 shadow-inner ${collapsed ? 'px-2' : ''}`}>
+                {!collapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-6">Core Management</p>}
                 {items.map((item) => (
                     <SidebarItem
                         key={item.href}
                         {...item}
                         active={pathname === item.href}
+                        collapsed={collapsed}
                     />
                 ))}
 
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Team Presence</p>
+                {!collapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Team Presence</p>}
                 {teamItems.map((item) => (
                     <SidebarItem
                         key={item.href}
                         {...item}
                         active={pathname === item.href}
+                        collapsed={collapsed}
                     />
                 ))}
 
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Digital Ecosystem</p>
+                {!collapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Digital Ecosystem</p>}
                 {websiteItems.map((item) => (
                     <SidebarItem
                         key={item.href}
                         {...item}
                         active={pathname === item.href}
+                        collapsed={collapsed}
                     />
                 ))}
 
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Brokerage Site Architect</p>
+                {!collapsed && <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 mt-8">Brokerage Site Architect</p>}
                 <SidebarItem
                     href="/website-builder"
-                    label="Brokerage Homepage"
+                    label="Website Builder"
                     active={pathname === '/website-builder'}
+                    collapsed={collapsed}
                     icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
-                />
-                <SidebarItem
-                    href="/website-builder/pages"
-                    label="Custom Pages"
-                    active={pathname === '/website-builder/pages'}
-                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-                />
-                <SidebarItem
-                    href="/website-builder/navigation"
-                    label="Navigation"
-                    active={pathname === '/website-builder/navigation'}
-                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>}
                 />
                 <SidebarItem
                     href="/website-builder/seo"
                     label="SEO & Meta"
                     active={pathname === '/website-builder/seo'}
+                    collapsed={collapsed}
                     icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
                 />
             </nav>
 
             {/* Footer / User */}
-            <div className="p-4 mt-auto">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-md">
+            <div className={`p-4 mt-auto ${collapsed ? 'p-2' : ''}`}>
+                <div className={`p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3 transition-all ${collapsed ? 'p-2 justify-center' : ''}`}>
+                    <div className="h-10 w-10 min-w-[40px] rounded-full bg-indigo-500 flex items-center justify-center font-bold text-white shadow-md">
                         JD
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                        <p className="text-xs font-bold text-slate-900 truncate">John Doe</p>
-                        <p className="text-[10px] text-slate-500 truncate">Brokerage Admin</p>
-                    </div>
-                    <Link href={'/settings' as any} className="p-2 hover:bg-indigo-50 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </Link>
+                    {!collapsed && (
+                        <div className="flex-1 overflow-hidden animate-in fade-in duration-300">
+                            <p className="text-xs font-bold text-slate-900 truncate">John Doe</p>
+                            <p className="text-[10px] text-slate-500 truncate">Brokerage Admin</p>
+                        </div>
+                    )}
+                    {!collapsed && (
+                        <Link href={'/settings' as any} className="p-2 hover:bg-indigo-50 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </Link>
+                    )}
                 </div>
             </div>
         </aside>

@@ -1,0 +1,52 @@
+import { Community } from '@repo/types';
+
+export const mockCommunities: Community[] = [
+    {
+        id: 'c1',
+        slug: 'toronto',
+        name: 'Toronto',
+        description: 'Experience the heartbeat of Canada in its largest city. From luxury condos to historic neighborhoods, Toronto offers unparalleled urban living.',
+        image: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&q=80&w=800',
+        listingCount: 15,
+        avgPrice: 1250000,
+        amenities: ['Transit Access', 'World-class Dining', 'Lakeside Parks'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 'c2',
+        slug: 'vancouver',
+        name: 'Vancouver',
+        description: 'Nestled between the mountains and the ocean, Vancouver provides a stunning backdrop for coastal living and vibrant city life.',
+        image: 'https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&q=80&w=800',
+        listingCount: 12,
+        avgPrice: 1550000,
+        amenities: ['Ocean Views', 'Mountain Access', 'Mild Climate'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 'c3',
+        slug: 'mississauga',
+        name: 'Mississauga',
+        description: 'A thriving community just west of Toronto, offering a perfect blend of suburban comfort and modern urban amenities.',
+        image: 'https://images.unsplash.com/photo-1549413280-3663a8a9a4b8?auto=format&fit=crop&q=80&w=800',
+        listingCount: 8,
+        avgPrice: 950000,
+        amenities: ['Family Friendly', 'Shopping Centers', 'Quiet Suburbs'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 'c4',
+        slug: 'muskoka',
+        name: 'Muskoka',
+        description: 'Canada\'s premier cottage country destination, where rustic charm meets modern luxury on the shores of crystal clear lakes.',
+        image: 'https://images.unsplash.com/photo-1449156001437-3a16d1dfda70?auto=format&fit=crop&q=80&w=800',
+        listingCount: 5,
+        avgPrice: 850000,
+        amenities: ['Lake Access', 'Hiking Trails', 'Seasonal Charm'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    }
+];

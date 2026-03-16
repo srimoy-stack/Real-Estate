@@ -20,6 +20,9 @@ export * from './websiteService';
 export * from './leadService';
 export * from './userSavedItemService';
 export * from './orgWebsiteService';
+export * from './blogService';
+export * from './communitiesService';
+export * from './savedListingsService';
 
 
 export { createAuditLog, getAuditLogs, AuditEventType } from '@repo/api-client';

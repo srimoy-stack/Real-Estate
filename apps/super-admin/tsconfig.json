@@ -39,6 +39,9 @@
       ],
       "@repo/design-system": [
         "../../packages/design-system/src"
+      ],
+      "@repo/modules/*": [
+        "../../shared/modules/*"
       ]
     }
   },

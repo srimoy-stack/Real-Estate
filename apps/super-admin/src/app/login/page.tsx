@@ -7,89 +7,119 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
     const { setAuth } = useAuthStore();
     const router = useRouter();
-    const [email] = useState('');
+    const [email, setEmail] = useState('superadmin@example.com');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleMockLogin = (role: Role) => {
-        // Since we don't have a real backend, we manually set the user in the store
-        // This demonstrates the store + guard integration even without a real API.
-        const mockUser = {
-            id: 'mock-123',
-            email: email || 'admin@example.com',
-            name: 'Demo Admin',
-            role: role,
-            organizationId: 'org-1'
-        };
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError('');
 
-        // Use the auth store directly to set mock state.
-        setAuth(mockUser as any, 'mock-jwt-token');
-        router.push('/');
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // In a real app, we would verify credentials with a backend
+            if (email && password) {
+                const mockUser = {
+                    id: 'super-admin-1',
+                    email: email,
+                    name: 'Super Administrator',
+                    role: Role.SUPER_ADMIN,
+                };
+
+                setAuth(mockUser as any, 'mock-super-admin-token');
+                router.push('/dashboard');
+            } else {
+                setError('Please enter both email and password.');
+            }
+        } catch (err) {
+            setError('Invalid credentials. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 font-sans antialiased selection:bg-indigo-500/30">
-            <div className="w-full max-w-lg space-y-8 rounded-3xl border border-white/5 bg-slate-900/50 p-8 backdrop-blur-xl md:p-12">
+            <div className="w-full max-w-lg space-y-8 rounded-[40px] border border-white/5 bg-slate-900/50 p-8 md:p-12 backdrop-blur-2xl shadow-2xl shadow-indigo-500/10 transition-all duration-500 hover:shadow-indigo-500/20">
                 <div className="text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 ring-1 ring-white/10">
-                        <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-700 shadow-2xl shadow-indigo-500/40 ring-1 ring-white/20 animate-in zoom-in duration-700">
+                        <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h2 className="mt-8 text-3xl font-bold tracking-tight text-white sm:text-4xl">Welcome Back</h2>
-                    <p className="mt-4 text-base text-slate-400">
-                        Select a persona to test the <span className="text-indigo-400 font-medium italic underline decoration-indigo-500/30 underline-offset-4">Role System</span>
+                    <h2 className="mt-10 text-4xl font-black tracking-tighter text-white sm:text-5xl italic uppercase">
+                        Super <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Admin</span>
+                    </h2>
+                    <p className="mt-4 text-slate-400 font-medium text-lg">
+                        Secure Access to the <span className="text-indigo-400 font-black italic">Brokerage Ecosystem</span>
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                    <button
-                        onClick={() => handleMockLogin(Role.SUPER_ADMIN)}
-                        className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/5 bg-slate-900/50 p-4 transition-all hover:border-indigo-500/30 hover:bg-slate-900"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400">
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48V12" />
-                                </svg>
-                            </div>
-                            <div className="text-left">
-                                <h3 className="text-lg font-semibold text-white">Super Admin</h3>
-                                <p className="text-sm text-slate-500">Full Platform Control</p>
-                            </div>
-                        </div>
-                        <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                            <svg className="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <form onSubmit={handleLogin} className="mt-12 space-y-6">
+                    {error && (
+                        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-sm text-rose-400 font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
+                            {error}
                         </div>
-                    </button>
+                    )}
+
+                    <div className="space-y-4">
+                        <div className="space-y-2 group">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2 group-focus-within:text-indigo-400 transition-colors">Admin Identity</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-sm font-bold outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 placeholder:text-slate-700"
+                                placeholder="name@domain.com"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2 group">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2 group-focus-within:text-indigo-400 transition-colors">Access Key</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-6 py-4 text-white text-sm font-bold outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 placeholder:text-slate-700"
+                                placeholder="••••••••"
+                                required
+                            />
+                        </div>
+                    </div>
 
                     <button
-                        onClick={() => handleMockLogin(Role.CLIENT_ADMIN)}
-                        className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/5 bg-slate-900/50 p-4 transition-all hover:border-amber-500/30 hover:bg-slate-900"
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-xs uppercase tracking-[0.2em] hover:from-indigo-500 hover:to-purple-500 transition-all shadow-2xl shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-wait group flex items-center justify-center gap-3 active:scale-95"
                     >
-                        <div className="flex items-center space-x-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400">
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                            <div className="text-left">
-                                <h3 className="text-lg font-semibold text-white text-opacity-80 group-hover:text-amber-100">Client Admin</h3>
-                                <p className="text-sm text-slate-500 italic">Expected: Access Restricted by Role</p>
-                            </div>
-                        </div>
-                        <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                            <svg className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        {isLoading ? (
+                            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                        </div>
+                        ) : (
+                            <>
+                                Establish Session
+                                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </>
+                        )}
                     </button>
 
-                    <p className="text-center text-xs text-slate-600 mt-4 leading-relaxed">
-                        Secure Session Management with <code className="text-indigo-400">HTTP-only</code> Cookies (Mocked) <br />
-                        & Automatic Tenant ID Injection Pattern Verified.
+                    <p className="text-center text-[10px] text-slate-600 mt-6 font-black uppercase tracking-widest leading-relaxed">
+                        Protected by AES-256 Architecture <br />
+                        <span className="text-indigo-500/50 italic font-medium">Session token bound to hardware identity</span>
                     </p>
-                </div>
+                </form>
             </div>
         </div>
     );

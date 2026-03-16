@@ -45,8 +45,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 phone: formData.phone,
                 message: formData.message,
                 mlsNumber,
-                source,
-                status: 'New'
+                source
             });
             setIsSuccess(true);
         } catch (err: any) {

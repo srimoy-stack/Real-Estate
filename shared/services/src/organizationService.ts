@@ -234,6 +234,12 @@ export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsRe
     }
 };
 
+export const getOrganizationById = async (id: string): Promise<OrganizationDashboardItem | null> => {
+    // In mock mode, find it from the list
+    const response = await getOrganizations({ page: 1, limit: 100 });
+    return response.items.find((org: any) => org.id === id) || null;
+};
+
 export const updateOrgStatus = async (id: string, status: OrgStatus): Promise<void> => {
     try {
         await apiClient.patch(`/super-admin/organizations/${id}/status`, { status });

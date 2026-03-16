@@ -40,7 +40,7 @@ export default function OrganizationsPage() {
     // Filters
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
-    const [typeFilter, setTypeFilter] = useState<OrganizationType | ''>('');
+    const [typeFilter] = useState<OrganizationType | ''>(OrgType.BROKERAGE);
     const [statusFilter, setStatusFilter] = useState<OrgStatus | ''>('');
     const [subFilter, setSubFilter] = useState<SubscriptionPlan | ''>('');
 
@@ -193,10 +193,10 @@ export default function OrganizationsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Organization Management</h1>
-                    <p className="mt-1 text-slate-500 font-medium">Manage {total} organizations across the platform</p>
+                    <p className="mt-1 text-slate-500 font-medium">Manage {total} onboarded organizations</p>
                 </div>
                 <button
-                    onClick={() => router.push('/onboarding')}
+                    onClick={() => router.push('/onboard-organization')}
                     className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 group"
                 >
                     <svg className="h-5 w-5 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,15 +221,7 @@ export default function OrganizationsPage() {
                     />
                 </div>
 
-                <select
-                    value={typeFilter}
-                    onChange={(e) => { setTypeFilter(e.target.value as OrganizationType); setPage(1); }}
-                    className="bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 px-4 py-2 outline-none focus:border-indigo-500 transition-all cursor-pointer"
-                >
-                    <option value="">All Types</option>
-                    <option value={OrgType.BROKERAGE}>Brokerage</option>
-                    <option value={OrgType.INDIVIDUAL_AGENT}>Agent</option>
-                </select>
+                {/* Type filter removed as per request to only show organization data */}
 
                 <select
                     value={statusFilter}
@@ -312,18 +304,28 @@ export default function OrganizationsPage() {
                                             <StatusBadge label={status.label} type={status.type} />
                                         </td>
                                         <td className="px-6 py-4 text-right relative actions-menu-container">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    setOpenMenuId(openMenuId === org.id ? null : org.id);
-                                                }}
-                                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-900"
-                                            >
-                                                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                                </svg>
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => router.push(`/website-builder?websiteId=${org.id}`)}
+                                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5"
+                                                    title="Open Website Builder"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                    Build
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setOpenMenuId(openMenuId === org.id ? null : org.id);
+                                                    }}
+                                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-900"
+                                                >
+                                                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
 
                                             {openMenuId === org.id && (
                                                 <div className="absolute right-6 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 py-1 flex flex-col items-start text-sm overflow-hidden animate-in fade-in zoom-in-95 duration-100">
@@ -343,9 +345,33 @@ export default function OrganizationsPage() {
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                         </svg>
-                                                        View Website
+                                                        View Live Site
                                                     </button>
-                                                    <div className="h-px bg-slate-100 w-full my-1" />
+                                                    <button onClick={() => router.push(`/organizations/${org.id}/website`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                        </svg>
+                                                        Manage Website
+                                                    </button>
+                                                    <button onClick={() => router.push(`/website-builder?websiteId=${org.id}`)} className="w-full text-left px-4 py-2 hover:bg-violet-50 text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-2 font-semibold">
+                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Website Builder
+                                                    </button>
+                                                    <button onClick={() => router.push(`/organizations/${org.id}/shortcodes`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                        </svg>
+                                                        Configure Listings
+                                                    </button>
+                                                    <button onClick={() => router.push(`/preview/organization/${org.id}`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        Preview Website
+                                                    </button>
                                                     <button onClick={() => handleImpersonate(org)} className="w-full text-left px-4 py-2 hover:bg-indigo-50 text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-2 font-semibold">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

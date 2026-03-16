@@ -1,0 +1,942 @@
+
+> real-estate-platform@1.0.0 dev:public
+> turbo dev --filter=public-site
+
+• turbo 2.8.14
+• Packages in scope: public-site
+• Running dev in 1 packages
+• Remote caching disabled
+public-site:dev: cache bypass, force executing 2cfe2b8a44645334
+public-site:dev: 
+public-site:dev: > public-site@0.1.0 dev
+public-site:dev: > next dev -p 3000
+public-site:dev: 
+public-site:dev:   ▲ Next.js 14.2.35
+public-site:dev:   - Local:        http://localhost:3000
+public-site:dev: 
+public-site:dev:  ✓ Starting...
+public-site:dev:  ✓ Ready in 4s
+public-site:dev:  ○ Compiling /src/middleware ...
+public-site:dev:  ✓ Compiled /src/middleware in 1045ms (90 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling / ...
+public-site:dev:  ✓ Compiled / in 9.6s (799 modules)
+public-site:dev:  GET / 200 in 10165ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 144ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 138ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 174ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 86ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 90ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /listing/[mlsNumber] ...
+public-site:dev:  ✓ Compiled /listing/[mlsNumber] in 8s (1055 modules)
+public-site:dev:  GET /listing/X123456 200 in 11314ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456 200 in 779ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 147ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /demo ...
+public-site:dev:  ✓ Compiled /demo in 2.6s (835 modules)
+public-site:dev:  GET /demo 200 in 3142ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling / ...
+public-site:dev:  ✓ Compiled / in 703ms (457 modules)
+public-site:dev:  GET / 200 in 1160ms
+public-site:dev:  ○ Compiling /_not-found ...
+public-site:dev:  ✓ Compiled /_not-found in 959ms (836 modules)
+public-site:dev:  GET /api/auth/providers 404 in 1237ms
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  POST /api/auth/_log 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 224ms
+public-site:dev:  GET /api/auth/error 404 in 45ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 6.3s (1189 modules)
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  POST /__nextjs_original-stack-frames 200 in 6557ms
+public-site:dev:  GET /favicon.ico 200 in 5654ms
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /api/auth/error 404 in 252ms
+public-site:dev:  GET / 200 in 464ms
+public-site:dev:  GET /favicon.ico 200 in 245ms
+public-site:dev:  GET /api/auth/error 404 in 61ms
+public-site:dev:  GET /favicon.ico 200 in 68ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /Auth/Login 404 in 387ms
+public-site:dev:  GET /favicon.ico 200 in 77ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /blog 200 in 77ms
+public-site:dev:  GET /favicon.ico 200 in 106ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 59ms
+public-site:dev:  GET /favicon.ico 200 in 130ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 52ms
+public-site:dev:  GET /favicon.ico 200 in 183ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 47ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 211ms
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 201ms
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 64ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 56ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 131ms
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 130ms
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 136ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 37ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 52ms
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 49ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 37ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 121ms
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 114ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/enroll-trends/2026 404 in 46ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 89ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 72ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 60ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 47ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 49ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 45ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 46ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /dashboard/my-dashboad 404 in 39ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 59ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 34ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 45ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 132ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 43ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 40ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 42ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 100ms
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 92ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 69ms
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 42ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 44ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 37ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  OPTIONS /register-logs/my-logs 404 in 69ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /register-logs/my-logs 404 in 62ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /register-logs/my-logs 404 in 52ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /register-logs/my-logs 404 in 55ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /register-logs/my-logs 404 in 48ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 69ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 46ms
+public-site:dev:  GET /favicon.ico 200 in 140ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /listings ...
+public-site:dev:  ✓ Compiled /listings in 6.5s (1360 modules)
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 478ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /agents?_rsc=o9ip9 200 in 20ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=yh0vm 200 in 16ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /contact ...
+public-site:dev:  ✓ Compiled /contact in 1151ms (1418 modules)
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /contact?_rsc=17vdm 200 in 35ms
+public-site:dev:  GET / 200 in 242ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /agents?_rsc=o9ip9 200 in 132ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /blog?_rsc=7mypr 200 in 25ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /agents?_rsc=o9ip9 200 in 33ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=yh0vm 200 in 36ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 2.8s (540 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 159ms
+public-site:dev:  GET / 200 in 456ms
+public-site:dev:  ✓ Compiled in 1064ms (540 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 303ms
+public-site:dev:  GET / 200 in 328ms
+public-site:dev:  ✓ Compiled in 1279ms (540 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 131ms
+public-site:dev:  ✓ Compiled in 584ms (540 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 212ms
+public-site:dev:  GET / 200 in 416ms
+public-site:dev:  ✓ Compiled in 1776ms (540 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 107ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ✓ Compiled in 6.4s (1522 modules)
+public-site:dev:  GET /?_rsc=1p60s 200 in 6335ms
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 6332ms
+public-site:dev:  GET / 200 in 6087ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=qi7eo 200 in 74ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /communities ...
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ⨯ ./src/app/(public)/communities/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { communitiesService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mCommunityCard[39m } [36mfrom[39m [32m'@/components/communities/CommunityCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+public-site:dev:  ⨯ ./src/app/(public)/communities/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { communitiesService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mCommunityCard[39m } [36mfrom[39m [32m'@/components/communities/CommunityCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  GET / 500 in 43330ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities 500 in 51ms
+public-site:dev: <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/home/lenovo/Desktop/Real Estate/apps/public-site/.next/cache/webpack/client-development-fallback/0.pack.gz_' -> '/home/lenovo/Desktop/Real Estate/apps/public-site/.next/cache/webpack/client-development-fallback/0.pack.gz'
+public-site:dev: <w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/home/lenovo/Desktop/Real Estate/apps/public-site/.next/cache/webpack/client-development-fallback/0.pack.gz_' -> '/home/lenovo/Desktop/Real Estate/apps/public-site/.next/cache/webpack/client-development-fallback/0.pack.gz'
+public-site:dev:  GET /favicon.ico 500 in 21ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  POST /__nextjs_original-stack-frames 500 in 19ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ./src/app/(public)/communities/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { communitiesService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mCommunityCard[39m } [36mfrom[39m [32m'@/components/communities/CommunityCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  GET /communities 200 in 2147ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities 500 in 43ms
+public-site:dev:  GET /favicon.ico 500 in 27ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ./src/app/(public)/agents/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { agentsService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mAgentCard[39m } [36mfrom[39m [32m'@/components/agents/AgentCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  HEAD /agents 500 in 6914ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  HEAD /communities 500 in 56ms
+public-site:dev:  GET /communities 500 in 74ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ./src/app/(public)/agents/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { agentsService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mAgentCard[39m } [36mfrom[39m [32m'@/components/agents/AgentCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  GET /favicon.ico 500 in 972ms
+public-site:dev:  HEAD /blog 500 in 2717ms
+public-site:dev:  ✓ Compiled /blog in 8.2s (1663 modules)
+public-site:dev:  GET /_next/static/webpack/f312c3ba4a6c5d3a.webpack.hot-update.json 500 in 8149ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /communities ...
+public-site:dev:  ⨯ ./src/app/(public)/communities/page.tsx:2:1
+public-site:dev: Module not found: Can't resolve '@repo/mock-api'
+public-site:dev: [0m [90m 1 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { communitiesService } [36mfrom[39m [32m'@repo/mock-api'[39m[33m;[39m[0m
+public-site:dev: [0m [90m   |[39m [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 3 |[39m [36mimport[39m { [33mCommunityCard[39m } [36mfrom[39m [32m'@/components/communities/CommunityCard'[39m[33m;[39m[0m
+public-site:dev: [0m [90m 4 |[39m[0m
+public-site:dev: [0m [90m 5 |[39m [36mexport[39m [36mconst[39m metadata [33m=[39m {[0m
+public-site:dev: 
+public-site:dev: https://nextjs.org/docs/messages/module-not-found
+public-site:dev:  GET /communities 500 in 1042ms
+public-site:dev:  GET /favicon.ico 500 in 30ms
+public-site:dev:  ✓ Compiled /communities in 1095ms (732 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities 500 in 51ms
+public-site:dev:  ✓ Compiled in 830ms (732 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities 500 in 34ms
+public-site:dev:  GET /favicon.ico 500 in 21ms
+public-site:dev:  ✓ Compiled in 3.1s (1682 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled (1668 modules)
+public-site:dev:  GET /communities 200 in 631ms
+public-site:dev:  GET /favicon.ico 200 in 349ms
+public-site:dev:  ✓ Compiled in 1214ms (1758 modules)
+public-site:dev:  ✓ Compiled in 1509ms (733 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=1u0sf 200 in 512ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 1420ms (1682 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=1u0sf 200 in 596ms
+public-site:dev:  ✓ Compiled in 901ms (733 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=1u0sf 200 in 343ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /blog ...
+public-site:dev:  ✓ Compiled /blog in 1770ms (1673 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 2.7s (1687 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /blog?_rsc=1evjt 200 in 467ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /contact?_rsc=17vdm 200 in 17ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 1470ms (734 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listings?_rsc=1ohfk 200 in 31ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1qmtg 200 in 88ms
+public-site:dev:  ✓ Compiled in 3.7s (1515 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 317ms
+public-site:dev:  ✓ Compiled in 2.4s (1526 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+public-site:dev:  GET /?_rsc=1p60s 200 in 365ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ src/components/sections/FeaturedListings.tsx (34:22) @ MOCK_FEATURED
+public-site:dev:  ⨯ ReferenceError: MOCK_FEATURED is not defined
+public-site:dev:     at FeaturedListings (./src/components/sections/FeaturedListings.tsx:120:31)
+public-site:dev: digest: "3109515586"
+public-site:dev: [0m [90m 32 |[39m[0m
+public-site:dev: [0m [90m 33 |[39m                 [33m<[39m[33mdiv[39m className[33m=[39m[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12"[39m[33m>[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 34 |[39m                     {[33mMOCK_FEATURED[39m[33m.[39mmap((listing) [33m=>[39m ([0m
+public-site:dev: [0m [90m    |[39m                      [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 35 |[39m                         [33m<[39m[33mPropertyCard[39m key[33m=[39m{listing[33m.[39mid} listing[33m=[39m{listing} [33m/[39m[33m>[39m[0m
+public-site:dev: [0m [90m 36 |[39m                     ))}[0m
+public-site:dev: [0m [90m 37 |[39m                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+public-site:dev:  ⨯ src/components/sections/FeaturedListings.tsx (34:22) @ MOCK_FEATURED
+public-site:dev:  ⨯ ReferenceError: MOCK_FEATURED is not defined
+public-site:dev:     at FeaturedListings (./src/components/sections/FeaturedListings.tsx:120:31)
+public-site:dev: digest: "3109515586"
+public-site:dev: [0m [90m 32 |[39m[0m
+public-site:dev: [0m [90m 33 |[39m                 [33m<[39m[33mdiv[39m className[33m=[39m[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12"[39m[33m>[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 34 |[39m                     {[33mMOCK_FEATURED[39m[33m.[39mmap((listing) [33m=>[39m ([0m
+public-site:dev: [0m [90m    |[39m                      [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 35 |[39m                         [33m<[39m[33mPropertyCard[39m key[33m=[39m{listing[33m.[39mid} listing[33m=[39m{listing} [33m/[39m[33m>[39m[0m
+public-site:dev: [0m [90m 36 |[39m                     ))}[0m
+public-site:dev: [0m [90m 37 |[39m                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+public-site:dev:  GET / 200 in 454ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 642ms (878 modules)
+public-site:dev:  GET /favicon.ico 200 in 1305ms
+public-site:dev:  ✓ Compiled in 2.4s (1614 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ src/components/sections/FeaturedListings.tsx (35:22) @ MOCK_FEATURED
+public-site:dev:  ⨯ ReferenceError: MOCK_FEATURED is not defined
+public-site:dev:     at FeaturedListings (./src/components/sections/FeaturedListings.tsx:122:31)
+public-site:dev: digest: "2026057472"
+public-site:dev: [0m [90m 33 |[39m[0m
+public-site:dev: [0m [90m 34 |[39m                 [33m<[39m[33mdiv[39m className[33m=[39m[32m"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12"[39m[33m>[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 35 |[39m                     {[33mMOCK_FEATURED[39m[33m.[39mmap((listing) [33m=>[39m ([0m
+public-site:dev: [0m [90m    |[39m                      [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 36 |[39m                         [33m<[39m[33mPropertyCard[39m key[33m=[39m{listing[33m.[39mid} listing[33m=[39m{listing} [33m/[39m[33m>[39m[0m
+public-site:dev: [0m [90m 37 |[39m                     ))}[0m
+public-site:dev: [0m [90m 38 |[39m                 [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+public-site:dev:  GET /?_rsc=1p60s 200 in 432ms
+public-site:dev:  ✓ Compiled in 1588ms (1614 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 523ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=3py13 200 in 633ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=3py13 200 in 350ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /agents ...
+public-site:dev:  ✓ Compiled /agents in 2.1s (1518 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /blog/[slug] ...
+public-site:dev:  ✓ Compiled /blog/[slug] in 1212ms (1391 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /listings ...
+public-site:dev:  ✓ Compiled /listings in 694ms (805 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /listing/[mlsNumber] ...
+public-site:dev:  ✓ Compiled /listing/[mlsNumber] in 2.4s (813 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1qmtg 200 in 2955ms
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 337ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=6poej 200 in 376ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/W7654321?_rsc=1qmtg 200 in 367ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/W7654321?_rsc=17e0t 200 in 323ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  HEAD /agents 200 in 204ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  HEAD /communities 200 in 54ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  HEAD /blog 200 in 63ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /contact ...
+public-site:dev:  ✓ Compiled /contact in 835ms (816 modules)
+public-site:dev:  HEAD /contact 200 in 1039ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 611ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 6.3s (887 modules)
+public-site:dev:  GET /favicon.ico 200 in 7452ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /agents 200 in 495ms
+public-site:dev:  GET /favicon.ico 200 in 218ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /communities ...
+public-site:dev:  ✓ Compiled /communities in 2.6s (890 modules)
+public-site:dev:  GET /communities 200 in 3546ms
+public-site:dev:  GET /favicon.ico 200 in 370ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /blog ...
+public-site:dev:  ✓ Compiled /blog in 1134ms (872 modules)
+public-site:dev:  GET /blog 200 in 1841ms
+public-site:dev:  GET /favicon.ico 200 in 359ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456 200 in 979ms
+public-site:dev:  GET /favicon.ico 200 in 196ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /contact ...
+public-site:dev:  ✓ Compiled /contact in 1234ms (877 modules)
+public-site:dev:  GET /contact 200 in 1739ms
+public-site:dev:  GET /favicon.ico 200 in 440ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /careers ...
+public-site:dev:  ✓ Compiled /careers in 2.3s (1594 modules)
+public-site:dev:  GET /careers 200 in 3176ms
+public-site:dev:  GET /favicon.ico 200 in 349ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling / ...
+public-site:dev:  ✓ Compiled / in 1840ms (893 modules)
+public-site:dev:  GET /?_rsc=1ugnj 200 in 2630ms
+public-site:dev:  GET /favicon.ico 200 in 473ms
+public-site:dev:  ✓ Compiled in 2s (734 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 404ms
+public-site:dev:  GET /listing/W7654321?_rsc=zf7d1 200 in 464ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 515ms
+public-site:dev:  GET /favicon.ico 200 in 303ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=19zvn 200 in 408ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=n39e5 200 in 759ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 12.2s (1625 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listings?_rsc=1ohfk 200 in 383ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 654ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1qmtg 200 in 430ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /login ...
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled /login in 8.9s (1521 modules)
+public-site:dev:  GET /login 200 in 5188ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 1663ms (884 modules)
+public-site:dev:  GET /favicon.ico 200 in 3155ms
+public-site:dev:  ✓ Compiled in 8.4s (1616 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /login?_rsc=1f2yp 200 in 498ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 758ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /agents ...
+public-site:dev:  ✓ Compiled /agents in 3.2s (799 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 410ms
+public-site:dev:  GET /agents?_rsc=487vd 200 in 416ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=12xdt 200 in 350ms
+public-site:dev:  ✓ Compiled in 3.8s (736 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 445ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 442ms
+public-site:dev:  ✓ Compiled in 7.6s (1531 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 615ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 627ms
+public-site:dev:  ✓ Compiled in 5.5s (1534 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 890ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 894ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 832ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 6s (882 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /favicon.ico 200 in 7363ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 878ms
+public-site:dev:  GET /?_rsc=1p60s 200 in 892ms
+public-site:dev:  GET / 200 in 926ms
+public-site:dev:  GET /favicon.ico 200 in 288ms
+public-site:dev:  ✓ Compiled in 4.1s (1610 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 687ms
+public-site:dev:  ✓ Compiled in 2.7s (1610 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 559ms
+public-site:dev:  ✓ Compiled in 3.8s (1520 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 549ms
+public-site:dev:  ✓ Compiled in 2.1s (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 404ms
+public-site:dev:  ✓ Compiled in 4.2s (1610 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 566ms
+public-site:dev:  ⨯ ../../shared/mock-api/services/listingsService.ts
+public-site:dev: Error: 
+public-site:dev:   [31mx[0m the name `PropertyType` is defined multiple times
+public-site:dev:    ,-[[36;1;4m/home/lenovo/Desktop/Real Estate/shared/mock-api/services/listingsService.ts[0m:1:1]
+public-site:dev:  [2m1[0m | import { mockListings } from '../mock/listingsMock';
+public-site:dev:  [2m2[0m | import { Listing, PropertyType } from '@repo/types';
+public-site:dev:    : [31;1m                  ^^^^^^|^^^^^[0m
+public-site:dev:    :                         [31;1m`-- [31;1mprevious definition of `PropertyType` here[0m[0m
+public-site:dev:  [2m3[0m | 
+public-site:dev:  [2m4[0m | import { Listing, PropertyType, ListingFilters, ListingStatus } from '@repo/types';
+public-site:dev:    : [33;1m                  ^^^^^^|^^^^^[0m
+public-site:dev:    :                         [33;1m`-- [33;1m`PropertyType` redefined here[0m[0m
+public-site:dev:  [2m5[0m | 
+public-site:dev:  [2m6[0m | export const listingsService = {
+public-site:dev:  [2m7[0m |     getListings: async (filters: ListingFilters = {}): Promise<Listing[]> => {
+public-site:dev:    `----
+public-site:dev: 
+public-site:dev: Import trace for requested module:
+public-site:dev: ../../shared/mock-api/services/listingsService.ts
+public-site:dev: ../../shared/services/src/listingService.ts
+public-site:dev: ../../shared/services/src/index.ts
+public-site:dev: ./src/components/auth/LeadGate.tsx
+public-site:dev:  ✓ Compiled in 2.9s (1520 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 446ms
+public-site:dev:  ✓ Compiled in 2.9s (1534 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 424ms
+public-site:dev:  ✓ Compiled in 674ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 353ms
+public-site:dev:  ✓ Compiled in 853ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 352ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 4.8s (1624 modules)
+public-site:dev:  GET /?_rsc=1p60s 200 in 3716ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 339ms
+public-site:dev:  ✓ Compiled in 3s (1534 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 503ms
+public-site:dev:  ✓ Compiled in 967ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1p60s 200 in 360ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /listing/[mlsNumber] ...
+public-site:dev:  ✓ Compiled /listing/[mlsNumber] in 1964ms (813 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1qmtg 200 in 2571ms
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 359ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 231ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 172ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 168ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 192ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 165ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 178ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678 200 in 391ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 1697ms (893 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /favicon.ico 200 in 2191ms
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 482ms
+public-site:dev:  ✓ Compiled in 1834ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 375ms
+public-site:dev:  ✓ Compiled in 1045ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 415ms
+public-site:dev:  ✓ Compiled in 4.8s (1613 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 521ms
+public-site:dev:  ✓ Compiled in 6.3s (1613 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 467ms
+public-site:dev:  ✓ Compiled in 3.2s (1533 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 888ms
+public-site:dev:  ✓ Compiled in 2.2s (1533 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 902ms
+public-site:dev:  ✓ Compiled in 4.3s (1547 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 821ms
+public-site:dev:  ✓ Compiled in 2.7s (1547 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 890ms
+public-site:dev:  ✓ Compiled in 1888ms (1547 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 906ms
+public-site:dev:  ✓ Compiled in 901ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1smp6 200 in 717ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/E2345678?_rsc=1qmtg 200 in 384ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/E2345678?_rsc=1keln 200 in 642ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET / 200 in 448ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled /[slug] in 5.3s (890 modules)
+public-site:dev:  GET /favicon.ico 200 in 6302ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=19zvn 200 in 1690ms
+public-site:dev:  ⨯ ../shared/services/src/listingService.ts (51:20) @ filter
+public-site:dev:  ⨯ TypeError: all.filter is not a function
+public-site:dev:     at Object.getRelatedListings (../../shared/services/src/listingService.ts:50:20)
+public-site:dev:     at async DynamicListingPage (listing/[mlsNumber]/page.tsx:125:29)
+public-site:dev: digest: "1830564850"
+public-site:dev: [0m [90m 49 |[39m             limit[33m:[39m limit [33m+[39m [35m1[39m[0m
+public-site:dev: [0m [90m 50 |[39m         })[33m;[39m[0m
+public-site:dev: [0m[31m[1m>[22m[39m[90m 51 |[39m         [36mreturn[39m all[33m.[39mfilter(l [33m=>[39m l[33m.[39mid [33m!==[39m listing[33m.[39mid)[33m.[39mslice([35m0[39m[33m,[39m limit)[33m;[39m[0m
+public-site:dev: [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+public-site:dev: [0m [90m 52 |[39m     }[33m,[39m[0m
+public-site:dev: [0m [90m 53 |[39m[0m
+public-site:dev: [0m [90m 54 |[39m     submitLead[33m:[39m [36masync[39m (_listingId[33m:[39m string[33m,[39m leadData[33m:[39m any) [33m=>[39m {[0m
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 672ms
+public-site:dev:  ✓ Compiled in 5.5s (1613 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 830ms
+public-site:dev:  ✓ Compiled in 1756ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 702ms
+public-site:dev:  ✓ Compiled in 1042ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 713ms
+public-site:dev:  ✓ Compiled in 897ms (737 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 728ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 270ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 61ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 153ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 208ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 138ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321 200 in 658ms
+public-site:dev:  GET /favicon.ico 200 in 290ms
+public-site:dev:  ✓ Compiled in 8.5s (1538 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 1115ms
+public-site:dev:  ✓ Compiled in 1655ms (1552 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 926ms
+public-site:dev:  ✓ Compiled in 1756ms (1552 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 855ms
+public-site:dev:  ✓ Compiled in 2.7s (1552 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X654321?_rsc=qpn7x 200 in 890ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /?_rsc=1bxob 200 in 417ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /search ...
+public-site:dev:  ✓ Compiled /search in 10.3s (1549 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /communities ...
+public-site:dev:  ✓ Compiled /communities in 1663ms (805 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /communities?_rsc=1u0sf 200 in 377ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ○ Compiling /blog ...
+public-site:dev:  ✓ Compiled /blog in 1517ms (725 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /blog?_rsc=1evjt 200 in 402ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=k1i79 200 in 434ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1t46x 200 in 653ms
+public-site:dev:  ✓ Compiled in 4.8s (1449 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 862ms
+public-site:dev:  ✓ Compiled in 7.5s (1543 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 847ms
+public-site:dev:  ✓ Compiled in 3.2s (1452 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 838ms
+public-site:dev:  ⨯ ./src/components/communities/CommunityCard.tsx
+public-site:dev: Error: 
+public-site:dev:   [31mx[0m Unexpected token `Link`. Expected jsx identifier
+public-site:dev:     ,-[[36;1;4m/home/lenovo/Desktop/Real Estate/apps/public-site/src/components/communities/CommunityCard.tsx[0m:8:1]
+public-site:dev:  [2m 8[0m | 
+public-site:dev:  [2m 9[0m | export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
+public-site:dev:  [2m10[0m |     return (
+public-site:dev:  [2m11[0m |         <Link href={`/communities/${community.slug}`} className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700 block">
+public-site:dev:     : [31;1m         ^^^^[0m
+public-site:dev:  [2m12[0m |             <img
+public-site:dev:  [2m13[0m |                 src={community.image}
+public-site:dev:  [2m14[0m |                 alt={community.name}
+public-site:dev:     `----
+public-site:dev: 
+public-site:dev: Caused by:
+public-site:dev:     Syntax Error
+public-site:dev: 
+public-site:dev: Import trace for requested module:
+public-site:dev: ./src/components/communities/CommunityCard.tsx
+public-site:dev: ./src/app/(public)/communities/page.tsx
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456 500 in 116ms
+public-site:dev:  ○ Compiling /[slug] ...
+public-site:dev:  ✓ Compiled /[slug] in 6.3s (1547 modules)
+public-site:dev:  GET /favicon.ico 200 in 3561ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456 200 in 973ms
+public-site:dev:  GET /favicon.ico 200 in 289ms
+public-site:dev:  ✓ Compiled in 3s (1547 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 1014ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  ✓ Compiled in 8.2s (1558 modules)
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 6166ms
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 697ms
+public-site:dev:  ✓ Compiled in 4.1s (1467 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 942ms
+public-site:dev:  ✓ Compiled in 948ms (743 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 762ms
+public-site:dev:  ✓ Compiled in 1306ms (743 modules)
+public-site:dev: [Middleware] Resolved tenant: local, Domain: localhost, Website Found: true
+public-site:dev:  GET /listing/X123456?_rsc=1l5dg 200 in 761ms

@@ -8,6 +8,7 @@ interface LeadCaptureFormProps {
     listingId: string;
     mlsNumber: string;
     listingTitle: string;
+    agentId?: string;
     websiteId?: string;
 }
 
@@ -15,6 +16,7 @@ export const LeadCaptureForm = ({
     listingId,
     mlsNumber,
     listingTitle,
+    agentId,
     websiteId,
 }: LeadCaptureFormProps) => {
     const searchParams = useSearchParams();
@@ -30,7 +32,7 @@ export const LeadCaptureForm = ({
         message: `I would like more information regarding ${listingTitle}.`,
     });
 
-    // Auto-detect source on mount
+    // Auto-detect source on mount (supports UTM tagging)
     const [detectedSource, setDetectedSource] = useState('listing_page');
     useEffect(() => {
         const utmSource = searchParams.get('utm_source');
@@ -38,6 +40,15 @@ export const LeadCaptureForm = ({
             setDetectedSource(`listing_page_${utmSource}`);
         }
     }, [searchParams]);
+
+    const validate = (): string | null => {
+        if (!formData.name.trim()) return 'Please enter your name.';
+        if (!formData.email.trim()) return 'Please enter your email address.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Please enter a valid email address.';
+        if (!formData.phone.trim()) return 'Please enter your phone number.';
+        if (formData.phone.replace(/\D/g, '').length < 7) return 'Phone number seems too short.';
+        return null;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,28 +61,28 @@ export const LeadCaptureForm = ({
             return;
         }
 
-        // Basic validation
-        if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
-            setError('Please fill in all required fields.');
+        const validationError = validate();
+        if (validationError) {
+            setError(validationError);
             return;
         }
 
         setLoading(true);
         try {
             await leadService.createLead({
-                websiteId: websiteId || 'ws-1', // Fallback to demo website
                 name: formData.name.trim(),
                 email: formData.email.trim(),
                 phone: formData.phone.trim(),
                 message: formData.message.trim(),
-                mlsNumber,
                 source: detectedSource,
-                status: 'New'
+                listingId,
+                agentId,
+                mlsNumber,
+                websiteId: websiteId || 'ws-1',
             });
 
             setSuccess(true);
             setLastSubmitTime(Date.now());
-
             setFormData(prev => ({
                 ...prev,
                 name: '',
@@ -88,13 +99,13 @@ export const LeadCaptureForm = ({
 
     if (success) {
         return (
-            <div className="text-center space-y-4 py-4">
+            <div className="text-center space-y-4 py-4 animate-[fadeIn_0.5s_ease-out]">
                 <div className="mx-auto h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center">
                     <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Inquiry Sent!</h3>
+                <h3 className="text-lg font-black text-slate-900">Thank you! Your inquiry has been sent.</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">
                     Your inquiry for <strong>MLS® {mlsNumber}</strong> has been received.
                     An agent will contact you shortly.
@@ -115,7 +126,7 @@ export const LeadCaptureForm = ({
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium text-center">
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium text-center animate-[fadeIn_0.3s_ease-out]">
                     {error}
                 </div>
             )}
@@ -168,7 +179,7 @@ export const LeadCaptureForm = ({
                 onChange={e => setFormData({ ...formData, message: e.target.value })}
             />
 
-            {/* Hidden context fields (visible in dev tools for debugging) */}
+            {/* Hidden context fields */}
             <input type="hidden" name="listingId" value={listingId} />
             <input type="hidden" name="mlsNumber" value={mlsNumber} />
             <input type="hidden" name="source" value={detectedSource} />

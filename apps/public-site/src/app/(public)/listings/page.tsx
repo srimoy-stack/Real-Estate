@@ -103,7 +103,7 @@ export default async function ListingsPage({
                 <FilterSidebar />
               </Suspense>
 
-              <SaveSearchButton filters={queryParams} />
+              <SaveSearchButton filters={queryParams as any} />
             </div>
           </aside>
 

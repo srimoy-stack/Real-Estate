@@ -15,6 +15,8 @@
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "@craftjs/core": "^0.2.12",
+    "@craftjs/utils": "^0.2.5",
     "@repo/ui": "*",
     "@repo/auth": "*",
     "@repo/types": "*",

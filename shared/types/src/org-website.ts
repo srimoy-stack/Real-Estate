@@ -10,6 +10,13 @@ import { BaseEntity } from './index';
 
 export type OrgWebsiteStatus = 'ACTIVE' | 'DRAFT' | 'SUSPENDED' | 'PROVISIONING';
 
+/** A single navigation menu item, optionally containing nested children (submenus). */
+export interface OrgNavItem {
+    label: string;
+    slug: string;
+    children?: OrgNavItem[];
+}
+
 export interface OrgWebsite extends BaseEntity {
     organizationId: string;
     domain: string;
@@ -17,6 +24,7 @@ export interface OrgWebsite extends BaseEntity {
     templateName: string;
     organizationName: string;
     status: OrgWebsiteStatus;
+    navigation?: OrgNavItem[];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -25,12 +33,23 @@ export interface OrgWebsite extends BaseEntity {
 //  configuration as JSON.
 // ═══════════════════════════════════════════════════════════
 
-export type OrgPageSectionType = 'hero' | 'text' | 'listings' | 'agent_profiles' | 'gallery' | 'testimonials' | 'contact' | 'cta';
+export type OrgPageSectionType =
+    | 'hero' | 'text' | 'listings' | 'agent_profiles' | 'gallery'
+    | 'testimonials' | 'contact' | 'cta' | 'heading' | 'spacer'
+    | 'divider' | 'button' | 'video' | 'stats' | 'faq'
+    | 'newsletter' | 'map' | 'image' | 'agents' | 'about'
+    | 'communities' | 'blog' | 'footer';
 
 export interface OrgPageSectionConfig {
     type: OrgPageSectionType;
     /** Optional reference to a specific configuration (e.g. featuredListings) */
     configId?: string;
+    /** Optional filter config for listing sections */
+    filters?: Record<string, any>;
+    /** Optional content overrides */
+    content?: Record<string, any>;
+    /** Optional limit for list sections */
+    limit?: number;
 }
 
 export interface OrgPageLayoutConfig {

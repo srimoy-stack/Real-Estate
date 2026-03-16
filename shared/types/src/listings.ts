@@ -20,10 +20,6 @@ export interface Listing extends BaseEntity {
     organizationId: string;
     tenantId?: string; // Some data uses tenantId instead of organizationId
     mlsNumber: string;
-    agentName: string;
-    agentPhone?: string;
-    agentEmail?: string;
-    brokerageName?: string;
     externalId?: string; // e.g. CREA DDF ID
     slug: string;
     title: string;
@@ -47,6 +43,17 @@ export interface Listing extends BaseEntity {
     postalCode: string;
     latitude?: number;
     longitude?: number;
+    location?: {
+        lat: number;
+        lng: number;
+    };
+
+    // Agent contact
+    agentName: string;
+    agentPhone?: string;
+    agentEmail?: string;
+    agentPhoto?: string;
+    brokerageName?: string;
 
     // Media
     mainImage: string;
@@ -67,10 +74,13 @@ export interface ListingFilters {
     maxPrice?: number;
     bedrooms?: number;
     bathrooms?: number;
-    propertyType?: PropertyType[];
+    propertyType?: PropertyType | PropertyType[];
     city?: string;
     postalCode?: string;
     keyword?: string;
-    page: number;
-    limit: number;
+    status?: ListingStatus;
+    sort?: 'newest' | 'price_asc' | 'price_desc';
+    agentName?: string;
+    page?: number;
+    limit?: number;
 }

@@ -3,28 +3,53 @@
 import React, { createContext, useContext } from 'react';
 import { TemplateName } from './TemplateRenderer';
 
+
 interface TemplateContextType {
     templateId: TemplateName;
+    navigation?: any[];
+    currentPageSlug?: string;
+    onNavigate?: (slug: string) => void;
+    organizationName?: string;
 }
 
 const TemplateContext = createContext<TemplateContextType | undefined>(undefined);
 
-export const TemplateProvider: React.FC<{ templateId: TemplateName; children: React.ReactNode }> = ({
+export const TemplateProvider: React.FC<{
+    templateId: TemplateName;
+    navigation?: any;
+    currentPageSlug?: string;
+    onNavigate?: (slug: string) => void;
+    organizationName?: string;
+    children: React.ReactNode;
+}> = ({
     templateId,
+    navigation: rawNavigation,
+    currentPageSlug,
+    onNavigate,
+    organizationName,
     children,
 }) => {
-    return (
-        <TemplateContext.Provider value={{ templateId }}>
-            {children}
-        </TemplateContext.Provider>
-    );
-};
+        const navigation = Array.isArray(rawNavigation)
+            ? rawNavigation
+            : rawNavigation?.headerLinks || [];
+
+        return (
+            <TemplateContext.Provider value={{ templateId, navigation, currentPageSlug, onNavigate, organizationName }}>
+                {children}
+            </TemplateContext.Provider>
+        );
+    };
 
 export const useTemplate = () => {
     const context = useContext(TemplateContext);
     if (!context) {
-        // Fallback or error? Let's default to modern-realty if not in context
-        return { templateId: 'modern-realty' as TemplateName };
+        return {
+            templateId: 'modern-realty' as TemplateName,
+            navigation: [],
+            currentPageSlug: '/',
+            onNavigate: undefined,
+            organizationName: ''
+        };
     }
     return context;
 };

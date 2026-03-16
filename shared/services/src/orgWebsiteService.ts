@@ -11,69 +11,121 @@ import { useNotificationStore } from './notificationStore';
 //  MOCK DATA
 // ═══════════════════════════════════════════════════════════
 
-let mockOrgWebsite: OrgWebsite = {
-    id: 'ws_brokerage_001',
-    organizationId: 'org-1',
-    domain: 'skyline-estates.realestate.com',
-    templateId: 'modern-realty',
-    templateName: 'Modern Realty',
-    organizationName: 'Prestige Realty Group',
-    status: 'ACTIVE',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2025-11-20T14:30:00Z',
+// ═══════════════════════════════════════════════════════════
+//  MOCK DATA PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+
+const IS_SERVER = typeof window === 'undefined';
+const DATA_VERSION = 'v3'; // Bump this to reset localStorage mock data
+const STORAGE_KEYS = {
+    WEBSITE: 'mock_org_website',
+    PAGES: 'mock_org_pages',
+    BRANDING: 'mock_org_branding',
+    AGENTS: 'mock_org_agents',
+    VERSION: 'mock_data_version'
 };
 
-let mockPages: OrgWebsitePage[] = [
-    {
-        id: 'page-1',
-        websiteId: 'ws_brokerage_001',
-        slug: '/',
-        title: 'Home',
-        layoutConfig: {
-            sections: [
-                { type: 'hero' },
-                { type: 'listings' },
-                { type: 'agent_profiles' },
-                { type: 'testimonials' },
-                { type: 'contact' },
-            ],
-        },
-        isPublished: true,
+// Clear stale data on version mismatch
+if (!IS_SERVER) {
+    const storedVersion = localStorage.getItem(STORAGE_KEYS.VERSION);
+    if (storedVersion !== DATA_VERSION) {
+        localStorage.removeItem(STORAGE_KEYS.WEBSITE);
+        localStorage.removeItem(STORAGE_KEYS.PAGES);
+        localStorage.removeItem(STORAGE_KEYS.BRANDING);
+        localStorage.removeItem(STORAGE_KEYS.AGENTS);
+        localStorage.setItem(STORAGE_KEYS.VERSION, DATA_VERSION);
+    }
+}
+
+const getInitialWebsite = (): OrgWebsite => {
+    if (!IS_SERVER) {
+        const saved = localStorage.getItem(STORAGE_KEYS.WEBSITE);
+        if (saved) return JSON.parse(saved);
+    }
+    return {
+        id: 'ws_brokerage_001',
+        organizationId: 'org-1',
+        domain: 'skyline-estates.realestate.com',
+        templateId: 'modern-realty',
+        templateName: 'Modern Realty',
+        organizationName: 'Prestige Realty Group',
+        status: 'ACTIVE',
         createdAt: '2024-01-15T10:00:00Z',
         updatedAt: '2025-11-20T14:30:00Z',
-    },
-    {
-        id: 'page-2',
-        websiteId: 'ws_brokerage_001',
-        slug: 'about-dynamic',
-        title: 'About Us (Dynamic)',
-        layoutConfig: {
-            sections: [
-                { type: 'hero' },
-                { type: 'text' },
-                { type: 'agent_profiles' },
-            ],
+        navigation: [
+            { label: 'Home', slug: '/' },
+            { label: 'About', slug: '/about' },
+            { label: 'Communities', slug: '/communities' },
+        ],
+    };
+};
+
+const getInitialPages = (): OrgWebsitePage[] => {
+    if (!IS_SERVER) {
+        const saved = localStorage.getItem(STORAGE_KEYS.PAGES);
+        if (saved) return JSON.parse(saved);
+    }
+    return [
+        {
+            id: 'page-1',
+            websiteId: 'ws_brokerage_001',
+            slug: '/',
+            title: 'Home',
+            layoutConfig: {
+                sections: [
+                    { type: 'hero' },
+                    { type: 'listings' },
+                    { type: 'agent_profiles' },
+                    { type: 'testimonials' },
+                    { type: 'contact' },
+                ],
+            },
+            isPublished: true,
+            createdAt: '2024-01-15T10:00:00Z',
+            updatedAt: '2025-11-20T14:30:00Z',
         },
-        isPublished: true,
-        createdAt: '2024-02-10T10:00:00Z',
-        updatedAt: '2025-10-05T16:45:00Z',
-    },
-    {
-        id: 'page-3',
-        websiteId: 'ws_brokerage_001',
-        slug: 'communities',
-        title: 'Communities',
-        layoutConfig: {
-            sections: [
-                { type: 'hero' },
-                { type: 'gallery' },
-            ],
+        {
+            id: 'page-2',
+            websiteId: 'ws_brokerage_001',
+            slug: '/about',
+            title: 'About Us',
+            layoutConfig: {
+                sections: [
+                    { type: 'text' },
+                    { type: 'agent_profiles' },
+                ],
+            },
+            isPublished: true,
+            createdAt: '2024-02-10T10:00:00Z',
+            updatedAt: '2025-10-05T16:45:00Z',
         },
-        isPublished: true,
-        createdAt: '2024-03-22T12:00:00Z',
-        updatedAt: '2025-09-15T08:30:00Z',
-    },
-];
+        {
+            id: 'page-3',
+            websiteId: 'ws_brokerage_001',
+            slug: '/communities',
+            title: 'Communities',
+            layoutConfig: {
+                sections: [
+                    { type: 'hero' },
+                    { type: 'gallery' },
+                ],
+            },
+            isPublished: true,
+            createdAt: '2024-03-22T12:00:00Z',
+            updatedAt: '2025-09-15T08:30:00Z',
+        },
+    ];
+};
+
+let mockOrgWebsite = getInitialWebsite();
+let mockPages = getInitialPages();
+
+const persist = () => {
+    if (!IS_SERVER) {
+        localStorage.setItem(STORAGE_KEYS.WEBSITE, JSON.stringify(mockOrgWebsite));
+        localStorage.setItem(STORAGE_KEYS.PAGES, JSON.stringify(mockPages));
+    }
+};
 
 let mockBranding: OrgWebsiteBranding = {
     id: 'brand-1',
@@ -146,36 +198,43 @@ let mockAgentProfiles: WebsiteAgentProfile[] = [
 export const orgWebsiteService = {
     // ─── Website Details ───────────────────────────────────
     getOrgWebsite: async (organizationId: string): Promise<OrgWebsite | null> => {
-        if (mockOrgWebsite.organizationId === organizationId) {
-            return mockOrgWebsite;
+        // Return a mock website for any organizationId to ensure the builder always loads in demo
+        return {
+            ...mockOrgWebsite,
+            organizationId: organizationId,
+            id: `ws_${organizationId}`
+        };
+    },
+
+    // ─── Page Management ───────────────────────────────────
+    getPages: async (_organizationId: string, websiteId: string): Promise<OrgWebsitePage[]> => {
+        // Return mock pages for any valid combination for demo
+        return mockPages.map(p => ({ ...p, websiteId }));
+    },
+
+    getPageById: async (_organizationId: string, websiteId: string, pageId: string): Promise<OrgWebsitePage | null> => {
+        const page = mockPages.find(p => p.id === pageId);
+        if (page) {
+            return { ...page, websiteId };
         }
         return null;
     },
 
-    // ─── Page Management ───────────────────────────────────
-    getPages: async (organizationId: string, websiteId: string): Promise<OrgWebsitePage[]> => {
-        // Multi-tenant safety check
-        if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
-            return [];
-        }
-        return mockPages.filter(p => p.websiteId === websiteId);
-    },
+    getPageBySlug: async (_organizationId: string, _websiteId: string, slug: string): Promise<OrgWebsitePage | null> => {
+        // Normalize slug for comparison — ensure leading slash consistency and remove trailing slash
+        let normalizedSlug = slug.trim();
+        if (!normalizedSlug.startsWith('/')) normalizedSlug = '/' + normalizedSlug;
+        if (normalizedSlug.length > 1 && normalizedSlug.endsWith('/')) normalizedSlug = normalizedSlug.slice(0, -1);
 
-    getPageById: async (organizationId: string, websiteId: string, pageId: string): Promise<OrgWebsitePage | null> => {
-        if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
-            return null;
-        }
-        return mockPages.find(p => p.id === pageId) || null;
+        const found = mockPages.find(p => {
+            let pageSlug = p.slug.trim();
+            if (!pageSlug.startsWith('/')) pageSlug = '/' + pageSlug;
+            if (pageSlug.length > 1 && pageSlug.endsWith('/')) pageSlug = pageSlug.slice(0, -1);
+            return pageSlug === normalizedSlug;
+        });
+        return found ? { ...found, websiteId: _websiteId } : null;
     },
-
-    getPageBySlug: async (organizationId: string, websiteId: string, slug: string): Promise<OrgWebsitePage | null> => {
-        if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
-            return null;
-        }
-        return mockPages.find(p => p.websiteId === websiteId && p.slug === slug) || null;
-    },
-
-    createPage: async (organizationId: string, data: {
+    createPage: async (_organizationId: string, data: {
         websiteId: string;
         slug: string;
         title: string;
@@ -183,9 +242,8 @@ export const orgWebsiteService = {
         isPublished: boolean;
     }): Promise<OrgWebsitePage> => {
         // Multi-tenant safety check
-        if (mockOrgWebsite.id !== data.websiteId || mockOrgWebsite.organizationId !== organizationId) {
-            throw new Error('Unauthorized');
-        }
+        // In demo, we skip restrictive auth checks to allow multi-org testing
+
 
         const newPage: OrgWebsitePage = {
             id: `page-${Math.random().toString(36).substr(2, 9)}`,
@@ -195,10 +253,20 @@ export const orgWebsiteService = {
         };
         mockPages.push(newPage);
 
+        // Auto-add to navigation if published and not already there
+        if (newPage.isPublished) {
+            if (!mockOrgWebsite.navigation) mockOrgWebsite.navigation = [];
+            if (!mockOrgWebsite.navigation.some(n => n.slug === newPage.slug)) {
+                mockOrgWebsite.navigation.push({ label: newPage.title, slug: newPage.slug });
+            }
+        }
+
+        persist();
+
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Page Created',
-            message: `"${newPage.title}" has been added to your website.`,
+            message: `"${newPage.title}" has been added to your website and navigation.`,
         });
 
         return newPage;
@@ -223,26 +291,28 @@ export const orgWebsiteService = {
         }
     },
 
-    updatePage: async (organizationId: string, pageId: string, data: Partial<OrgWebsitePage>): Promise<OrgWebsitePage> => {
-        // Multi-tenant check
-        if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
+    updatePage: async (_organizationId: string, pageId: string, data: Partial<OrgWebsitePage>): Promise<OrgWebsitePage> => {
+        // Multi-tenant check - relaxed for demo
+        // if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
 
         const idx = mockPages.findIndex(p => p.id === pageId);
         if (idx === -1) throw new Error('Page not found');
 
         mockPages[idx] = { ...mockPages[idx], ...data, updatedAt: new Date().toISOString() };
+        persist();
 
         return mockPages[idx];
     },
 
-    savePageLayout: async (organizationId: string, pageId: string, json: string): Promise<void> => {
-        if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
+    savePageLayout: async (_organizationId: string, pageId: string, json: string): Promise<void> => {
+        // if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
 
         const idx = mockPages.findIndex(p => p.id === pageId);
         if (idx === -1) throw new Error('Page not found');
 
         mockPages[idx].customLayoutJson = json;
         mockPages[idx].updatedAt = new Date().toISOString();
+        persist();
 
         useNotificationStore.getState().addNotification({
             type: 'success',
@@ -251,12 +321,12 @@ export const orgWebsiteService = {
         });
     },
 
-    deletePage: async (organizationId: string, pageId: string): Promise<void> => {
-        // Multi-tenant check
-        if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
+    deletePage: async (_organizationId: string, pageId: string): Promise<void> => {
+        // if (mockOrgWebsite.organizationId !== organizationId) throw new Error('Unauthorized');
 
         const page = mockPages.find(p => p.id === pageId);
         mockPages = mockPages.filter(p => p.id !== pageId);
+        persist();
 
         useNotificationStore.getState().addNotification({
             type: 'success',
@@ -265,11 +335,10 @@ export const orgWebsiteService = {
         });
     },
 
-    reorderPages: async (organizationId: string, websiteId: string, pageIds: string[]): Promise<OrgWebsitePage[]> => {
-        // Multi-tenant check
-        if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
-            throw new Error('Unauthorized');
-        }
+    reorderPages: async (_organizationId: string, websiteId: string, pageIds: string[]): Promise<OrgWebsitePage[]> => {
+        // if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
+        //     throw new Error('Unauthorized');
+        // }
 
         // Reorder in-place based on the provided order
         const websitePages = mockPages.filter(p => p.websiteId === websiteId);
@@ -278,6 +347,7 @@ export const orgWebsiteService = {
             .map(id => websitePages.find(p => p.id === id))
             .filter((p): p is OrgWebsitePage => !!p);
         mockPages = [...otherPages, ...reordered];
+        persist();
 
         useNotificationStore.getState().addNotification({
             type: 'success',
@@ -286,6 +356,20 @@ export const orgWebsiteService = {
         });
 
         return reordered;
+    },
+
+    updateNavigation: async (_organizationId: string, _websiteId: string, navigation: { label: string; slug: string; children?: { label: string; slug: string; children?: any[] }[] }[]): Promise<void> => {
+        // if (mockOrgWebsite.id !== websiteId || mockOrgWebsite.organizationId !== organizationId) {
+        //     throw new Error('Unauthorized');
+        // }
+        mockOrgWebsite.navigation = navigation;
+        persist();
+
+        useNotificationStore.getState().addNotification({
+            type: 'success',
+            title: 'Navigation Saved',
+            message: 'Site navigation menu has been updated.',
+        });
     },
 
     // ─── Branding ──────────────────────────────────────────

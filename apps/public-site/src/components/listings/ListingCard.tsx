@@ -46,7 +46,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             {/* Image Container */}
             <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
-                    src={listing.mainImage}
+                    src={listing.mainImage || (listing.images && listing.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800'}
                     alt={listing.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

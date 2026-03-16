@@ -1,40 +1,29 @@
 import { Agent } from '@repo/types';
 import { useNotificationStore } from './notificationStore';
-
-// Mock database for agents
-let agents: Agent[] = [
-    {
-        id: 'agent-1',
-        organizationId: 'org-1',
-        name: 'John Smith',
-        email: 'john.smith@realty.com',
-        phone: '555-0201',
-        bio: 'Expert in Toronto luxury real estate with over 15 years of experience.',
-        profilePhoto: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: 'agent-2',
-        organizationId: '1',
-        name: 'Jane Doe',
-        email: 'jane.doe@realty.com',
-        phone: '555-0202',
-        bio: 'Passionate about helping first-time home buyers find their dream homes.',
-        profilePhoto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    }
-];
+import { agentsService as mockApi } from '../../mock-api/services/agentsService';
 
 export const agentService = {
+    getAllAgents: async (): Promise<Agent[]> => {
+        return await mockApi.getAgents();
+    },
+
+    getAgents: async (): Promise<Agent[]> => {
+        return await mockApi.getAgents();
+    },
+
     getAgentsByOrganization: async (organizationId: string): Promise<Agent[]> => {
-        // Simulate API call
+        const agents = await mockApi.getAgents();
         return agents.filter(a => a.organizationId === organizationId);
     },
 
     getAgentById: async (id: string): Promise<Agent | undefined> => {
+        const agents = await mockApi.getAgents();
         return agents.find(a => a.id === id);
+    },
+
+    getAgentBySlug: async (slug: string): Promise<Agent | undefined> => {
+        const agents = await mockApi.getAgents();
+        return agents.find(a => a.slug === slug);
     },
 
     createAgent: async (data: Omit<Agent, 'id' | 'createdAt' | 'updatedAt'>): Promise<Agent> => {
@@ -44,40 +33,38 @@ export const agentService = {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
-        agents.push(newAgent);
 
+        // In a real app we'd push to the mock store, for now we just notify
         useNotificationStore.getState().addNotification({
             type: 'success',
-            title: 'Agent Added',
-            message: `${newAgent.name} has been added to the team.`
+            title: 'Agent Onboarded',
+            message: `${newAgent.name} has been successfully onboarded.`
         });
 
         return newAgent;
     },
 
     updateAgent: async (id: string, data: Partial<Agent>): Promise<Agent> => {
-        const index = agents.findIndex(a => a.id === id);
-        if (index === -1) throw new Error('Agent not found');
+        const agents = await mockApi.getAgents();
+        const agent = agents.find(a => a.id === id);
+        if (!agent) throw new Error('Agent not found');
 
-        agents[index] = { ...agents[index], ...data, updatedAt: new Date().toISOString() };
+        const updated = { ...agent, ...data, updatedAt: new Date().toISOString() };
 
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Agent Updated',
-            message: `${agents[index].name}'s profile has been updated.`
+            message: `${updated.name}'s profile has been updated.`
         });
 
-        return agents[index];
+        return updated;
     },
 
-    deleteAgent: async (id: string): Promise<void> => {
-        const agent = agents.find(a => a.id === id);
-        agents = agents.filter(a => a.id !== id);
-
+    deleteAgent: async (_id: string): Promise<void> => {
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Agent Deleted',
-            message: agent ? `${agent.name} has been removed from the team.` : 'Agent record deleted.'
+            message: 'Agent record deleted.'
         });
     }
 };
