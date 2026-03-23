@@ -6,6 +6,7 @@ export { TemplateRenderer } from './TemplateRenderer';
 export type { TemplateName, PageType, TemplateModule } from './TemplateRenderer';
 export { templateRegistry } from './TemplateRenderer';
 export { TemplateProvider, useTemplate } from './TemplateContext';
+export { pageTemplates, listingPageTemplate, agentPageTemplate } from './pageTemplates';
 
 // Individual template exports for direct access
 export * as ModernRealty from './modern-realty';
@@ -24,6 +25,8 @@ export {
     TextSection,
     ImageSection,
     ListingsSection,
-    AgentProfilesSection
+    AgentProfilesSection,
+    GlobalHeader,
+    GlobalFooter
 } from './shared';
 export { mockListings, mockAgents } from './shared';

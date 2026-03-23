@@ -306,7 +306,7 @@ export default function OrganizationsPage() {
                                         <td className="px-6 py-4 text-right relative actions-menu-container">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    onClick={() => router.push(`/website-builder?websiteId=${org.id}`)}
+                                                    onClick={() => router.push(`/website-builder?websiteId=${org.id}&templateId=${org.template}`)}
                                                     className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5"
                                                     title="Open Website Builder"
                                                 >
@@ -353,7 +353,7 @@ export default function OrganizationsPage() {
                                                         </svg>
                                                         Manage Website
                                                     </button>
-                                                    <button onClick={() => router.push(`/website-builder?websiteId=${org.id}`)} className="w-full text-left px-4 py-2 hover:bg-violet-50 text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-2 font-semibold">
+                                                    <button onClick={() => router.push(`/website-builder?websiteId=${org.id}&templateId=${org.template}`)} className="w-full text-left px-4 py-2 hover:bg-violet-50 text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-2 font-semibold">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
@@ -452,7 +452,7 @@ export default function OrganizationsPage() {
                     <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Edit <span className="text-indigo-600">Organization</span></h2>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Edit <span className="text-indigo-600">Organization</span></h2>
                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">ID: {editingOrg.id}</p>
                             </div>
                             <button onClick={() => setEditingOrg(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">

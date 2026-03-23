@@ -17,13 +17,13 @@ const ImageBlock = ({ content }: { content: any }) => (
             {content.url ? (
                 <img src={content.url} alt={content.caption || 'Page image'} className="w-full h-auto" />
             ) : (
-                <div className="aspect-video bg-slate-100 flex items-center justify-center italic text-slate-400 font-bold">
+                <div className="aspect-video bg-slate-100 flex items-center justify-center  text-slate-400 font-bold">
                     Image Placeholder
                 </div>
             )}
         </div>
         {content.caption && (
-            <p className="mt-6 text-center text-sm font-bold text-slate-400 uppercase tracking-widest italic">
+            <p className="mt-6 text-center text-sm font-bold text-slate-400 uppercase tracking-widest ">
                 {content.caption}
             </p>
         )}
@@ -37,7 +37,7 @@ const TextImageBlock = ({ content }: { content: any }) => (
                 <h2 className="text-4xl font-black text-slate-900 leading-tight">
                     Premium <span className="text-indigo-600">Architectural</span> Narratives
                 </h2>
-                <p className="text-lg text-slate-600 font-medium leading-relaxed italic">
+                <p className="text-lg text-slate-600 font-medium leading-relaxed ">
                     {content.text || 'Elevating real estate through narrative-driven design and strategic placement.'}
                 </p>
             </div>
@@ -46,7 +46,7 @@ const TextImageBlock = ({ content }: { content: any }) => (
                     {content.url ? (
                         <img src={content.url} alt="Text+Image" className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full bg-slate-100 flex items-center justify-center italic text-slate-400 font-bold">
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center  text-slate-400 font-bold">
                             Visual Asset
                         </div>
                     )}
@@ -80,7 +80,7 @@ const GalleryBlock = ({ content }: { content: any }) => (
                     {img.url ? (
                         <img src={img.url} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-300 font-black uppercase text-[10px] tracking-widest italic">
+                        <div className="w-full h-full flex items-center justify-center text-slate-300 font-black uppercase text-[10px] tracking-widest ">
                             Portfolio Asset {i + 1}
                         </div>
                     )}

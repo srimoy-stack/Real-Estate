@@ -4,6 +4,7 @@ const config: Config = {
   content: [
     './src/**/*.{ts,tsx,mdx}',
     '../../shared/ui/src/**/*.{ts,tsx}',
+    '../../shared/modules/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

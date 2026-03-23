@@ -90,6 +90,7 @@ export default function OrgWebsiteManagementPage() {
             slug: pageForm.slug,
             layoutConfig,
             isPublished: true,
+            isPublic: true,
         });
         setShowPageForm(false);
         setPageForm({ title: '', slug: '', sections: 'hero,listings,contact' });
@@ -111,6 +112,7 @@ export default function OrgWebsiteManagementPage() {
             slug: seoForm.slug,
             layoutConfig,
             isPublished: seoForm.isPublished,
+            isPublic: true,
         });
         setShowSeoForm(false);
         setSeoForm({ title: '', slug: '', metaTitle: '', metaDescription: '', isPublished: false });

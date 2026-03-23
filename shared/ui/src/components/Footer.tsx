@@ -48,7 +48,7 @@ export function Footer({ brand = 'Real Estate Platform', year = new Date().getFu
 
           {/* Links */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3 text-emerald-600 italic">Company</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3 text-emerald-600 ">Company</h3>
             <ul className="space-y-1.5">
               {[
                 { label: 'About Us', href: '/about' },

@@ -63,7 +63,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Inquiry Received!</h3>
+                <h3 className="text-2xl font-black text-slate-900  tracking-tighter">Inquiry Received!</h3>
                 <p className="text-slate-600 font-medium">An expert agent will contact you shortly.</p>
                 <Button onClick={() => setIsSuccess(false)} className="mt-4">Send Another Message</Button>
             </div>
@@ -72,7 +72,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
 
     return (
         <div className={`bg-white p-8 rounded-[40px] shadow-2xl shadow-slate-200 border border-slate-100 ${className}`}>
-            <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter mb-6">
+            <h3 className="text-2xl font-black text-slate-900  tracking-tighter mb-6">
                 {title}
             </h3>
 
@@ -126,7 +126,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
                 </div>
 
                 {error && (
-                    <p className="text-red-500 text-xs font-bold italic">{error}</p>
+                    <p className="text-red-500 text-xs font-bold ">{error}</p>
                 )}
 
                 <Button

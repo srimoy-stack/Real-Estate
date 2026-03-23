@@ -6,13 +6,14 @@ export interface ImageSectionProps {
     fullWidth?: boolean;
 }
 
-export const ImageSection: React.FC<ImageSectionProps> = ({
+export const ImageSection: React.FC<ImageSectionProps & { id?: string }> = ({
     url = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200',
     caption,
-    fullWidth = false
+    fullWidth = false,
+    id
 }) => {
     return (
-        <section className={`py-12 ${fullWidth ? '' : 'px-6'} bg-white`}>
+        <section id={id} className={`py-12 ${fullWidth ? '' : 'px-6'} bg-white`}>
             <div className={`${fullWidth ? 'w-full' : 'max-w-7xl mx-auto'}`}>
                 <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
                     <img

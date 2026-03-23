@@ -88,14 +88,14 @@ export class ShortcodeConfigService {
         const results = Array.from(this.db.values());
 
         if (query.role === 'super_admin') {
-            // Super admins see everything they ask for, filter by intent
+            // Super admins see everything; filters provided are just hints
+            let filtered = results;
             if (query.websiteId) {
-                return results.filter(c => c.websiteId === query.websiteId);
+                // If a site is specified, we might want to prioritize it, but for a "select anything" flow, 
+                // we'll return all and let the UI handle grouping/labelling.
+                // However, for super admins we won't strictly filter out others unless they ask for it.
             }
-            if (query.organizationId) {
-                return results.filter(c => c.organizationId === query.organizationId);
-            }
-            return results;
+            return filtered;
         }
 
         if (query.role === 'client_admin') {

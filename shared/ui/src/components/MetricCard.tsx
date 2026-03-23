@@ -25,7 +25,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             <div className="flex justify-between items-start">
                 <div className="relative z-10">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</p>
-                    <p className="mt-2 text-3xl font-black text-slate-900 tracking-tighter italic">{value}</p>
+                    <p className="mt-2 text-3xl font-black text-slate-900 tracking-tighter">{value}</p>
                     {trend && (
                         <p className={`mt-2 text-[10px] font-black flex items-center gap-1 uppercase tracking-widest ${trend.type === 'positive' ? 'text-emerald-600' :
                             trend.type === 'negative' ? 'text-rose-600' : 'text-slate-400'

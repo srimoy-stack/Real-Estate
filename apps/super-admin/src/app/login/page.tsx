@@ -51,11 +51,11 @@ export default function LoginPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h2 className="mt-10 text-4xl font-black tracking-tighter text-white sm:text-5xl italic uppercase">
+                    <h2 className="mt-10 text-4xl font-black tracking-tighter text-white sm:text-5xl uppercase">
                         Super <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Admin</span>
                     </h2>
                     <p className="mt-4 text-slate-400 font-medium text-lg">
-                        Secure Access to the <span className="text-indigo-400 font-black italic">Brokerage Ecosystem</span>
+                        Secure Access to the <span className="text-indigo-400 font-black">Brokerage Ecosystem</span>
                     </p>
                 </div>
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
 
                     <p className="text-center text-[10px] text-slate-600 mt-6 font-black uppercase tracking-widest leading-relaxed">
                         Protected by AES-256 Architecture <br />
-                        <span className="text-indigo-500/50 italic font-medium">Session token bound to hardware identity</span>
+                        <span className="text-indigo-500/50 font-medium">Session token bound to hardware identity</span>
                     </p>
                 </form>
             </div>

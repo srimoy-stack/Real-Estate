@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
-import { listingService } from '@repo/services';
+import { listingService, orgWebsiteService } from '@repo/services';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const headersList = headers();
@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     let listingRoutes: MetadataRoute.Sitemap = [];
+    let pageRoutes: MetadataRoute.Sitemap = [];
 
     if (tenantId) {
         try {
@@ -31,10 +32,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 changeFrequency: 'weekly' as const,
                 priority: 0.6,
             }));
+
+            // Fetch dynamic website pages
+            const pages = await orgWebsiteService.getPages('org-1', tenantId);
+            pageRoutes = pages
+                .filter(p => p.isPublished && p.slug !== '/') // Skip '/' as it's in routes
+                .map(p => ({
+                    url: `${baseUrl}/${p.slug.replace(/^\//, '')}`,
+                    lastModified: new Date(p.updatedAt),
+                    changeFrequency: 'monthly' as const,
+                    priority: 0.7,
+                }));
         } catch (e) {
             console.error('Sitemap generation failed for tenant:', tenantId, e);
         }
     }
 
-    return [...routes, ...listingRoutes];
+    return [...routes, ...listingRoutes, ...pageRoutes];
 }

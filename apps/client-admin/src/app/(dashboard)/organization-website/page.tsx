@@ -20,7 +20,7 @@ export default function OrganizationWebsitePage() {
         (async () => {
             setLoading(true);
             const orgId = 'org-1'; // Aligned with user request for multi-tenancy
-            const ws = await orgWebsiteService.getOrgWebsite(orgId);
+            const ws = await orgWebsiteService.getOrgWebsite(orgId, `ws_${orgId}`);
             setWebsite(ws);
             if (ws) {
                 // Ensure default pages exist (Home)
@@ -198,6 +198,7 @@ function PagesTab({
             slug: form.slug || form.title.toLowerCase().replace(/\s+/g, '-'),
             layoutConfig: { sections: secs.map(type => ({ type })) },
             isPublished: form.isPublished,
+            isPublic: true,
         });
         setPages([...pages, page]);
         setShowCreate(false);

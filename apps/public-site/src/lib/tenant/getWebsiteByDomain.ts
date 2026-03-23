@@ -11,7 +11,7 @@ import { createWebsiteConfig } from '@repo/types';
 // Helper: create and then customize configs from the factory
 function buildModernBrokerage(): WebsiteConfig {
   const config = createWebsiteConfig({
-    tenantId: 'tenant_brokerage_001',
+    tenantId: 'org-1',
     domain: 'brokerage.local',
     brandName: 'Skyline Estates',
     templateId: 'modern-realty',
@@ -88,7 +88,7 @@ function buildLuxuryAgent(): WebsiteConfig {
     mode: 'luxury-estate',
     primaryColor: '#0F172A',
     luxuryAccent: '#C8A951',
-    fontHeading: 'Playfair Display',
+    fontHeading: 'Inter',
     fontBody: 'Inter',
   };
   config.seo = {

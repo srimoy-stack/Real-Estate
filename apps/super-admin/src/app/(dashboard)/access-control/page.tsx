@@ -158,18 +158,18 @@ export default function AccessControlPage() {
                         <div className="h-1 w-1 bg-slate-600 rounded-full" />
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Administrative Identity Manager</span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter italic">Access <span className="text-indigo-400 underline decoration-indigo-400/20 underline-offset-[16px]">Control</span></h1>
+                    <h1 className="text-5xl font-black tracking-tighter">Access <span className="text-indigo-400 underline decoration-indigo-400/20 underline-offset-[16px]">Control</span></h1>
                     <p className="text-slate-400 font-medium max-w-lg text-lg">Provision secure credentials and orchestrate portal access for the entire brokerage network.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 lg:min-w-[400px] relative z-10">
                     <div className="p-6 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10">
                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Provisioned Personas</p>
-                        <p className="text-3xl font-black tracking-tighter italic">{users.length}</p>
+                        <p className="text-3xl font-black tracking-tighter">{users.length}</p>
                     </div>
                     <div className="p-6 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10">
                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Active Protocols</p>
-                        <p className="text-3xl font-black tracking-tighter italic text-emerald-400">Stable</p>
+                        <p className="text-3xl font-black tracking-tighter text-emerald-400">Stable</p>
                     </div>
                 </div>
             </div>
@@ -233,7 +233,7 @@ export default function AccessControlPage() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-slate-900 leading-none mb-1.5">{u.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold italic">{u.email}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold">{u.email}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -268,7 +268,7 @@ export default function AccessControlPage() {
                     </table>
                     {!loading && filteredUsers.length === 0 && (
                         <div className="py-20 text-center">
-                            <p className="text-slate-400 font-bold italic">No identities found within active filters.</p>
+                            <p className="text-slate-400 font-bold">No identities found within active filters.</p>
                         </div>
                     )}
                 </div>
@@ -281,7 +281,7 @@ export default function AccessControlPage() {
                         <div className="p-10 border-b border-slate-100 flex items-center justify-between relative bg-slate-900 text-white">
                             <div className="absolute top-0 right-0 h-full w-40 bg-white/5 rounded-bl-[100px] pointer-events-none" />
                             <div className="space-y-1 relative z-10">
-                                <h2 className="text-3xl font-black tracking-tighter italic leading-none">Identity <span className="text-indigo-400">Provisioning</span></h2>
+                                <h2 className="text-3xl font-black tracking-tighter leading-none">Identity <span className="text-indigo-400">Provisioning</span></h2>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Secure Protocol Handshake</p>
                             </div>
                             <button onClick={() => setModalOpen(false)} className="p-3 hover:bg-white/10 rounded-full transition-colors relative z-10">
@@ -350,7 +350,7 @@ export default function AccessControlPage() {
                             <div className="absolute top-0 left-0 w-full h-full bg-indigo-500/5" />
                             <div className="relative z-10">
                                 <div className="h-12 w-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-xl mb-6 shadow-lg shadow-indigo-500/20">🆔</div>
-                                <h1 className="text-2xl font-black tracking-tight leading-8 italic">Manual<br /><span className="text-indigo-400">Identity</span><br />Provisioning</h1>
+                                <h1 className="text-2xl font-black tracking-tight leading-8">Manual<br /><span className="text-indigo-400">Identity</span><br />Provisioning</h1>
                                 <p className="mt-6 text-sm text-slate-400 font-medium leading-relaxed">
                                     Directly orchestrate a new network node without standard agency onboarding protocols.
                                 </p>
@@ -372,8 +372,8 @@ export default function AccessControlPage() {
 
                             <div className="space-y-8 max-w-lg mx-auto">
                                 <div className="space-y-2">
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">Persona <span className="text-indigo-600">Architect</span></h2>
-                                    <p className="text-sm text-slate-500 font-medium italic">Define the security profile for the new identity.</p>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Persona <span className="text-indigo-600">Architect</span></h2>
+                                    <p className="text-sm text-slate-500 font-medium">Define the security profile for the new identity.</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-6">

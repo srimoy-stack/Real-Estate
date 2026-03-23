@@ -229,7 +229,7 @@ export default function AuditLogsPage() {
                             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em]">Governance Module</span>
                         </div>
                     </div>
-                    <h1 className="text-5xl font-black text-slate-900 tracking-tighter italic leading-none">
+                    <h1 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">
                         Audit <span className="text-indigo-600 underline decoration-indigo-600/10 underline-offset-[16px] decoration-8">Streams</span>
                     </h1>
                     <p className="text-slate-500 font-medium max-w-xl text-lg">
@@ -348,7 +348,7 @@ export default function AuditLogsPage() {
                                             <div className="h-20 w-20 mx-auto rounded-3xl bg-slate-50 flex items-center justify-center">
                                                 <svg className="h-10 w-10 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6" /></svg>
                                             </div>
-                                            <p className="text-slate-400 font-bold italic text-sm">No synchronized records found for the active filter set.</p>
+                                            <p className="text-slate-400 font-bold text-sm">No synchronized records found for the active filter set.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -381,7 +381,7 @@ export default function AuditLogsPage() {
                                     </td>
                                     <td className="px-8 py-8">
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-black text-slate-700 italic">{log.targetName || 'Global Grid'}</span>
+                                            <span className="text-sm font-black text-slate-700">{log.targetName || 'Global Grid'}</span>
                                             <span className="text-[10px] text-slate-400 font-mono mt-2 uppercase tracking-tighter">{log.organizationId || 'Core Platform'}</span>
                                         </div>
                                     </td>
@@ -413,7 +413,7 @@ export default function AuditLogsPage() {
                         <div className="p-10 border-b border-slate-100 flex items-center justify-between bg-white relative">
                             <div className="absolute top-0 right-0 h-full w-40 bg-indigo-50/20 rounded-bl-[100px] pointer-events-none" />
                             <div className="space-y-2 relative z-10">
-                                <h3 className="text-3xl font-black text-slate-900 tracking-tighter italic leading-none">Sequence <span className="text-indigo-600">Report</span></h3>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tighter leading-none">Sequence <span className="text-indigo-600">Report</span></h3>
                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Advanced Telemetry Audit #{selectedLog.id}</p>
                             </div>
                             <button

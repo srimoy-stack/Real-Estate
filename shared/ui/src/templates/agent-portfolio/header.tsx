@@ -1,35 +1,35 @@
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@repo/auth';
 import { AuthModal } from '../../components/AuthModal';
-
-const navLinks = [
-    { label: 'Home', href: '/' },
-    { label: 'Listings', href: '/listings' },
-    { label: 'About Me', href: '#about' },
-    { label: 'Communities', href: '#communities' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Contact', href: '#contact' },
-];
+import { useTemplate } from '../TemplateContext';
 
 export const Header: React.FC = () => {
+    const { navigation, onNavigate, organizationName, currentPageSlug, isEditor } = useTemplate();
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const { isAuthenticated, user, logout } = useAuth();
 
     useEffect(() => {
+        if (isEditor) return; // Don't track scroll in editor
         const onScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener('scroll', onScroll);
         return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+    }, [isEditor]);
+
+    const handleClick = (e: React.MouseEvent, slug: string) => {
+        if (onNavigate) {
+            e.preventDefault();
+            onNavigate(slug);
+        }
+        setMenuOpen(false);
+    };
 
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+                className={`${isEditor ? 'sticky' : 'fixed'} top-0 left-0 right-0 z-50 transition-all duration-500 ${(scrolled || isEditor)
                     ? 'bg-[#0a1628]/95 backdrop-blur-xl shadow-2xl shadow-black/20'
                     : 'bg-transparent'
                     }`}
@@ -37,26 +37,27 @@ export const Header: React.FC = () => {
                 <div className="max-w-[1400px] mx-auto px-8">
                     <div className="h-20 flex items-center justify-between">
                         {/* Logo / Agent Name */}
-                        <Link href="/" className="flex items-center gap-3 group">
+                        <Link href="/" onClick={(e) => handleClick(e, '/')} className="flex items-center gap-3 group">
                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                                <span className="text-white font-black text-lg">S</span>
+                                <span className="text-white font-black text-lg">{organizationName?.charAt(0) || 'S'}</span>
                             </div>
                             <div className="hidden sm:block">
-                                <span className="text-white font-bold text-lg tracking-tight block leading-tight">Sarah Mitchell</span>
+                                <span className="text-white font-bold text-lg tracking-tight block leading-tight">{organizationName || 'Sarah Mitchell'}</span>
                                 <span className="text-amber-400/60 text-[9px] font-bold uppercase tracking-[0.3em]">Real Estate</span>
                             </div>
                         </Link>
 
                         {/* Desktop Nav */}
-                        <nav className="hidden lg:flex items-center gap-8">
-                            {navLinks.map((link) => (
+                        <nav className="hidden md:flex items-center gap-8">
+                            {navigation?.map((link: any, idx) => (
                                 <Link
-                                    key={link.href}
-                                    href={link.href}
-                                    className="text-[13px] font-semibold text-white/60 hover:text-amber-400 transition-colors duration-300 relative group"
+                                    key={link.slug + idx}
+                                    href={link.slug}
+                                    onClick={(e) => handleClick(e, link.slug)}
+                                    className={`text-[13px] font-semibold transition-colors duration-300 relative group ${currentPageSlug === link.slug ? 'text-amber-400' : 'text-white/60 hover:text-amber-400'}`}
                                 >
                                     {link.label}
-                                    <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-amber-400 group-hover:w-full transition-all duration-300 rounded-full" />
+                                    <span className={`absolute left-0 -bottom-1 h-0.5 bg-amber-400 transition-all duration-300 rounded-full ${currentPageSlug === link.slug ? 'w-full' : 'w-0 group-hover:w-full'}`} />
                                 </Link>
                             ))}
                         </nav>
@@ -91,7 +92,7 @@ export const Header: React.FC = () => {
                             </a>
                             <button
                                 onClick={() => setMenuOpen(!menuOpen)}
-                                className="lg:hidden p-2 text-white/60 hover:text-amber-400 transition-colors"
+                                className="md:hidden p-2 text-white/60 hover:text-amber-400 transition-colors"
                             >
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     {menuOpen
@@ -109,12 +110,12 @@ export const Header: React.FC = () => {
             {menuOpen && (
                 <div className="fixed inset-0 z-40 bg-[#0a1628]/98 backdrop-blur-xl flex flex-col items-center justify-center lg:hidden">
                     <nav className="flex flex-col items-center gap-6">
-                        {navLinks.map((link) => (
+                        {navigation?.map((link: any, idx) => (
                             <Link
-                                key={link.href}
-                                href={link.href}
-                                onClick={() => setMenuOpen(false)}
-                                className="text-xl font-bold text-white/80 hover:text-amber-400 transition-colors"
+                                key={link.slug + idx}
+                                href={link.slug}
+                                onClick={(e) => handleClick(e, link.slug)}
+                                className={`text-xl font-bold transition-colors ${currentPageSlug === link.slug ? 'text-amber-400' : 'text-white/80 hover:text-amber-400'}`}
                             >
                                 {link.label}
                             </Link>

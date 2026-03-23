@@ -1,30 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-const BLOG_POSTS = [
-    {
-        title: 'How to Prepare Your Home for a Spring Sale',
-        date: 'March 14, 2026',
-        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800',
-        excerpt: 'Maximize your property value with these essential staging and renovation tips from our top-performing agents.'
-    },
-    {
-        title: 'Current Trends in the Luxury Condo Market',
-        date: 'March 10, 2026',
-        image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800',
-        excerpt: 'We analyze the shift in urban living preferences and what investors need to watch for in the coming months.'
-    },
-    {
-        title: 'Sustainable Architecture: The Future of Luxury',
-        date: 'March 05, 2026',
-        image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800',
-        excerpt: 'Discover how modern eco-friendly designs are redefining exclusivity and comfort in high-end real estate.'
-    }
-];
+import { blogService } from '@repo/services';
+import { BlogPost } from '@repo/types';
 
 export const BlogSection = () => {
+    const [posts, setPosts] = useState<BlogPost[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const data = await blogService.getPosts('org-1');
+                setPosts(data.filter(p => p.status === 'Published').slice(0, 3));
+            } catch (error) {
+                console.error('Failed to fetch blog posts:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPosts();
+    }, []);
+
+    if (loading) return null;
+
     return (
         <section className="py-24 bg-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,30 +48,32 @@ export const BlogSection = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {BLOG_POSTS.map((post, i) => (
-                        <article key={i} className="group flex flex-col space-y-6">
-                            <div className="relative aspect-[16/10] rounded-[32px] overflow-hidden">
+                    {posts.map((post) => (
+                        <article key={post.id} className="group flex flex-col space-y-6">
+                            <Link href={`/blog/${post.slug}`} className="relative aspect-[16/10] rounded-[32px] overflow-hidden block">
                                 <img
-                                    src={post.image}
+                                    src={post.featuredImage}
                                     alt={post.title}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute top-6 left-6">
                                     <span className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-xl">
-                                        Lifestyle
+                                        {post.category}
                                     </span>
                                 </div>
-                            </div>
+                            </Link>
 
                             <div className="space-y-4 px-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{post.date}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                                    {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
+                                </p>
                                 <h3 className="text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
-                                    {post.title}
+                                    <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                                 </h3>
                                 <p className="text-slate-500 font-medium line-clamp-2">
                                     {post.excerpt}
                                 </p>
-                                <Link href={`/blog/${i}`} className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900 group-hover:text-indigo-600 transition-colors">
                                     Read Full Story
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                                 </Link>
@@ -83,3 +85,4 @@ export const BlogSection = () => {
         </section>
     );
 };
+

@@ -1,27 +1,46 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import { useTemplate } from '../TemplateContext';
 
-export const Header: React.FC = () => (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-700 rounded flex items-center justify-center"><span className="text-white font-black text-sm">CB</span></div>
-                <span className="text-lg font-bold text-slate-900">CorporateBrokerage</span>
-            </Link>
-            <nav className="hidden md:flex items-center gap-6">
-                {[{ l: 'Home', h: '/' }, { l: 'Properties', h: '/listings' }, { l: 'Offices', h: '#' }, { l: 'Agents', h: '#' }, { l: 'About', h: '#' }, { l: 'Contact', h: '#' }].map(n => (
-                    <Link key={n.l} href={n.h} className="text-sm font-medium text-slate-600 hover:text-blue-700 transition-colors">{n.l}</Link>
-                ))}
-            </nav>
-            <div className="flex items-center gap-3">
-                <span className="hidden lg:block text-sm text-slate-500 font-medium">1-800-REALTY</span>
-                <button className="px-5 py-2 bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm rounded-lg transition-all">List With Us</button>
+export const Header: React.FC = () => {
+    const { navigation, onNavigate, organizationName, currentPageSlug } = useTemplate();
+
+    const handleClick = (e: React.MouseEvent, slug: string) => {
+        if (onNavigate) {
+            e.preventDefault();
+            onNavigate(slug);
+        }
+    };
+
+    return (
+        <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <Link href="/" onClick={(e) => handleClick(e, '/')} className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-700 rounded flex items-center justify-center">
+                        <span className="text-white font-black text-sm">{organizationName?.charAt(0) || 'C'}</span>
+                    </div>
+                    <span className="text-lg font-bold text-slate-900">{organizationName || 'CorporateBrokerage'}</span>
+                </Link>
+                <nav className="hidden md:flex items-center gap-6">
+                    {navigation?.map((n: any, idx) => (
+                        <Link
+                            key={n.slug + idx}
+                            href={n.slug}
+                            onClick={(e) => handleClick(e, n.slug)}
+                            className={`text-sm font-medium transition-colors ${currentPageSlug === n.slug ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
+                        >
+                            {n.label}
+                        </Link>
+                    ))}
+                </nav>
+                <div className="flex items-center gap-3">
+                    <span className="hidden lg:block text-sm text-slate-500 font-medium">1-800-REALTY</span>
+                    <button className="px-5 py-2 bg-blue-700 hover:bg-blue-600 text-white font-bold text-sm rounded-lg transition-all">List With Us</button>
+                </div>
             </div>
-        </div>
-    </header>
-);
+        </header>
+    );
+};
 
 export const Footer: React.FC = () => (
     <footer className="bg-slate-900 text-white py-16">

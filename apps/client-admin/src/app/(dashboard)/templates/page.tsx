@@ -1,17 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getAllTemplates, TemplateDefinition } from '@repo/types';
+import { getAllTemplates, TemplateDefinition, createWebsiteConfig } from '@repo/types';
 import { useAuth } from '@repo/auth';
+import { TemplateRenderer, TemplateProvider, type TemplateName } from '@repo/ui';
 
 export default function TemplatesPage() {
     useAuth();
     const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
     const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
-
-    // Logic: In demo/development, show the FULL roster. "previously visible" version.
-    // Note: 'team' variable is not defined in this scope, assuming it's a placeholder or intended for another part of the code.
-    // const visibleTeam = team;
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -35,6 +32,82 @@ export default function TemplatesPage() {
         'agent-portfolio': 'from-purple-500 to-indigo-500',
         'minimal-realty': 'from-gray-100 to-gray-200',
     };
+
+    // Build mock data for the inline preview
+    const previewConfig = previewTemplate
+        ? (() => {
+            const mockWebsite = createWebsiteConfig({
+                tenantId: 'preview_tenant',
+                domain: 'preview.local',
+                brandName: 'Prestige Realty Group',
+                templateId: previewTemplate as any,
+            });
+            mockWebsite.homepage.sections = [
+                {
+                    id: 'preview-hero',
+                    type: 'hero',
+                    title: 'Hero',
+                    isVisible: true,
+                    isLocked: true,
+                    order: 0,
+                    content: {
+                        _type: 'hero',
+                        headline: 'Find Your Place in the World',
+                        subheadline: 'Exclusive listings and bespoke real estate services tailored to your lifestyle.',
+                        buttonText: 'Explore Properties',
+                        buttonHref: '#',
+                        bgImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600',
+                    }
+                },
+                {
+                    id: 'preview-listings',
+                    type: 'featured_listings',
+                    title: 'Listings',
+                    isVisible: true,
+                    isLocked: true,
+                    order: 1,
+                    content: {
+                        _type: 'featured_listings',
+                        title: 'Curated Collection',
+                        subtitle: 'Discover our most sought-after properties.',
+                        maxItems: 3,
+                    }
+                },
+                {
+                    id: 'preview-about',
+                    type: 'about_banner',
+                    title: 'About',
+                    isVisible: true,
+                    isLocked: true,
+                    order: 2,
+                    content: {
+                        _type: 'about_banner',
+                        title: 'Expertise You Can Trust',
+                        description: 'With over 20 years of experience in the local market, we provide unparalleled guidance for buyers and sellers alike.',
+                        buttonText: 'Meet Our Team',
+                        buttonHref: '#',
+                        imageUrl: 'https://images.unsplash.com/photo-1560520653-9e0e4c89eb81?auto=format&fit=crop&q=80&w=800',
+                    }
+                },
+                {
+                    id: 'preview-contact',
+                    type: 'contact_cta',
+                    title: 'Contact',
+                    isVisible: true,
+                    isLocked: true,
+                    order: 3,
+                    content: {
+                        _type: 'contact_cta',
+                        title: 'Schedule a Private Viewing',
+                        description: 'We are here to help you find your dream home. Contact us today for a consultation.',
+                        buttonLabel: 'Get In Touch',
+                        buttonHref: '#',
+                    }
+                }
+            ];
+            return mockWebsite;
+        })()
+        : null;
 
     return (
         <div className="max-w-6xl mx-auto space-y-12 pb-20">
@@ -66,10 +139,10 @@ export default function TemplatesPage() {
                         {/* Simulated Thumbnail */}
                         <div className={`h-48 w-full bg-gradient-to-br ${templateColors[template.id] || 'from-slate-200 to-slate-300'} relative flex items-center justify-center overflow-hidden`}>
                             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-                            {template.id === 'luxury-estate' && <div className="text-amber-400 font-serif text-3xl font-bold tracking-widest italic drop-shadow-lg">LUXURY</div>}
+                            {template.id === 'luxury-estate' && <div className="text-amber-400 font-sans text-3xl font-bold tracking-widest italic drop-shadow-lg">LUXURY</div>}
                             {template.id === 'modern-realty' && <div className="text-white font-sans text-3xl font-black tracking-tighter drop-shadow-md">MODERN</div>}
                             {template.id === 'agent-portfolio' && <div className="text-white font-sans text-3xl font-black italic drop-shadow-md">PORTFOLIO</div>}
-                            {template.id === 'corporate-brokerage' && <div className="text-white font-serif text-3xl font-bold drop-shadow-md">CLASSIC</div>}
+                            {template.id === 'corporate-brokerage' && <div className="text-white font-sans text-3xl font-bold drop-shadow-md">CLASSIC</div>}
                             {template.id === 'minimal-realty' && <div className="text-slate-800 font-sans text-2xl font-light tracking-widest drop-shadow-sm">MINIMAL</div>}
 
                             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900">
@@ -109,12 +182,12 @@ export default function TemplatesPage() {
                 ))}
             </div>
 
-            {/* Preview Modal */}
-            {previewTemplate && (
+            {/* Preview Modal — Inline Render (no iframe, works on Vercel) */}
+            {previewTemplate && previewConfig && (
                 <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                     <div className="bg-white rounded-[40px] w-full max-w-6xl h-[85vh] overflow-hidden flex flex-col shadow-2xl relative">
                         {/* Browser-like Header */}
-                        <div className="flex items-center justify-between p-4 bg-slate-100 border-b border-slate-200">
+                        <div className="flex items-center justify-between p-4 bg-slate-100 border-b border-slate-200 flex-shrink-0">
                             <div className="flex gap-2">
                                 <div className="w-3 h-3 rounded-full bg-red-400" />
                                 <div className="w-3 h-3 rounded-full bg-amber-400" />
@@ -133,18 +206,30 @@ export default function TemplatesPage() {
                             </button>
                         </div>
 
-                        {/* Iframe iframe for actual demo preview if we had the routes mapped, but since it's a dynamic multi-tenant, we will render a robust mock view or iframe to localhost */}
-                        <div className="flex-1 bg-slate-50 relative">
-                            {/* In a real production environment we would load the demo tenant via iframe. Using iframe to hit local dev server with a custom header or via path */}
-                            <iframe
-                                src={`http://localhost:3000/demo/${previewTemplate}`}
-                                className="w-full h-full border-none bg-white"
-                                title="Template Preview"
-                            />
+                        {/* Inline Template Render */}
+                        <div className="flex-1 bg-white overflow-y-auto">
+                            <TemplateProvider
+                                templateId={previewTemplate as TemplateName}
+                                navigation={previewConfig.navigation.headerLinks.map(l => ({
+                                    label: l.label,
+                                    slug: l.href,
+                                }))}
+                                currentPageSlug="/"
+                                organizationName={previewConfig.brandName}
+                                branding={{
+                                    logoUrl: previewConfig.branding.logoUrl,
+                                    primaryColor: previewConfig.branding.primaryColor,
+                                }}
+                            >
+                                <TemplateRenderer
+                                    template={previewTemplate as TemplateName}
+                                    page="homepage"
+                                />
+                            </TemplateProvider>
                         </div>
 
                         {/* Footer Action */}
-                        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center">
+                        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center flex-shrink-0">
                             <div className="text-sm font-bold text-slate-500 px-4">
                                 Viewing <span className="text-indigo-600 font-black">{templates.find(t => t.id === previewTemplate)?.name}</span>
                             </div>

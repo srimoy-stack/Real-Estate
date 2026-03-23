@@ -1,20 +1,24 @@
 'use client';
 
 import React from 'react';
-import { AgentHero } from './agent-hero';
-import { AgentBio } from './agent-bio';
-import { FeaturedListings } from './FeaturedListings';
-import { CommunitiesSection } from './communities-section';
-import { Testimonials } from './testimonials';
-import { ContactSection } from './contact-section';
+import { SectionRenderer } from '../../components/website/SectionRenderer';
+import { useTemplate } from '../TemplateContext';
+import * as Template from './index';
 
-export const Homepage: React.FC = () => (
-    <>
-        <AgentHero />
-        <AgentBio />
-        <FeaturedListings />
-        <CommunitiesSection />
-        <Testimonials />
-        <ContactSection />
-    </>
-);
+export const Homepage: React.FC = () => {
+    const { pageSections } = useTemplate();
+
+    // Use builder/database sections if available, otherwise template default
+    const rawSections = pageSections?.homepage || Template.structure.homepage || [];
+
+    // Convert to format for SectionRenderer
+    const sections = rawSections.map((s: any, idx: number) => ({
+        id: s.id || `section-${idx}`,
+        type: s.type,
+        config: s.config,
+        isVisible: true,
+        order: idx
+    })) as any;
+
+    return <SectionRenderer sections={sections} components={Template as any} />;
+};

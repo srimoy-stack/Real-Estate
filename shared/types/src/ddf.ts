@@ -29,5 +29,8 @@ export interface DDFStatusOverview {
     lastSyncAt: string | null;
     totalListingsCount: number;
     listingsAddedToday: number;
+    lastSyncAdded: number;
+    lastSyncUpdated: number;
+    lastSyncRemoved: number;
     lastSyncError?: string;
 }

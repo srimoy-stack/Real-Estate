@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, ListingSectionFilters, ListingSortOrder } from '@repo/types';
 import { PropertyCard } from './PropertyCard';
+import { IDXPropertyCard } from '../idx/IDXPropertyCard';
 
 // ─── Types ─────────────────────────────────────────────
 export interface ListingsSectionConfig {
@@ -30,6 +31,8 @@ export interface ListingsSectionProps {
     viewAllHref?: string;
     /** Custom CSS class */
     className?: string;
+    /** Card variant: 'default' | 'idx' */
+    variant?: 'default' | 'idx';
 }
 
 // ─── Component ─────────────────────────────────────────
@@ -42,6 +45,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     showViewAll = true,
     viewAllHref = '/listings',
     className = '',
+    variant = 'default',
 }) => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -245,7 +249,11 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                             className="opacity-0 animate-[fadeSlideUp_0.5s_ease-out_forwards]"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            <PropertyCard listing={listing} />
+                            {variant === 'idx' ? (
+                                <IDXPropertyCard listing={listing} />
+                            ) : (
+                                <PropertyCard listing={listing} />
+                            )}
                         </div>
                     ))}
                 </div>

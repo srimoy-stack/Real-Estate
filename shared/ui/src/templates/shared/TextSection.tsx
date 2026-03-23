@@ -8,15 +8,16 @@ export interface TextSectionProps {
     };
 }
 
-export const TextSection: React.FC<TextSectionProps> = ({
+export const TextSection: React.FC<TextSectionProps & { id?: string }> = ({
     text = '',
     align = 'left',
-    content
+    content,
+    id
 }) => {
     const displayText = content?.text || text;
 
     return (
-        <section className="py-12 bg-white">
+        <section id={id} className="py-12 bg-white">
             <div className={`max-w-4xl mx-auto px-6 text-${align}`}>
                 <div
                     className="prose prose-slate max-w-none text-lg text-slate-600 leading-relaxed"

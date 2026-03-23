@@ -15,12 +15,12 @@ const leadStore: Lead[] = [
         email: 'd.wilson@example.com',
         phone: '(416) 555-8888',
         message: 'I am interested in viewing this luxury condo.',
-        mlsNumber: 'X123456',
+        mlsNumber: 'W1234567',
         source: 'listing_page',
         status: 'New',
         notes: [],
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+        updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     },
     {
         id: 'lead-2',
@@ -30,12 +30,55 @@ const leadStore: Lead[] = [
         email: 'emilyb@example.com',
         phone: '(604) 555-7777',
         message: 'Does this family home have a school nearby?',
-        mlsNumber: 'X654321',
+        mlsNumber: 'V3456789',
         source: 'contact_form',
         status: 'Contacted',
+        notes: [
+            { id: 'n-1', text: 'Left a voicemail. Waiting for callback.', author: 'System', createdAt: new Date(Date.now() - 3600000).toISOString() }
+        ],
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        updatedAt: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+        id: 'lead-3',
+        websiteId: 'ws-1',
+        name: 'Michael Jordan',
+        email: 'mj@example.com',
+        phone: '(312) 555-2323',
+        message: 'Looking for a lakeside cottage in Muskoka.',
+        source: 'contact_page',
+        status: 'Qualified',
         notes: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+        updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    },
+    {
+        id: 'lead-4',
+        websiteId: 'ws-1',
+        agentId: 'A1',
+        name: 'Sarah Connor',
+        email: 's.connor@example.com',
+        phone: '(213) 555-1984',
+        message: 'Need to sell my property fast.',
+        source: 'agent_profile',
+        status: 'Closed',
+        notes: [],
+        createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
+        updatedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+    },
+    {
+        id: 'lead-5',
+        websiteId: 'ws-1',
+        name: 'Thomas Anderson',
+        email: 'neo@matrix.com',
+        phone: '(555) 010-1010',
+        message: 'I want to see the penthouse unit.',
+        mlsNumber: 'Q1234567',
+        source: 'listing_page',
+        status: 'New',
+        notes: [],
+        createdAt: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
+        updatedAt: new Date(Date.now() - 1800000).toISOString(),
     },
 ];
 

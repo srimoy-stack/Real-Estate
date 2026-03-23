@@ -1,11 +1,62 @@
 'use client';
 
 import React from 'react';
+import { Listing } from '@repo/types';
+import { mlsListingService as listingsService } from '@repo/services';
 import { mockListings } from '../shared';
 import { LuxuryListingCard } from './luxury-listing-card';
 
-export const FeaturedLuxuryListings: React.FC = () => {
-    const featured = mockListings.slice(0, 6);
+export interface FeaturedLuxuryListingsProps {
+    title?: string;
+    subtitle?: string;
+    limit?: number;
+    filters?: any;
+    listings?: Listing[];
+    content?: { title?: string; subtitle?: string };
+}
+
+export const FeaturedLuxuryListings: React.FC<FeaturedLuxuryListingsProps> = ({
+    title = 'Featured Luxury Listings',
+    subtitle = 'Handpicked properties from our exclusive portfolio, representing the pinnacle of real estate.',
+    limit = 6,
+    filters: propsFilters,
+    listings: providedListings,
+    content
+}) => {
+    const [listings, setListings] = React.useState<Listing[]>(providedListings || []);
+    const [loading, setLoading] = React.useState(!providedListings);
+
+    React.useEffect(() => {
+        if (providedListings && providedListings.length > 0) {
+            setListings(providedListings);
+            setLoading(false);
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                if (propsFilters?.city || propsFilters?.propertyType || propsFilters?.status) {
+                    const response = await listingsService.getListings({
+                        ...propsFilters,
+                        limit: limit
+                    });
+                    setListings(response.listings.map((l: any) => ({ ...l, id: l.mlsNumber })));
+                } else {
+                    setListings(mockListings.slice(0, limit));
+                }
+            } catch (error) {
+                console.error('FeaturedLuxuryListings fetch error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [providedListings, propsFilters, limit]);
+
+    if (loading) return <div className="py-20 bg-slate-950 text-center"><div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse mx-auto" /></div>;
+
+    const displayTitle = content?.title || title || 'Featured Luxury Listings';
+    const displaySubtitle = content?.subtitle || subtitle || 'Handpicked properties from our exclusive portfolio, representing the pinnacle of real estate.';
 
     return (
         <section className="py-32 bg-slate-950 relative overflow-hidden">
@@ -21,10 +72,9 @@ export const FeaturedLuxuryListings: React.FC = () => {
                             <span className="text-amber-400/80 text-[11px] font-black uppercase tracking-[0.4em]">Curated Selection</span>
                         </div>
                         <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-tight">
-                            Featured <span className="text-amber-400 italic">Luxury</span>
-                            <br />Listings
+                            {displayTitle.split(' ').slice(0, -1).join(' ')} <span className="text-amber-400 italic">{displayTitle.split(' ').slice(-1)}</span>
                         </h2>
-                        <p className="text-white/30 text-lg mt-4 max-w-md font-light">Handpicked properties from our exclusive portfolio, representing the pinnacle of real estate.</p>
+                        <p className="text-white/30 text-lg mt-4 max-w-md font-light">{displaySubtitle}</p>
                     </div>
                     <a
                         href="/listings"
@@ -39,7 +89,7 @@ export const FeaturedLuxuryListings: React.FC = () => {
 
                 {/* Two-column grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {featured.map((listing, i) => (
+                    {listings.map((listing, i) => (
                         <LuxuryListingCard
                             key={listing.id}
                             listing={listing}

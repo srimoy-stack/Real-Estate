@@ -216,7 +216,7 @@ const Step2OrgDetails = () => {
                             onChange={(e) => updateAdminUser({ email: e.target.value })}
                             className={`w-full bg-slate-50 border ${errors.adminEmail ? 'border-rose-500' : 'border-slate-200'} rounded-xl px-4 py-2 outline-none focus:border-indigo-500 transition-all text-slate-900 font-medium`}
                         />
-                        <p className="text-[10px] text-slate-400 italic">This address will be used for first-time login and activation.</p>
+                        <p className="text-[10px] text-slate-400">This address will be used for first-time login and activation.</p>
                     </div>
                 </div>
             </div>
@@ -406,7 +406,7 @@ const Step4Modules = () => {
                                         <p className="text-[10px] text-slate-500 mt-2 font-medium">{m.desc}</p>
                                     </div>
                                     {disabledByDep && (
-                                        <div className="text-[9px] text-amber-600 font-bold italic mt-auto">Requires {m.dependencies?.join(', ')}</div>
+                                        <div className="text-[9px] text-amber-600 font-bold mt-auto">Requires {m.dependencies?.join(', ')}</div>
                                     )}
                                 </button>
                             );

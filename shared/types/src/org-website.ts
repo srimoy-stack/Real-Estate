@@ -25,6 +25,8 @@ export interface OrgWebsite extends BaseEntity {
     organizationName: string;
     status: OrgWebsiteStatus;
     navigation?: OrgNavItem[];
+    seo?: any;
+    brandingConfig?: Record<string, any>;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -38,9 +40,10 @@ export type OrgPageSectionType =
     | 'testimonials' | 'contact' | 'cta' | 'heading' | 'spacer'
     | 'divider' | 'button' | 'video' | 'stats' | 'faq'
     | 'newsletter' | 'map' | 'image' | 'agents' | 'about'
-    | 'communities' | 'blog' | 'footer';
+    | 'communities' | 'blog' | 'footer' | 'listing-detail' | 'agent-detail' | 'featured_listings';
 
 export interface OrgPageSectionConfig {
+    id?: string;
     type: OrgPageSectionType;
     /** Optional reference to a specific configuration (e.g. featuredListings) */
     configId?: string;
@@ -50,19 +53,33 @@ export interface OrgPageSectionConfig {
     content?: Record<string, any>;
     /** Optional limit for list sections */
     limit?: number;
+    /**
+     * Optional dynamic configuration for this section.
+     * Supports future per-section settings (e.g. layout variants, theme overrides).
+     * Defaults to {} when not provided — existing sections are unaffected.
+     */
+    config?: Record<string, any>;
 }
 
 export interface OrgPageLayoutConfig {
     sections: OrgPageSectionConfig[];
 }
 
+import { PageSeoConfig } from './website';
+
+export type OrgWebsitePageType = 'static' | 'listing' | 'agent';
+
 export interface OrgWebsitePage extends BaseEntity {
     websiteId: string;
     slug: string;
     title: string;
+    pageType: OrgWebsitePageType;
     layoutConfig: OrgPageLayoutConfig;
     customLayoutJson?: string;
+    seo?: PageSeoConfig;
     isPublished: boolean;
+    isPublic: boolean;
+    overrideSections?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -1,5 +1,7 @@
-import { SeoSettings } from '@/modules/website-builder/pages/SeoSettings';
+'use client';
 
-export default function SeoPage() {
-    return <SeoSettings />;
+import WebsiteBuilderPage from '@repo/modules/website-builder/WebsiteBuilderPage';
+
+export default function Page() {
+    return <WebsiteBuilderPage initialTab="seo" />;
 }

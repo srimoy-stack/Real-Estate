@@ -28,7 +28,7 @@ export const ImpersonationBanner: React.FC<ImpersonationBannerProps> = ({
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">System Mode: Impersonation Active</span>
                     <span className="h-1 w-1 bg-amber-400 rounded-full hidden md:block" />
                     <p className="text-xs font-bold leading-none">
-                        Logged in as <span className="font-black italic px-1 bg-white/10 rounded">{user?.name}</span> ({user?.email})
+                        Logged in as <span className="font-black  px-1 bg-white/10 rounded">{user?.name}</span> ({user?.email})
                         on behalf of <span className="font-black">{originalUser.name}</span>
                     </p>
                 </div>

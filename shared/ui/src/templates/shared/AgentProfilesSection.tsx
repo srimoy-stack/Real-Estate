@@ -10,13 +10,15 @@ export interface AgentProfilesSectionProps {
     };
 }
 
-export const AgentProfilesSection: React.FC<AgentProfilesSectionProps> = ({
+export const AgentProfilesSection: React.FC<AgentProfilesSectionProps & { id?: string }> = ({
     title,
     description,
-    content
+    content,
+    id,
 }) => {
     return (
         <AgentSection
+            id={id}
             title={content?.title || title}
             subtitle={content?.description || description}
         />

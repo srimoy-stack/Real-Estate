@@ -20,6 +20,7 @@ module.exports = {
     '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
     'react/prop-types': 'off',
     'react/display-name': 'off',
+    'react/no-unescaped-entities': 'off',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
   ignorePatterns: ['node_modules/', '.next/', 'dist/', '.turbo/', '*.config.js', '*.config.ts', '*.config.mjs'],

@@ -13,13 +13,14 @@ import { ListingsSection } from './ListingsSection';
 export const FeaturedListings: React.FC = () => {
     return (
         <ListingsSection
-            filters={{ status: 'ACTIVE' as any }}
-            limit={3}
+            filters={{ featured: true }}
+            limit={6}
             sort="latest"
-            title="Featured Listings"
-            subtitle="Hand-picked properties that represent the pinnacle of design, location, and value in today's elite market."
+            title="Premium Collection"
+            subtitle="Explore our hand-picked properties representing the pinnacle of design, location, and value in today's most desirable markets."
             showViewAll={true}
-            viewAllHref="/search"
+            viewAllHref="/properties"
+            variant="idx"
         />
     );
 };

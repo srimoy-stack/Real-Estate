@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Listing } from '@repo/types';
+import { SaveButton } from '@/components/listings/SaveButton';
 
 interface IDXPropertyCardProps {
     listing: Listing;
@@ -40,8 +41,8 @@ export const IDXPropertyCard: React.FC<IDXPropertyCardProps> = ({
         <Link
             href={`/listing/${listing.mlsNumber}`}
             className={`group relative flex flex-col bg-white rounded-2xl overflow-hidden border transition-all duration-300 h-full ${isHighlighted
-                    ? 'border-indigo-400 shadow-xl shadow-indigo-100 scale-[1.02]'
-                    : 'border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 hover:-translate-y-1'
+                ? 'border-indigo-400 shadow-xl shadow-indigo-100 scale-[1.02]'
+                : 'border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 hover:-translate-y-1'
                 }`}
             onMouseEnter={() => onHover?.(listing.id)}
             onMouseLeave={() => onHover?.(null)}
@@ -67,6 +68,10 @@ export const IDXPropertyCard: React.FC<IDXPropertyCardProps> = ({
                             Featured
                         </span>
                     )}
+                </div>
+                {/* Save Button */}
+                <div className="absolute top-3 right-3 z-10">
+                    <SaveButton listingId={listing.id} />
                 </div>
 
                 {/* Price Overlay */}

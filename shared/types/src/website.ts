@@ -49,7 +49,23 @@ export type SectionType =
     | 'gallery'
     | 'communities'
     | 'listings'
-    | 'agents';
+    | 'agents'
+    // Additional types supported by SectionRenderer
+    | 'about'
+    | 'text'
+    | 'blog'
+    | 'heading'
+    | 'contact'
+    | 'footer'
+    | 'team'
+    | 'agent_profiles'
+    | 'image'
+    | 'video'
+    | 'spacer'
+    | 'divider'
+    | 'button'
+    | 'faq'
+    | 'map';
 
 export interface SectionConfig {
     id: string;
@@ -63,6 +79,12 @@ export interface SectionConfig {
     content: SectionContent;
     /** Display order (0-indexed) */
     order: number;
+    /**
+     * Optional dynamic configuration for this section.
+     * Supports future per-section settings (e.g. layout variants, theme overrides).
+     * Defaults to {} when not provided — existing sections are unaffected.
+     */
+    config?: Record<string, any>;
 }
 
 /**
@@ -347,15 +369,17 @@ export interface WebsiteSeoConfig {
 }
 
 export interface PageSeoConfig {
-    title: string;
-    description: string;
+    metaTitle: string;
+    metaDescription: string;
     keywords?: string[];
     ogTitle?: string;
     ogDescription?: string;
     ogImage?: string;
     canonicalUrl?: string;
     noIndex?: boolean;
+    schemaType?: 'RealEstateListing' | 'Article' | 'Organization' | 'LocalBusiness';
 }
+
 
 // ═══════════════════════════════════════════════════════════
 //  BRANDING

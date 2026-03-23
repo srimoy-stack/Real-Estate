@@ -15,7 +15,6 @@ export const HeroSection = () => {
                 />
                 {/* Modern Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent" />
             </div>
 
             {/* Hero Content */}

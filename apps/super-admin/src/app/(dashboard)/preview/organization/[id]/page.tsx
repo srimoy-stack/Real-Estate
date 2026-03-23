@@ -38,7 +38,7 @@ const SECTION_COMPONENTS: Record<string, React.FC<any>> = {
                         { name: 'Lisa P.', text: 'Made the entire selling process smooth and stress-free.' },
                     ].map(t => (
                         <div key={t.name} className="p-8 bg-slate-50 rounded-3xl border border-slate-100">
-                            <p className="text-slate-600 leading-relaxed italic">&ldquo;{t.text}&rdquo;</p>
+                            <p className="text-slate-600 leading-relaxed ">&ldquo;{t.text}&rdquo;</p>
                             <p className="mt-6 font-black text-slate-900 text-sm">{t.name}</p>
                         </div>
                     ))}

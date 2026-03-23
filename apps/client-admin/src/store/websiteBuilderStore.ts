@@ -37,6 +37,7 @@ export const useWebsiteBuilderStore = create<WebsiteBuilderState>((set, get) => 
             isLocked: false,
             order: get().sections.length,
             content: { _type: type as any } as any, // Initialize with basic type
+            config: {}, // Default to empty config — populated by future section editors
         };
         set((state) => ({
             sections: [...state.sections, newSection],

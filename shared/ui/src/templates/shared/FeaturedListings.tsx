@@ -13,18 +13,19 @@ export interface FeaturedListingsProps {
 
 import { mockListings } from './mock-data';
 
-export const FeaturedListings: React.FC<FeaturedListingsProps> = ({
+export const FeaturedListings: React.FC<FeaturedListingsProps & { id?: string }> = ({
     listings,
     variant = 'default',
     title = 'Featured Properties',
     subtitle = 'Handpicked selections from our premium collection.',
+    id,
 }) => {
     const displayListings = (listings && listings.length > 0) ? listings : mockListings;
 
 
     if (variant === 'luxury') {
         return (
-            <section className="py-24 bg-slate-950">
+            <section id={id || 'listings'} className="py-24 bg-slate-950">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="h-px w-12 bg-amber-500" />
@@ -47,7 +48,7 @@ export const FeaturedListings: React.FC<FeaturedListingsProps> = ({
 
     if (variant === 'corporate') {
         return (
-            <section className="py-20 bg-slate-50">
+            <section id={id || 'listings'} className="py-20 bg-slate-50">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight">{title}</h2>
@@ -66,7 +67,7 @@ export const FeaturedListings: React.FC<FeaturedListingsProps> = ({
 
     if (variant === 'minimal') {
         return (
-            <section className="py-20 bg-white">
+            <section id={id || 'listings'} className="py-20 bg-white">
                 <div className="max-w-5xl mx-auto px-6">
                     <h2 className="text-3xl font-light text-slate-900 tracking-tight">{title}</h2>
                     <div className="h-px w-16 bg-slate-300 mt-6 mb-12" />
@@ -80,7 +81,7 @@ export const FeaturedListings: React.FC<FeaturedListingsProps> = ({
 
     // Default
     return (
-        <section className="py-24 bg-slate-50">
+        <section id={id || 'listings'} className="py-24 bg-slate-50">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
                     <span className="text-indigo-600 text-xs font-black uppercase tracking-[0.3em]">Explore</span>

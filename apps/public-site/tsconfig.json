@@ -42,6 +42,9 @@
       ],
       "@repo/mock-api": [
         "../../shared/mock-api"
+      ],
+      "@repo/modules/*": [
+        "../../shared/modules/*"
       ]
     }
   },

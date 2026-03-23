@@ -7,6 +7,35 @@ import {
 } from '@repo/types';
 import { useNotificationStore } from './notificationStore';
 
+export interface OrgWebsiteService {
+    getOrgWebsite(organizationId: string, websiteId?: string): Promise<OrgWebsite | null>;
+    updateWebsite(organizationId: string, websiteId: string, data: Partial<OrgWebsite>): Promise<OrgWebsite>;
+    getPages(organizationId: string, websiteId: string): Promise<OrgWebsitePage[]>;
+    getPageById(organizationId: string, websiteId: string, pageId: string): Promise<OrgWebsitePage | null>;
+    getPageBySlug(organizationId: string, websiteId: string, slug: string): Promise<OrgWebsitePage | null>;
+    createPage(organizationId: string, data: {
+        websiteId: string;
+        slug: string;
+        title: string;
+        layoutConfig: OrgPageLayoutConfig;
+        seo?: any;
+        isPublished: boolean;
+        isPublic: boolean;
+    }): Promise<OrgWebsitePage>;
+    provisionDefaultPages(organizationId: string, websiteId: string): Promise<void>;
+    updatePage(organizationId: string, pageId: string, data: Partial<OrgWebsitePage>): Promise<OrgWebsitePage>;
+    savePageLayout(organizationId: string, pageId: string, json: string): Promise<void>;
+    deletePage(organizationId: string, pageId: string): Promise<void>;
+    reorderPages(organizationId: string, websiteId: string, pageIds: string[]): Promise<OrgWebsitePage[]>;
+    updateNavigation(organizationId: string, websiteId: string, navigation: any[]): Promise<void>;
+    getBranding(organizationId: string, websiteId: string): Promise<OrgWebsiteBranding | null>;
+    updateBranding(organizationId: string, websiteId: string, data: Partial<OrgWebsiteBranding>): Promise<OrgWebsiteBranding>;
+    getAgentProfiles(websiteId: string, organizationId: string): Promise<WebsiteAgentProfile[]>;
+    addAgentProfile(organizationId: string, data: any): Promise<WebsiteAgentProfile>;
+    updateAgentProfile(organizationId: string, profileId: string, data: any): Promise<WebsiteAgentProfile>;
+    removeAgentProfile(organizationId: string, profileId: string): Promise<void>;
+}
+
 // ═══════════════════════════════════════════════════════════
 //  MOCK DATA
 // ═══════════════════════════════════════════════════════════
@@ -80,7 +109,15 @@ const getInitialPages = (): OrgWebsitePage[] => {
                     { type: 'contact' },
                 ],
             },
+            seo: {
+                metaTitle: 'Skyline Estates | Your Trusted Real Estate Partner',
+                metaDescription: 'Discover luxury homes and expert real estate services with Skyline Estates.',
+                ogTitle: 'Skyline Estates | Luxury Real Estate',
+                schemaType: 'Organization'
+            },
+            pageType: 'static',
             isPublished: true,
+            isPublic: true,
             createdAt: '2024-01-15T10:00:00Z',
             updatedAt: '2025-11-20T14:30:00Z',
         },
@@ -95,7 +132,13 @@ const getInitialPages = (): OrgWebsitePage[] => {
                     { type: 'agent_profiles' },
                 ],
             },
+            seo: {
+                metaTitle: 'About Skyline Estates | Our Mission & Team',
+                metaDescription: 'Learn about the history and dedicated team behind Skyline Estates.',
+            },
+            pageType: 'static',
             isPublished: true,
+            isPublic: true,
             createdAt: '2024-02-10T10:00:00Z',
             updatedAt: '2025-10-05T16:45:00Z',
         },
@@ -110,7 +153,13 @@ const getInitialPages = (): OrgWebsitePage[] => {
                     { type: 'gallery' },
                 ],
             },
+            seo: {
+                metaTitle: 'Explore Local Communities | Skyline Estates',
+                metaDescription: 'Guide to the best neighborhoods and communities in the area.',
+            },
+            pageType: 'static',
             isPublished: true,
+            isPublic: true,
             createdAt: '2024-03-22T12:00:00Z',
             updatedAt: '2025-09-15T08:30:00Z',
         },
@@ -195,15 +244,21 @@ let mockAgentProfiles: WebsiteAgentProfile[] = [
 //  ORGANIZATION WEBSITE SERVICE
 // ═══════════════════════════════════════════════════════════
 
-export const orgWebsiteService = {
+export const orgWebsiteService: OrgWebsiteService = {
     // ─── Website Details ───────────────────────────────────
-    getOrgWebsite: async (organizationId: string): Promise<OrgWebsite | null> => {
+    getOrgWebsite: async (organizationId: string, _websiteId?: string): Promise<OrgWebsite | null> => {
         // Return a mock website for any organizationId to ensure the builder always loads in demo
         return {
             ...mockOrgWebsite,
             organizationId: organizationId,
             id: `ws_${organizationId}`
         };
+    },
+
+    updateWebsite: async (_organizationId: string, _websiteId: string, data: Partial<OrgWebsite>): Promise<OrgWebsite> => {
+        mockOrgWebsite = { ...mockOrgWebsite, ...data, updatedAt: new Date().toISOString() };
+        persist();
+        return mockOrgWebsite;
     },
 
     // ─── Page Management ───────────────────────────────────
@@ -239,7 +294,9 @@ export const orgWebsiteService = {
         slug: string;
         title: string;
         layoutConfig: OrgPageLayoutConfig;
+        seo?: any; // Use any for simplicity in mock
         isPublished: boolean;
+        isPublic: boolean;
     }): Promise<OrgWebsitePage> => {
         // Multi-tenant safety check
         // In demo, we skip restrictive auth checks to allow multi-org testing
@@ -247,26 +304,19 @@ export const orgWebsiteService = {
 
         const newPage: OrgWebsitePage = {
             id: `page-${Math.random().toString(36).substr(2, 9)}`,
+            pageType: 'static',
             ...data,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
         mockPages.push(newPage);
 
-        // Auto-add to navigation if published and not already there
-        if (newPage.isPublished) {
-            if (!mockOrgWebsite.navigation) mockOrgWebsite.navigation = [];
-            if (!mockOrgWebsite.navigation.some(n => n.slug === newPage.slug)) {
-                mockOrgWebsite.navigation.push({ label: newPage.title, slug: newPage.slug });
-            }
-        }
-
         persist();
 
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Page Created',
-            message: `"${newPage.title}" has been added to your website and navigation.`,
+            message: `"${newPage.title}" has been created successfully.`,
         });
 
         return newPage;
@@ -287,6 +337,7 @@ export const orgWebsiteService = {
                     ]
                 },
                 isPublished: true,
+                isPublic: true,
             });
         }
     },

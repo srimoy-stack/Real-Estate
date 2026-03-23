@@ -37,7 +37,7 @@ export function createWebsiteConfig(options: ProvisionOptions): WebsiteConfig {
     const defaultBranding: BrandingConfig = {
         mode: options.templateId,
         primaryColor: options.templateId === 'luxury-estate' ? '#0F172A' : '#2563EB',
-        fontHeading: options.templateId === 'luxury-estate' ? 'Playfair Display' : 'Inter',
+        fontHeading: 'Inter',
         fontBody: 'Inter',
         logoUrl: options.logoUrl ?? '/images/logo-placeholder.png',
     };

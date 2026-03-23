@@ -25,6 +25,12 @@ export type TemplateSectionType =
 export interface TemplateLayoutSection {
     type: TemplateSectionType;
     enabled: boolean;
+    /**
+     * Optional dynamic configuration for this section.
+     * Supports future per-section settings (e.g. layout variants, theme overrides).
+     * Defaults to {} when not provided — existing template sections are unaffected.
+     */
+    config?: Record<string, any>;
 }
 
 /**

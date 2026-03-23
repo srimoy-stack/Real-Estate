@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
 import { Input } from './Input';
-import { useAuth } from '@repo/auth';
+import { useAuth, useAuthStore } from '@repo/auth';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -38,7 +38,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                     role: 'VIEWER' as any
                 };
 
-                const { useAuthStore } = require('@repo/auth');
                 useAuthStore.getState().setAuth(mockUser, 'mock-jwt-token');
 
                 onClose();

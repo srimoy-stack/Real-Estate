@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { getTemplateByKey } from '@/data/templates';
+import { createWebsiteConfig } from '@repo/types';
+import { TemplateRenderer, type TemplateName } from '@repo/ui';
 
 // ─── Component ─────────────────────────────────────
 
@@ -17,6 +19,14 @@ export function TemplatePreviewPopup({ templateKey, onClose }: TemplatePreviewPo
     if (!template) return null;
 
     const viewportWidths = { desktop: '100%', tablet: '768px', mobile: '375px' };
+
+    // Build mock website config for inline preview
+    const mockWebsite = createWebsiteConfig({
+        tenantId: 'preview_tenant',
+        domain: 'preview.local',
+        brandName: 'Prestige Realty Group',
+        templateId: templateKey as any,
+    });
 
     return (
         <div className="fixed inset-0 z-[200] bg-slate-950/60 backdrop-blur-md flex flex-col overflow-hidden animate-in fade-in duration-300 p-4 md:p-10">
@@ -55,11 +65,19 @@ export function TemplatePreviewPopup({ templateKey, onClose }: TemplatePreviewPo
                         className="h-full bg-white shadow-[0_0_100px_rgba(0,0,0,0.1)] rounded-t-[32px] transition-all duration-700 overflow-auto border-x border-t border-slate-200"
                         style={{ width: viewportWidths[viewport] }}
                     >
-                        {/* Use the same iframe-based demo preview as Client Admin */}
-                        <iframe
-                            src={`http://localhost:3000/demo/${templateKey}`}
-                            className="w-full h-full border-none bg-white"
-                            title="Template Preview"
+                        <TemplateRenderer
+                            template={templateKey as TemplateName}
+                            page="homepage"
+                            navigation={mockWebsite.navigation.headerLinks.map(l => ({
+                                label: l.label,
+                                href: l.href,
+                                slug: l.href, // keep both for compatibility
+                            }))}
+                            organizationName={mockWebsite.brandName}
+                            branding={{
+                                logoUrl: mockWebsite.branding.logoUrl,
+                                primaryColor: mockWebsite.branding.primaryColor,
+                            }}
                         />
                     </div>
                 </main>

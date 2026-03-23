@@ -38,12 +38,12 @@ export const Textarea: React.FC<TextareaProps> = ({
                 {...props}
             />
             {error && (
-                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest pl-2 italic">
+                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest pl-2 ">
                     {error}
                 </p>
             )}
             {helperText && !error && (
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 italic">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2 ">
                     {helperText}
                 </p>
             )}

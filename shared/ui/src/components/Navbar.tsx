@@ -12,10 +12,17 @@ export interface NavbarProps {
   brand?: string;
   items?: NavItem[];
   className?: string;
+  containerClassName?: string;
   rightContent?: React.ReactNode;
 }
 
-export function Navbar({ brand = 'Real Estate', items = [], className = '', rightContent }: NavbarProps) {
+export function Navbar({
+  brand = 'Real Estate',
+  items = [],
+  className = '',
+  containerClassName = 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8',
+  rightContent
+}: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -24,8 +31,8 @@ export function Navbar({ brand = 'Real Estate', items = [], className = '', righ
       <div className="w-full h-1 bg-gradient-to-r from-rose-400 via-rose-300 to-amber-300" />
 
       <header className={`sticky top-0 z-50 w-full border-b border-gray-200 bg-white ${className}`}>
-        <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Brand */}
+        <nav className={`flex h-14 items-center justify-between relative ${containerClassName}`}>
+          {/* Left: Brand */}
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-emerald-600 to-teal-700 text-xs font-bold text-white shadow-sm">
               RE
@@ -33,19 +40,21 @@ export function Navbar({ brand = 'Real Estate', items = [], className = '', righ
             <span className="text-base font-semibold tracking-tight text-gray-900">{brand}</span>
           </Link>
 
-          {/* Center (Desktop Nav) */}
-          <ul className="hidden items-center gap-1 md:flex">
-            {items.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {/* Center: Desktop Nav */}
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
+            <ul className="hidden items-center gap-1 md:flex">
+              {items.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Right Content */}
           <div className="flex items-center gap-4">

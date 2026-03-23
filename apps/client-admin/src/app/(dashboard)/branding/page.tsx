@@ -220,11 +220,11 @@ export default function BrandingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {[
-                            { id: 'modern-realty', name: 'Modern Realty', img: '/images/templates/modern-thumb.jpg' },
-                            { id: 'luxury-estate', name: 'Luxury Estate', img: '/images/templates/luxury-thumb.jpg' },
-                            { id: 'corporate-brokerage', name: 'Corporate', img: '/images/templates/classic-thumb.jpg' },
-                            { id: 'agent-portfolio', name: 'Portfolio', img: '/images/templates/agent-thumb.jpg' },
-                            { id: 'minimal-realty', name: 'Minimal', img: '/images/templates/minimal-thumb.jpg' },
+                            { id: 'modern-realty', name: 'Modern Realty', img: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=400' },
+                            { id: 'luxury-estate', name: 'Luxury Estate', img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=400' },
+                            { id: 'corporate-brokerage', name: 'Corporate', img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=400' },
+                            { id: 'agent-portfolio', name: 'Portfolio', img: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=400' },
+                            { id: 'minimal-realty', name: 'Minimal', img: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&q=80&w=400' },
                         ].filter(t => form.allowedTemplates.includes(t.id)).map((tpl) => (
                             <button
                                 key={tpl.id}

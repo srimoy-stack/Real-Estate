@@ -92,7 +92,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
                 {/* Action */}
                 <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-indigo-600 italic">
+                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-indigo-600 ">
                             {listing.agentName[0]}
                         </div>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Listed by {listing.agentName.split(' ')[0]}</span>

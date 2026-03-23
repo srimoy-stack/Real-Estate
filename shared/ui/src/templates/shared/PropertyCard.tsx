@@ -16,14 +16,24 @@ const statusColors: Record<ListingStatus, { bg: string; text: string; label: str
     [ListingStatus.OFF_MARKET]: { bg: 'bg-slate-500', text: 'text-white', label: 'Off Market' },
 };
 
+import { useTemplate } from '../TemplateContext';
+
 export const PropertyCard: React.FC<PropertyCardProps> = ({ listing, variant = 'default' }) => {
+    const { onNavigate } = useTemplate();
     const status = statusColors[listing.status];
     const price = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(listing.price);
     const address = `${listing.address}, ${listing.city}`;
 
+    const handlePropertyClick = (e: React.MouseEvent) => {
+        if (onNavigate) {
+            e.preventDefault();
+            onNavigate(`/listing/${listing.mlsNumber}`);
+        }
+    };
+
     if (variant === 'luxury') {
         return (
-            <Link href={`/listings/${listing.slug}`} className="group block">
+            <Link href={`/listings/${listing.slug}`} onClick={handlePropertyClick} className="group block">
                 <div className="relative overflow-hidden rounded-3xl bg-slate-900 aspect-[4/5] shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
                     <div className="absolute inset-0 bg-slate-800 flex items-center justify-center">
@@ -49,7 +59,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ listing, variant = '
 
     if (variant === 'compact') {
         return (
-            <Link href={`/listings/${listing.slug}`} className="group flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all bg-white">
+            <Link href={`/listings/${listing.slug}`} onClick={handlePropertyClick} className="group flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all bg-white">
                 <div className="w-32 h-24 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
                     <span className="text-slate-400 text-xs">Image</span>
                 </div>
@@ -67,7 +77,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ listing, variant = '
 
     if (variant === 'minimal') {
         return (
-            <Link href={`/listings/${listing.slug}`} className="group block">
+            <Link href={`/listings/${listing.slug}`} onClick={handlePropertyClick} className="group block">
                 <div className="aspect-[3/2] bg-slate-100 rounded-lg overflow-hidden mb-4 relative">
                     <div className="absolute inset-0 flex items-center justify-center"><span className="text-slate-400 text-sm">Property Image</span></div>
                     <div className="absolute top-3 right-3">
@@ -83,7 +93,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ listing, variant = '
 
     if (variant === 'corporate') {
         return (
-            <Link href={`/listings/${listing.slug}`} className="group block border border-slate-200 rounded-xl overflow-hidden hover:shadow-xl transition-all bg-white">
+            <Link href={`/listings/${listing.slug}`} onClick={handlePropertyClick} className="group block border border-slate-200 rounded-xl overflow-hidden hover:shadow-xl transition-all bg-white">
                 <div className="aspect-[16/10] bg-slate-100 relative">
                     <div className="absolute inset-0 flex items-center justify-center"><span className="text-slate-400 text-sm">Property Image</span></div>
                     <div className="absolute top-0 left-0">
@@ -108,7 +118,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ listing, variant = '
 
     // Default variant
     return (
-        <Link href={`/listings/${listing.slug}`} className="group block rounded-2xl overflow-hidden border border-slate-100 hover:shadow-2xl hover:border-indigo-200 transition-all bg-white">
+        <Link href={`/listings/${listing.slug}`} onClick={handlePropertyClick} className="group block rounded-2xl overflow-hidden border border-slate-100 hover:shadow-2xl hover:border-indigo-200 transition-all bg-white">
             <div className="aspect-[16/10] bg-slate-100 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-slate-400 text-sm">Property Image</span>

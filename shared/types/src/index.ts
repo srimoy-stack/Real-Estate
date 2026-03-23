@@ -137,6 +137,33 @@ export interface Website extends BaseEntity {
   defaultLanguage?: string;
   layoutConfig: any; // matches TemplateLayoutConfig
   brandingConfig: any; // matches BrandingConfig
+  globalSections?: {
+    header: { type: string; props: Record<string, any> };
+    footer: { type: string; props: Record<string, any> };
+  };
+  navigation?: any[];
+  config?: Record<string, any>;
+  seo?: {
+    global?: {
+      metaTitle?: string;
+      metaDescription?: string;
+    };
+    pages?: Record<string, {
+      title?: string;
+      description?: string;
+      slug?: string;
+    }>;
+    dynamic?: {
+      listing?: {
+        titleTemplate?: string;
+        descriptionTemplate?: string;
+      };
+      agent?: {
+        titleTemplate?: string;
+        descriptionTemplate?: string;
+      };
+    };
+  };
 }
 
 export type WebsiteInstance = Website;
@@ -158,3 +185,6 @@ export * from './saved-items';
 export * from './org-website';
 export * from './website-page';
 export * from './communities';
+export * from './blog';
+export * from './agency';
+

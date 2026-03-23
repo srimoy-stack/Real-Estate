@@ -68,21 +68,21 @@ export function resolvePageSeo(
 ): PageSeoConfig {
     if (!pageSeo) {
         return {
-            title: siteSeo.defaultTitle,
-            description: siteSeo.defaultDescription,
+            metaTitle: siteSeo.defaultTitle,
+            metaDescription: siteSeo.defaultDescription,
             keywords: siteSeo.keywords,
             ogImage: siteSeo.ogImage,
         };
     }
 
     return {
-        title: pageSeo.title
-            ? siteSeo.titleTemplate.replace('%s', pageSeo.title)
+        metaTitle: pageSeo.metaTitle
+            ? siteSeo.titleTemplate.replace('%s', pageSeo.metaTitle)
             : siteSeo.defaultTitle,
-        description: pageSeo.description || siteSeo.defaultDescription,
+        metaDescription: pageSeo.metaDescription || siteSeo.defaultDescription,
         keywords: pageSeo.keywords ?? siteSeo.keywords,
-        ogTitle: pageSeo.ogTitle ?? pageSeo.title,
-        ogDescription: pageSeo.ogDescription ?? pageSeo.description,
+        ogTitle: pageSeo.ogTitle ?? pageSeo.metaTitle,
+        ogDescription: pageSeo.ogDescription ?? pageSeo.metaDescription,
         ogImage: pageSeo.ogImage ?? siteSeo.ogImage,
         canonicalUrl: pageSeo.canonicalUrl,
         noIndex: pageSeo.noIndex ?? false,

@@ -2,17 +2,19 @@
 
 import React, { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { TEMPLATE_REGISTRY } from '@repo/types';
+import { createWebsiteConfig } from '@repo/types';
+import { TemplateRenderer, type TemplateName, templateRegistry, mockListings } from '@repo/ui';
 
 export default function TemplatePreviewFrame() {
     const params = useParams();
     const router = useRouter();
     const templateId = params?.templateId as string;
-    const template = TEMPLATE_REGISTRY[templateId as any];
+    const templateMod = templateRegistry[templateId as TemplateName];
 
     const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+    const [activePage, setActivePage] = useState<string>('homepage');
 
-    if (!template) return <div className="p-20 text-center font-black text-rose-500">Template Registry Error: Invalid ID</div>;
+    if (!templateMod) return <div className="p-20 text-center font-black text-rose-500">Template Registry Error: Invalid ID</div>;
 
     const viewportWidths = {
         desktop: '100%',
@@ -20,8 +22,25 @@ export default function TemplatePreviewFrame() {
         mobile: '375px'
     };
 
-    // Note: In production, this would be an absolute URL to the public-site
-    const previewUrl = `http://localhost:3000/demo/${templateId}`;
+    // Build mock website config for inline preview
+    const mockWebsite = createWebsiteConfig({
+        tenantId: 'preview_tenant',
+        domain: 'preview.local',
+        brandName: 'Prestige Realty Group',
+        templateId: templateId as any,
+    });
+
+    const pageSections = {
+        homepage: templateMod.structure?.homepage || [],
+        about: templateMod.structure?.about || [],
+        contact: templateMod.structure?.contact || [],
+        communities: templateMod.structure?.communities || [],
+        listings: templateMod.structure?.listings || [],
+        'listing-detail': templateMod.structure?.['listing-detail'] || [],
+        agents: templateMod.structure?.agents || [],
+        'agent-detail': templateMod.structure?.['agent-detail'] || [],
+        'community-detail': templateMod.structure?.['community-detail'] || [],
+    };
 
     return (
         <div className="fixed inset-0 z-[200] bg-slate-100 flex flex-col overflow-hidden">
@@ -38,10 +57,10 @@ export default function TemplatePreviewFrame() {
                     </button>
                     <div className="h-8 w-px bg-slate-800" />
                     <div>
-                        <h1 className="text-white font-black text-sm tracking-tight italic">
+                        <h1 className="text-white font-black text-sm tracking-tight ">
                             Platform <span className="text-indigo-500">Preview Engine</span>
                         </h1>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{template.name} Blueprint</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{templateId} Blueprint</p>
                     </div>
                 </div>
 
@@ -90,13 +109,31 @@ export default function TemplatePreviewFrame() {
             {/* Main Preview Container */}
             <main className="flex-1 relative flex justify-center bg-slate-200/50 overflow-hidden pt-8 pb-8">
                 <div
-                    className="h-full bg-white shadow-[0_0_100px_rgba(0,0,0,0.15)] rounded-t-2xl transition-all duration-500 border-x border-t border-slate-300 overflow-hidden"
+                    className="h-full bg-white shadow-[0_0_100px_rgba(0,0,0,0.15)] rounded-t-2xl transition-all duration-500 border-x border-t border-slate-300 overflow-auto"
                     style={{ width: viewportWidths[viewport] }}
                 >
-                    <iframe
-                        src={previewUrl}
-                        className="w-full h-full border-none"
-                        title={`${template.name} Preview`}
+                    <TemplateRenderer
+                        template={templateId as TemplateName}
+                        page={activePage as any}
+                        pageSections={pageSections}
+                        navigation={mockWebsite.navigation.headerLinks.map(l => ({
+                            label: l.label,
+                            slug: l.href,
+                        }))}
+                        listing={mockListings[0]}
+                        organizationName={mockWebsite.brandName}
+                        branding={{
+                            logoUrl: mockWebsite.branding.logoUrl,
+                            primaryColor: mockWebsite.branding.primaryColor,
+                        }}
+                        onNavigate={(slug) => {
+                            if (slug.startsWith('/listings/')) {
+                                setActivePage('listing-detail');
+                            } else {
+                                const pageName = slug.replace('/', '') || 'homepage';
+                                setActivePage(pageName);
+                            }
+                        }}
                     />
                 </div>
 
@@ -108,7 +145,7 @@ export default function TemplatePreviewFrame() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Preview</p>
-                            <p className="text-xs font-bold text-slate-900">{template.name}</p>
+                            <p className="text-xs font-bold text-slate-900">{templateId}</p>
                         </div>
                     </div>
                 </div>
