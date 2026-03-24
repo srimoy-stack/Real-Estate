@@ -1130,7 +1130,7 @@ const GoogleSnippetPreview = ({ title, description, url }: { title: string; desc
 const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string }) => {
     const store = useBuilderStore();
     const website = store.website;
-    const [subTab, setSubTab] = React.useState<'global' | 'pages' | 'dynamic'>('global');
+    const [subTab, setSubTab] = React.useState<'global' | 'pages' | 'dynamic' | 'automation'>('global');
     const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
     const [seo, setSeo] = React.useState<any>(null);
     const [saving, setSaving] = React.useState(false);
@@ -1178,6 +1178,7 @@ const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string })
         if (!page) return null;
 
         const pageSeo = seo.pages?.[pageId] || { title: page.name, description: '', autoGenerate: true };
+        const listingSection = page.sections.find(s => s.type === 'ListingsSection');
         const generated = seoEngine.generateDynamicSeo(page, website?.name || 'Prestige Realty');
 
         const finalTitle = pageSeo.autoGenerate ? generated.title : pageSeo.title;
@@ -1197,8 +1198,10 @@ const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string })
 
                 <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
                     <div>
-                        <h4 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest leading-none">Smart SEO Engine</h4>
-                        <p className="text-[9px] font-bold text-indigo-400 uppercase mt-1">Automatically generate tags from MLS data</p>
+                        <h4 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest leading-none">SEO Generation Mode</h4>
+                        <p className="text-[9px] font-bold text-indigo-400 uppercase mt-1">
+                            {pageSeo.autoGenerate ? 'Auto (from shortcode)' : 'Manual Mode'}
+                        </p>
                     </div>
                     <button
                         onClick={() => updatePageSeo({ autoGenerate: !pageSeo.autoGenerate })}
@@ -1249,12 +1252,73 @@ const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string })
                         <div className="flex items-center gap-3 pt-6">
                             <input
                                 type="checkbox"
+                                id="noIndexToggle"
                                 checked={pageSeo.noIndex}
                                 onChange={e => updatePageSeo({ noIndex: e.target.checked })}
                                 className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                             />
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Hide from Google</label>
+                            <label htmlFor="noIndexToggle" className="text-[10px] font-black text-slate-500 uppercase tracking-widest cursor-pointer">Hide from Google</label>
                         </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100 space-y-4 font-sans">
+                        <div className="flex items-center justify-between">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Structured Data & Linking</h5>
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded">Healthy</span>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1.5">
+                                <label className={labelClass}>JSON-LD Schema Preview</label>
+                                <div className="p-4 bg-slate-900 rounded-2xl font-mono text-[9px] text-indigo-300 overflow-x-auto whitespace-pre custom-scrollbar max-h-40 border border-slate-800 shadow-inner">
+                                    {seoEngine.generateSchemaMarkup(page, website)}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className={labelClass}>Internal Linking Strategy</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {seoEngine.generateInternalLinking(listingSection?.config?.filters?.city || 'Local', listingSection?.config?.filters?.propertyType || 'Real Estate').map((link, idx) => (
+                                        <span key={idx} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[9px] font-black text-slate-500 uppercase tracking-tight shadow-sm">
+                                            {link}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100">
+                        <label className={labelClass}>Slug Management</label>
+                        <div className="flex gap-2">
+                            <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-400">
+                                {page.slug}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const listingSection = page.sections.find(s => s.type === 'ListingsSection');
+                                    if (listingSection?.config?.filters) {
+                                        const newSlug = seoEngine.generateDynamicSlug(listingSection.config.filters);
+                                        store.updatePage(pageId, { slug: newSlug });
+                                        useNotificationStore.getState().addNotification({
+                                            type: 'success',
+                                            title: 'Slug Generated',
+                                            message: `URL updated to ${newSlug}`
+                                        });
+                                    } else {
+                                        useNotificationStore.getState().addNotification({
+                                            type: 'warning',
+                                            title: 'No MLS Data',
+                                            message: 'Add a listings section first to generate a dynamic slug.'
+                                        });
+                                    }
+                                }}
+                                className="px-4 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm"
+                            >
+                                Generate Dynamic Slug
+                            </button>
+                        </div>
+                        <p className="mt-2 text-[8px] font-bold text-slate-400 uppercase tracking-tight">Strategy: {'{city}-{propertyType}'}</p>
                     </div>
                 </div>
 
@@ -1388,6 +1452,7 @@ const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string })
                 <div className="flex bg-slate-100 p-1 rounded-xl">
                     <button onClick={() => { setSubTab('global'); setSelectedPageId(null); }} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${subTab === 'global' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Global</button>
                     <button onClick={() => { setSubTab('pages'); }} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${subTab === 'pages' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Pages</button>
+                    <button onClick={() => { setSubTab('automation'); setSelectedPageId(null); }} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${subTab === 'automation' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Automation</button>
                     <button onClick={() => { setSubTab('dynamic'); setSelectedPageId(null); }} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-lg transition-all ${subTab === 'dynamic' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Logic</button>
                 </div>
             </div>
@@ -1396,6 +1461,69 @@ const SeoPanel = ({ websiteId }: { agentId?: string | null; websiteId: string })
                     <>
                         {subTab === 'global' && renderGlobal()}
                         {subTab === 'pages' && renderPages()}
+                        {subTab === 'automation' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+                                <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white space-y-4 shadow-xl">
+                                    <h4 className="text-sm font-black uppercase tracking-widest">SEO Automation Clusters</h4>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed font-bold uppercase tracking-tight">
+                                        Generate high-ranking landing pages for specific locations and property types automatically.
+                                    </p>
+                                    <div className="pt-4 grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => {
+                                                const cities = ['Toronto', 'Vancouver', 'Richmond Hill', 'Oakville'];
+                                                const types = ['Condo', 'Detached', 'Townhouse'];
+
+                                                cities.forEach(city => {
+                                                    types.forEach(type => {
+                                                        const p = seoEngine.generateSeoPage(city, type);
+                                                        store.addPage({
+                                                            id: `auto-${city}-${type}-${Date.now()}`,
+                                                            isPublished: true,
+                                                            ...p
+                                                        } as any);
+                                                    });
+                                                });
+                                                useNotificationStore.getState().addNotification({
+                                                    type: 'success',
+                                                    title: 'Clusters Generated',
+                                                    message: '12 search-optimized pages have been added to your site.'
+                                                });
+                                            }}
+                                            className="p-4 bg-indigo-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-indigo-600 transition-all border border-indigo-600"
+                                        >
+                                            Generate 12 Clusters
+                                        </button>
+                                        <button className="p-4 bg-slate-800 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all border border-slate-700">
+                                            Configure Template
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Automated Pages</p>
+                                    {Object.values(store.pages).filter(p => p.id.startsWith('auto-')).map(p => (
+                                        <div key={p.id} className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between">
+                                            <span className="text-[11px] font-black text-slate-900 truncate pr-4">{p.name}</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                                <button
+                                                    onClick={() => store.removePage(p.id)}
+                                                    className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline"
+                                                >
+                                                    Disable
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {Object.values(store.pages).filter(p => p.id.startsWith('auto-')).length === 0 && (
+                                        <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">No automated clusters found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         {subTab === 'dynamic' && renderDynamic()}
                     </>
                 )}
@@ -2070,7 +2198,7 @@ const NavigationPanel = ({ websiteId, agentId, onUpdate }: { websiteId: string; 
     if (loading) return <div className="p-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Nav...</div>;
 
     return (
-        <div className="p-5 space-y-6">
+        <div className="p-5 space-y-6 overflow-y-auto h-full custom-scrollbar">
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
@@ -2527,13 +2655,206 @@ const SettingsPanel = () => {
                             />
                         </label>
 
-                        {/* ─── Data Source Toggle ─── */}
+                        {/* ─── Listing Source Toggle ─── */}
                         <div className="space-y-3">
-                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Data Source</span>
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Listing Source</span>
                             <div className="flex bg-slate-100 p-1 rounded-xl">
                                 {[
-                                    { id: 'manual', label: 'Manual Filters' },
-                                    { id: 'shortcode', label: 'Shortcode' },
+                                    { id: 'manual', label: 'Static Content' },
+                                    { id: 'shortcode', label: 'Dynamic (Shortcode)' },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => {
+                                            updateProp('source', tab.id);
+                                            if (tab.id === 'manual') updateProp('shortcodeId', undefined);
+                                        }}
+                                        className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${(selected.props.source || 'manual') === tab.id
+                                            ? 'bg-white text-indigo-600 shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-600'
+                                            }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ─── Shortcode mode ─── */}
+                        {(selected.props.source === 'shortcode') && (
+                            <ShortcodeSelector
+                                selectedId={selected.props.shortcodeId}
+                                websiteId={store.website?.id || 'default'}
+                                organizationId={store.website?.organizationId}
+                                role="super_admin"
+                                onSelect={(scId, sc) => {
+                                    updateProp('shortcodeId', scId);
+                                    updateProp('source', 'shortcode');
+                                    // Extract filters to section config for programmatic SEO extraction
+                                    if (sc?.filters) {
+                                        updateProp('filters', sc.filters);
+                                    }
+                                }}
+                                onClear={() => {
+                                    updateProp('shortcodeId', undefined);
+                                }}
+                            />
+                        )}
+
+                        {/* ─── Manual filters mode (default) ─── */}
+                        {(selected.props.source !== 'shortcode') && (
+                            <>
+                                <label className="block space-y-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target City</span>
+                                    <input
+                                        type="text"
+                                        value={selected.props.filters?.city || ''}
+                                        onChange={e => updateProp('filters.city', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                    />
+                                </label>
+                                <label className="block space-y-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Property Type</span>
+                                    <select
+                                        value={selected.props.filters?.propertyType || ''}
+                                        onChange={e => updateProp('filters.propertyType', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                    >
+                                        <option value="">All Types</option>
+                                        <option value="Condo">Condo</option>
+                                        <option value="Detached">Detached</option>
+                                        <option value="Townhouse">Townhouse</option>
+                                    </select>
+                                </label>
+                                <label className="block space-y-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Listing Status</span>
+                                    <select
+                                        value={selected.props.filters?.status || ''}
+                                        onChange={e => updateProp('filters.status', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                    >
+                                        <option value="">Any Status</option>
+                                        <option value="sale">For Sale</option>
+                                        <option value="rent">For Rent</option>
+                                        <option value="sold">Sold</option>
+                                    </select>
+                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bedrooms</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Min beds"
+                                            value={selected.props.filters?.bedrooms || ''}
+                                            onChange={e => updateProp('filters.bedrooms', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bathrooms</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Min baths"
+                                            value={selected.props.filters?.bathrooms || ''}
+                                            onChange={e => updateProp('filters.bathrooms', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Price</span>
+                                        <input
+                                            type="number"
+                                            placeholder="No min"
+                                            value={selected.props.filters?.minPrice || ''}
+                                            onChange={e => updateProp('filters.minPrice', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Price</span>
+                                        <input
+                                            type="number"
+                                            placeholder="No max"
+                                            value={selected.props.filters?.maxPrice || ''}
+                                            onChange={e => updateProp('filters.maxPrice', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</span>
+                                        <input
+                                            type="number"
+                                            value={selected.props.limit || 3}
+                                            onChange={e => updateProp('limit', parseInt(e.target.value) || 0)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort Order</span>
+                                        <select
+                                            value={selected.props.sort || 'latest'}
+                                            onChange={e => updateProp('sort', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="latest">Newest First</option>
+                                            <option value="price-low-high">Price: Low to High</option>
+                                            <option value="price-high-low">Price: High to Low</option>
+                                            <option value="price_asc" className="hidden">Price: Low to High (Legacy)</option>
+                                            <option value="price_desc" className="hidden">Price: High to Low (Legacy)</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+
+                {selected.name === 'FeaturedListingsSection' && (
+                    <>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Design Style</span>
+                            <select
+                                value={selected.props.variant || 'default'}
+                                onChange={e => updateProp('variant', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                            >
+                                <option value="default">Modern Grid</option>
+                                <option value="luxury">Luxury Overlay</option>
+                                <option value="minimal">Minimal List</option>
+                                <option value="corporate">Corporate Card</option>
+                            </select>
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.title || ''}
+                                onChange={e => updateProp('content.title', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtitle</span>
+                            <input
+                                type="text"
+                                value={selected.props.content?.subtitle || ''}
+                                onChange={e => updateProp('content.subtitle', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                            />
+                        </label>
+
+                        {/* ─── Listing Source Toggle ─── */}
+                        <div className="space-y-3">
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Listing Source</span>
+                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                                {[
+                                    { id: 'manual', label: 'Static Content' },
+                                    { id: 'shortcode', label: 'Dynamic (Shortcode)' },
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
@@ -2603,11 +2924,33 @@ const SettingsPanel = () => {
                                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
                                     >
                                         <option value="">Any Status</option>
-                                        <option value="For Sale">For Sale</option>
-                                        <option value="Sold">Sold</option>
-                                        <option value="Pending">Pending</option>
+                                        <option value="sale">For Sale</option>
+                                        <option value="rent">For Rent</option>
+                                        <option value="sold">Sold</option>
                                     </select>
                                 </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bedrooms</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Min beds"
+                                            value={selected.props.filters?.bedrooms || ''}
+                                            onChange={e => updateProp('filters.bedrooms', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bathrooms</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Min baths"
+                                            value={selected.props.filters?.bathrooms || ''}
+                                            onChange={e => updateProp('filters.bathrooms', e.target.value ? parseInt(e.target.value) : undefined)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <label className="block space-y-2">
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Price</span>
@@ -2630,118 +2973,31 @@ const SettingsPanel = () => {
                                         />
                                     </label>
                                 </div>
-                                <label className="block space-y-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</span>
-                                    <input
-                                        type="number"
-                                        value={selected.props.limit || 3}
-                                        onChange={e => updateProp('limit', parseInt(e.target.value) || 0)}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                                    />
-                                </label>
-                            </>
-                        )}
-                    </>
-                )}
-
-                {selected.name === 'FeaturedListingsSection' && (
-                    <>
-                        <label className="block space-y-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Design Style</span>
-                            <select
-                                value={selected.props.variant || 'default'}
-                                onChange={e => updateProp('variant', e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                            >
-                                <option value="default">Modern Grid</option>
-                                <option value="luxury">Luxury Overlay</option>
-                                <option value="minimal">Minimal List</option>
-                                <option value="corporate">Corporate Card</option>
-                            </select>
-                        </label>
-                        <label className="block space-y-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Section Title</span>
-                            <input
-                                type="text"
-                                value={selected.props.content?.title || ''}
-                                onChange={e => updateProp('content.title', e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                            />
-                        </label>
-                        <label className="block space-y-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subtitle</span>
-                            <input
-                                type="text"
-                                value={selected.props.content?.subtitle || ''}
-                                onChange={e => updateProp('content.subtitle', e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                            />
-                        </label>
-
-                        {/* ─── Data Source Toggle ─── */}
-                        <div className="space-y-3">
-                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Data Source</span>
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
-                                {[
-                                    { id: 'manual', label: 'Manual Filters' },
-                                    { id: 'shortcode', label: 'Shortcode' },
-                                ].map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        onClick={() => {
-                                            updateProp('source', tab.id);
-                                            if (tab.id === 'manual') updateProp('shortcodeId', undefined);
-                                        }}
-                                        className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${(selected.props.source || 'manual') === tab.id
-                                            ? 'bg-white text-indigo-600 shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600'
-                                            }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* ─── Shortcode mode ─── */}
-                        {(selected.props.source === 'shortcode') && (
-                            <ShortcodeSelector
-                                selectedId={selected.props.shortcodeId}
-                                websiteId={store.website?.id || 'default'}
-                                organizationId={store.website?.organizationId}
-                                role="super_admin"
-                                onSelect={(scId, _sc) => {
-                                    updateProp('shortcodeId', scId);
-                                    updateProp('source', 'shortcode');
-                                }}
-                                onClear={() => {
-                                    updateProp('shortcodeId', undefined);
-                                }}
-                            />
-                        )}
-
-                        {/* ─── Manual filters mode (default) ─── */}
-                        {(selected.props.source !== 'shortcode') && (
-                            <>
-                                <label className="block space-y-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target City</span>
-                                    <input
-                                        type="text"
-                                        value={selected.props.filters?.city || ''}
-                                        onChange={e => updateProp('filters.city', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                                    />
-                                </label>
-                                <label className="block space-y-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</span>
-                                    <input
-                                        type="number"
-                                        value={selected.props.limit || 2}
-                                        onChange={e => updateProp('limit', parseInt(e.target.value) || 0)}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
-                                    />
-                                </label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Display Limit</span>
+                                        <input
+                                            type="number"
+                                            value={selected.props.limit || 2}
+                                            onChange={e => updateProp('limit', parseInt(e.target.value) || 0)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sort Order</span>
+                                        <select
+                                            value={selected.props.sort || 'latest'}
+                                            onChange={e => updateProp('sort', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="latest">Newest First</option>
+                                            <option value="price-low-high">Price: Low to High</option>
+                                            <option value="price-high-low">Price: High to Low</option>
+                                            <option value="price_asc" className="hidden">Price: Low to High (Legacy)</option>
+                                            <option value="price_desc" className="hidden">Price: High to Low (Legacy)</option>
+                                        </select>
+                                    </label>
+                                </div>
                             </>
                         )}
                     </>
@@ -4545,7 +4801,7 @@ function WebsiteBuilderInternal({ resolver, ...props }: { resolver: any } & Webs
 
                 {/* Right Panel: Configuration */}
                 {isRightPanelOpen && (
-                    <div className="w-[340px] max-w-[340px] bg-white border-l border-slate-200 flex flex-col overflow-y-auto overflow-x-hidden shadow-xl z-40 animate-in slide-in-from-right duration-300">
+                    <div className="w-[340px] max-w-[340px] bg-white border-l border-slate-200 flex flex-col overflow-hidden shadow-xl z-40 animate-in slide-in-from-right duration-300">
                         {/* 1) Specific element configuration takes precedence */}
                         {selected ? (
                             <SettingsPanel />

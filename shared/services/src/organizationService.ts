@@ -1,4 +1,3 @@
-import { apiClient } from '@repo/api-client';
 import { useNotificationStore } from './notificationStore';
 import { Organization, OrganizationType, TenantTemplate } from '@repo/types';
 import { templateAssignmentService } from './templateAssignmentService';
@@ -67,156 +66,121 @@ export interface GetOrgsResponse {
 // ─── Onboarding Wizard Payload ────────────────────────
 
 
+// ─── Persistence Logic ────────────────────────────────
+const STORAGE_KEY = 'platform_organizations_v2';
+const IS_SERVER = typeof window === 'undefined';
+
+const getInitialOrgs = (): OrganizationDashboardItem[] => {
+    if (!IS_SERVER) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+    }
+    return [
+        {
+            id: 'org-1',
+            name: 'Skyline Real Estate',
+            type: 'BROKERAGE',
+            email: 'contact@skyline.com',
+            phone: '555-0101',
+            timezone: 'America/New_York',
+            ddfStatus: DDFStatus.HEALTHY,
+            leads30d: 452,
+            subscriptionPlan: SubscriptionPlan.ENTERPRISE,
+            status: OrgStatus.ACTIVE,
+            createdAt: '2023-10-15T10:00:00Z',
+            updatedAt: '2024-03-01T12:00:00Z',
+            adminEmail: 'admin@skyline.com',
+            isActive: true,
+            domain: 'skyline.realty',
+            template: 'modern-realty',
+            allowedTemplates: ['modern-realty', 'luxury-estate', 'corporate-brokerage'],
+            modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
+        },
+        {
+            id: 'org-2',
+            name: 'John Smith Realty',
+            type: 'INDIVIDUAL_AGENT',
+            email: 'john@smithrealty.com',
+            phone: '555-0102',
+            timezone: 'America/Toronto',
+            ddfStatus: DDFStatus.WARNING,
+            leads30d: 87,
+            subscriptionPlan: SubscriptionPlan.PREMIUM,
+            status: OrgStatus.ACTIVE,
+            createdAt: '2023-11-02T14:30:00Z',
+            updatedAt: '2024-03-11T09:00:00Z',
+            adminEmail: 'john@smithrealty.com',
+            isActive: true,
+            domain: 'johnsmith.agent',
+            template: 'agent-portfolio',
+            allowedTemplates: ['agent-portfolio'],
+            modules: { ddfSync: true, leadCRM: true, advancedAnalytics: false, agentPortals: false }
+        },
+        {
+            id: 'org-3',
+            name: 'Coastal Properties',
+            type: 'BROKERAGE',
+            email: 'info@coastalprop.com',
+            phone: '555-0103',
+            timezone: 'America/Los_Angeles',
+            ddfStatus: DDFStatus.HEALTHY,
+            leads30d: 1240,
+            subscriptionPlan: SubscriptionPlan.ENTERPRISE,
+            status: OrgStatus.ACTIVE,
+            createdAt: '2023-08-20T10:00:00Z',
+            updatedAt: '2024-03-10T15:00:00Z',
+            adminEmail: 'admin@coastalprop.com',
+            isActive: true,
+            domain: 'coastal.properties',
+            template: 'luxury-estate',
+            allowedTemplates: ['modern-realty', 'luxury-estate'],
+            modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
+        },
+    ];
+};
+
+let memOrgs: OrganizationDashboardItem[] = getInitialOrgs();
+
+const persistOrgs = () => {
+    if (!IS_SERVER) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(memOrgs));
+    }
+};
+
+export const createOrganization = async (data: Partial<OrganizationDashboardItem>): Promise<OrganizationDashboardItem> => {
+    const newOrg: OrganizationDashboardItem = {
+        id: `org-${Math.random().toString(36).substr(2, 9)}`,
+        name: data.name || 'New Organization',
+        type: data.type || 'BROKERAGE',
+        email: data.email || '',
+        phone: data.phone || '',
+        timezone: data.timezone || 'America/Toronto',
+        ddfStatus: DDFStatus.HEALTHY,
+        leads30d: 0,
+        subscriptionPlan: data.subscriptionPlan || SubscriptionPlan.BASIC,
+        status: data.status || OrgStatus.ACTIVE,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isActive: true,
+        domain: data.domain || '',
+        logo: data.logo,
+        template: data.template || 'modern-realty',
+        allowedTemplates: data.allowedTemplates || [data.template || 'modern-realty'],
+        modules: data.modules || { ddfSync: true, leadCRM: true }
+    };
+
+    memOrgs.unshift(newOrg);
+    persistOrgs();
+    return newOrg;
+};
+
 export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsResponse> => {
     try {
-        const response = await apiClient.get<GetOrgsResponse>('/super-admin/organizations', { params });
-        return response.data;
-    } catch (error) {
-        // Mock data for demo/onboarding
-        const items: OrganizationDashboardItem[] = [
-            {
-                id: 'org-1',
-                name: 'Skyline Real Estate',
-                type: 'BROKERAGE',
-                email: 'contact@skyline.com',
-                phone: '555-0101',
-                timezone: 'America/New_York',
-                ddfStatus: DDFStatus.HEALTHY,
-                leads30d: 452,
-                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
-                status: OrgStatus.ACTIVE,
-                createdAt: '2023-10-15T10:00:00Z',
-                updatedAt: '2024-03-01T12:00:00Z',
-                adminEmail: 'admin@skyline.com',
-                isActive: true,
-                domain: 'skyline.realty',
-                template: 'modern-realty',
-                allowedTemplates: ['modern-realty', 'luxury-estate', 'corporate-brokerage'],
-                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
-            },
-            {
-                id: 'org-2',
-                name: 'John Smith Realty',
-                type: 'INDIVIDUAL_AGENT',
-                email: 'john@smithrealty.com',
-                phone: '555-0102',
-                timezone: 'America/Toronto',
-                ddfStatus: DDFStatus.WARNING,
-                leads30d: 87,
-                subscriptionPlan: SubscriptionPlan.PREMIUM,
-                status: OrgStatus.ACTIVE,
-                createdAt: '2023-11-02T14:30:00Z',
-                updatedAt: '2024-03-11T09:00:00Z',
-                adminEmail: 'john@smithrealty.com',
-                isActive: true,
-                domain: 'johnsmith.agent',
-                template: 'agent-portfolio',
-                allowedTemplates: ['agent-portfolio'],
-                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: false, agentPortals: false }
-            },
-            {
-                id: 'org-3',
-                name: 'Coastal Properties',
-                type: 'BROKERAGE',
-                email: 'info@coastalprop.com',
-                phone: '555-0103',
-                timezone: 'America/Los_Angeles',
-                ddfStatus: DDFStatus.HEALTHY,
-                leads30d: 1240,
-                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
-                status: OrgStatus.ACTIVE,
-                createdAt: '2023-08-20T10:00:00Z',
-                updatedAt: '2024-03-10T15:00:00Z',
-                adminEmail: 'admin@coastalprop.com',
-                isActive: true,
-                domain: 'coastal.properties',
-                template: 'luxury-estate',
-                allowedTemplates: ['modern-realty', 'luxury-estate'],
-                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
-            },
-            {
-                id: 'org-4',
-                name: 'Urban Living',
-                type: 'BROKERAGE',
-                email: 'hello@urbanliving.com',
-                phone: '555-0104',
-                timezone: 'America/Chicago',
-                ddfStatus: DDFStatus.ERROR,
-                leads30d: 56,
-                subscriptionPlan: SubscriptionPlan.BASIC,
-                status: OrgStatus.SUSPENDED,
-                createdAt: '2024-01-10T09:00:00Z',
-                updatedAt: '2024-03-05T11:00:00Z',
-                adminEmail: 'support@urbanliving.com',
-                isActive: false,
-                domain: 'urbanliving.site',
-                template: 'minimal-realty',
-                allowedTemplates: ['minimal-realty'],
-                modules: { ddfSync: true, leadCRM: false, advancedAnalytics: false, agentPortals: false }
-            },
-            {
-                id: 'org-5',
-                name: 'Sarah Miller',
-                type: 'INDIVIDUAL_AGENT',
-                email: 'sarah@millerrealty.ca',
-                phone: '555-0105',
-                timezone: 'America/Vancouver',
-                ddfStatus: DDFStatus.HEALTHY,
-                leads30d: 210,
-                subscriptionPlan: SubscriptionPlan.PREMIUM,
-                status: OrgStatus.ACTIVE,
-                createdAt: '2023-12-05T14:00:00Z',
-                updatedAt: '2024-03-12T08:00:00Z',
-                adminEmail: 'sarah@millerrealty.ca',
-                isActive: true,
-                domain: 'sarahmiller.realtor',
-                template: 'agent-portfolio',
-                allowedTemplates: ['agent-portfolio', 'minimal-realty'],
-                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: false, agentPortals: false }
-            },
-            {
-                id: 'org-6',
-                name: 'Summit Estates',
-                type: 'BROKERAGE',
-                email: 'contact@summitestates.com',
-                phone: '555-0106',
-                timezone: 'America/Denver',
-                ddfStatus: DDFStatus.WARNING,
-                leads30d: 890,
-                subscriptionPlan: SubscriptionPlan.ENTERPRISE,
-                status: OrgStatus.ACTIVE,
-                createdAt: '2023-09-15T11:00:00Z',
-                updatedAt: '2024-03-11T16:00:00Z',
-                adminEmail: 'admin@summitestates.com',
-                isActive: true,
-                domain: 'summit.estates',
-                template: 'corporate-brokerage',
-                allowedTemplates: ['corporate-brokerage', 'modern-realty'],
-                modules: { ddfSync: true, leadCRM: true, advancedAnalytics: true, agentPortals: true }
-            },
-            {
-                id: 'org-7',
-                name: 'Lakeside Realty',
-                type: 'BROKERAGE',
-                email: 'office@lakesiderea.com',
-                phone: '555-0107',
-                timezone: 'America/Detroit',
-                ddfStatus: DDFStatus.HEALTHY,
-                leads30d: 342,
-                subscriptionPlan: SubscriptionPlan.BASIC,
-                status: OrgStatus.INACTIVE,
-                createdAt: '2024-02-01T10:00:00Z',
-                updatedAt: '2024-02-01T10:00:00Z',
-                adminEmail: 'manager@lakesiderea.com',
-                isActive: false,
-                domain: 'lakeside.realty',
-                template: 'modern-realty',
-                allowedTemplates: ['modern-realty'],
-                modules: { ddfSync: true, leadCRM: false, advancedAnalytics: false, agentPortals: false }
-            }
-        ];
+        // In a real app we'd call the API:
+        // const response = await apiClient.get<GetOrgsResponse>('/super-admin/organizations', { params });
+        // return response.data;
 
-        let filtered = items;
+        let filtered = [...memOrgs];
         if (params.search) {
             const s = params.search.toLowerCase();
             filtered = filtered.filter(o => o.name.toLowerCase().includes(s));
@@ -231,6 +195,9 @@ export const getOrganizations = async (params: GetOrgsParams): Promise<GetOrgsRe
             limit: params.limit,
             totalPages: Math.ceil(filtered.length / params.limit)
         };
+    } catch (error) {
+        console.error("Failed to fetch organizations", error);
+        return { items: [], total: 0, page: 1, limit: 10, totalPages: 0 };
     }
 };
 
@@ -242,7 +209,15 @@ export const getOrganizationById = async (id: string): Promise<OrganizationDashb
 
 export const updateOrgStatus = async (id: string, status: OrgStatus): Promise<void> => {
     try {
-        await apiClient.patch(`/super-admin/organizations/${id}/status`, { status });
+        const idx = memOrgs.findIndex(o => o.id === id);
+        if (idx === -1) throw new Error('Organization not found');
+
+        memOrgs[idx].status = status;
+        memOrgs[idx].isActive = status === OrgStatus.ACTIVE;
+        memOrgs[idx].updatedAt = new Date().toISOString();
+
+        persistOrgs();
+
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Status Updated',
@@ -260,7 +235,9 @@ export const updateOrgStatus = async (id: string, status: OrgStatus): Promise<vo
 
 export const deleteOrganization = async (id: string): Promise<void> => {
     try {
-        await apiClient.delete(`/super-admin/organizations/${id}`);
+        memOrgs = memOrgs.filter(o => o.id !== id);
+        persistOrgs();
+
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Organization Deleted',

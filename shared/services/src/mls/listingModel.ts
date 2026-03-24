@@ -73,7 +73,7 @@ export interface MLSListingFilters {
     organizationId?: string;
     limit?: number;
     page?: number;
-    sort?: 'newest' | 'price_asc' | 'price_desc';
+    sort?: 'newest' | 'price_asc' | 'price_desc' | 'price-low-high' | 'price-high-low';
     minLat?: number;
     maxLat?: number;
     minLng?: number;

@@ -34,9 +34,9 @@ export const leadService = {
 
         // Fire in-app notification for the dashboard
         useNotificationStore.getState().addNotification({
-            type: 'info',
-            title: 'New Lead Captured',
-            message: `New inquiry from ${newLead.name} via ${formatSource(newLead.source)}.`,
+            type: 'success',
+            title: 'Lead Routed & Assigned',
+            message: `New inquiry from ${newLead.name} via ${formatSource(newLead.source)}. Assigned to ${newLead.assignedTo}.`,
         });
 
         return newLead;

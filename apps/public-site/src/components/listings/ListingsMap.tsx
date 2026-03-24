@@ -7,6 +7,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ListingCardField } from '@repo/services';
 
 // Fix for default marker icons in Next.js
@@ -62,11 +63,10 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
     const searchParams = useSearchParams();
     const [listings, setListings] = useState<ListingCardField[]>(initialListings);
 
-    // Default center (Toronto approximate)
-    const defaultCenter: [number, number] = [43.6532, -79.3832];
-
     // Calculate initial center based on available listings
     const center = useMemo(() => {
+        // Default center (Toronto approximate)
+        const defaultCenter: [number, number] = [43.6532, -79.3832];
         const withCoords = initialListings.filter(l => l.latitude && l.longitude);
         if (withCoords.length > 0) {
             const avgLat = withCoords.reduce((sum, l) => sum + l.latitude!, 0) / withCoords.length;
@@ -128,10 +128,11 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                                 <Popup className="custom-popup" closeButton={false} minWidth={240}>
                                     <div className="p-0 space-y-3">
                                         <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
-                                            <img
+                                            <Image
                                                 src={listing.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                                                 alt={listing.address}
-                                                className="w-full h-full object-cover"
+                                                fill
+                                                className="object-cover"
                                             />
                                             <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-md text-[9px] font-black uppercase tracking-widest text-slate-900">
                                                 {listing.propertyType}

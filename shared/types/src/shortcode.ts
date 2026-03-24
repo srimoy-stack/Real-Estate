@@ -1,13 +1,15 @@
-import { InternalListingStatus, UserRole } from './index';
+import { UserRole } from './index';
 
 export interface ShortcodeFilters {
     city?: string;
     propertyType?: string | string[];
-    status?: InternalListingStatus | InternalListingStatus[];
+    status?: string; // sale, rent, sold
     minPrice?: number;
     maxPrice?: number;
     bedrooms?: number;
     bathrooms?: number;
+    limit?: number;
+    sort?: 'latest' | 'price-low-high' | 'price-high-low' | 'price_asc' | 'price_desc';
     featured?: boolean;
 }
 

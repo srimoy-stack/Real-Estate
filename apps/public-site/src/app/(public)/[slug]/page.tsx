@@ -3,6 +3,7 @@ import { orgWebsiteService } from '@repo/services';
 import { notFound } from 'next/navigation';
 import { ModernSectionRenderer } from '@/components/section-renderer';
 import { Metadata } from 'next';
+import { seoEngine } from '@repo/modules/website-builder/SeoEngine';
 
 interface PageProps {
     params: {
@@ -14,67 +15,64 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const website = getWebsiteFromHeaders() as any;
     if (!website) return {};
 
-    const page = await orgWebsiteService.getPageBySlug('org-1', 'ws_brokerage_001', params.slug);
+    const page = await orgWebsiteService.getPageBySlug(website.organizationId, website.websiteId, params.slug);
     if (!page) return {};
 
-    const seo = page.seo;
-    const title = seo?.metaTitle || page.title;
-    const description = seo?.metaDescription;
+    // Use our new SEO engine for dynamic fallback logic
+    const generated = seoEngine.generateDynamicSeo(page as any, website?.name || 'Prestige Realty');
+
+    const seo = (page as any).seo || {};
+    const auto = seo.autoGenerate !== false;
+
+    const title = auto ? generated.title : (seo.title || page.title);
+    const description = auto ? generated.description : seo.description;
 
     const domain = website?.domain || 'skyline-estates.com';
     const baseUrl = `https://${domain}`;
 
     return {
-        title: title,
-        description: description,
+        title,
+        description,
         alternates: {
-            canonical: seo?.canonicalUrl || `${baseUrl}/${params.slug === '/' ? '' : params.slug}`,
+            canonical: seo.canonical || `${baseUrl}/${params.slug === '/' ? '' : params.slug}`,
         },
         openGraph: {
-            title: seo?.ogTitle || title,
-            description: seo?.ogDescription || description,
-            images: seo?.ogImage ? [{ url: seo.ogImage }] : [],
+            title,
+            description,
+            images: website?.brandingConfig?.logoUrl ? [{ url: website.brandingConfig.logoUrl }] : [],
             type: 'website',
             url: `${baseUrl}/${params.slug === '/' ? '' : params.slug}`,
         },
         robots: {
-            index: !seo?.noIndex,
-            follow: !seo?.noIndex,
+            index: !seo.noIndex,
+            follow: !seo.noIndex,
         }
     };
 }
 
 
 export default async function DynamicPage({ params }: PageProps) {
-    const website = getWebsiteFromHeaders();
+    const website = getWebsiteFromHeaders() as any;
     if (!website) return notFound();
 
     const { slug } = params;
 
     // Fetch the page dynamically from orgWebsiteService
-    const page = await orgWebsiteService.getPageBySlug(website.tenantId, website.websiteId, slug);
+    const page = await orgWebsiteService.getPageBySlug(website.organizationId, website.websiteId, slug);
 
-    if (!page || !page.isPublished) {
+    if (!page || !page.isPublic) {
         return notFound();
     }
 
-    const jsonLd = page.seo?.schemaType ? {
-        '@context': 'https://schema.org',
-        '@type': page.seo.schemaType,
-        name: page.seo.metaTitle || page.title,
-        description: page.seo.metaDescription,
-        url: `https://${website.domain || 'skyline-estates.com'}/${slug === '/' ? '' : slug}`,
-    } : null;
-
+    // Generate enriched JSON-LD Schema (Organization, Breadcrumb, Listing)
+    const schemaJson = seoEngine.generateSchemaMarkup(page as any, website);
 
     return (
-        <div className="space-y-12 pb-24">
-            {jsonLd && (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
-            )}
+        <div className="space-y-12 pb-24 h-full">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: schemaJson }}
+            />
 
             {/* Page Header */}
             <header className="py-20 bg-slate-50 border-b border-slate-200">

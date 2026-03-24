@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CITIES = [
     { name: 'Toronto', count: 432, image: 'https://images.unsplash.com/photo-1517090504586-fde19ea6066f?auto=format&fit=crop&q=80&w=800' },
@@ -18,15 +17,15 @@ export const CommunitiesSection = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
                     <div className="max-w-xl space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Local Experts</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Status: Optimal</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
                             Explore <span className="text-indigo-600 italic">Communities</span>
                         </h2>
                         <p className="text-slate-500 font-medium">
-                            Discover the unique character, local amenities, and market trends of Canada's most vibrant neighborhoods.
+                            Discover the unique character, local amenities, and market trends of Canada&apos;s most vibrant neighborhoods.
                         </p>
                     </div>
                 </div>
@@ -38,11 +37,12 @@ export const CommunitiesSection = () => {
                             href={`/communities/${city.name.toLowerCase()}`}
                             className="group flex flex-col items-center gap-4 p-4 rounded-[32px] bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-xl transition-all duration-500"
                         >
-                            <div className="w-full aspect-square rounded-[24px] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
-                                <img
+                            <div className="relative w-full aspect-square rounded-[24px] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+                                <Image
                                     src={city.image}
                                     alt={city.name}
-                                    className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-1000"
+                                    fill
+                                    className="object-cover group-hover:scale-125 transition-transform duration-1000"
                                 />
                             </div>
                             <div className="text-center">

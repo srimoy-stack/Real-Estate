@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@repo/auth';
 import { authService } from '@repo/services';
 
@@ -66,10 +67,11 @@ export const LeadGate = () => {
 
                 {/* Visual Header */}
                 <div className="relative h-48 bg-slate-900 overflow-hidden flex items-center justify-center">
-                    <img
+                    <Image
                         src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800"
                         alt="Luxury Architecture"
-                        className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
+                        fill
+                        className="object-cover opacity-40 grayscale"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
 

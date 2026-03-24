@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { TemplatePreviewPopup } from '@/components/TemplatePreviewPopup';
 
 export default function OrganizationsPage() {
-    const { startImpersonation, user: superAdmin, hasHydrated } = useAuth();
+    const { user: superAdmin, hasHydrated } = useAuth();
     const router = useRouter();
 
     // State
@@ -82,11 +82,13 @@ export default function OrganizationsPage() {
 
     const handleImpersonate = async (org: Organization) => {
         try {
-            await startImpersonation(org.id);
-            // PRD: Redirect to client-admin
-            // CRITICAL: We pass a flag/sid in local dev because sessionStorage is not shared between 3001/3002
-            const newAccessToken = "mock-impersonation-token"; // Should ideally come from service
-            window.location.href = `http://localhost:3002/dashboard?token=${newAccessToken}&impersonating=true`;
+            // TASK 1: Trigger Impersonation - Store in localStorage for consistency
+            localStorage.setItem('isImpersonating', 'true');
+            localStorage.setItem('impersonatedOrgId', org.id);
+            localStorage.setItem('impersonatedOrgName', org.name);
+
+            // Redirect to client-admin dashboard with URL params to bridge port gap
+            window.location.href = `http://localhost:3002/dashboard?impersonating=true&orgId=${org.id}&orgName=${encodeURIComponent(org.name)}`;
         } catch (error) {
             alert('Impersonation failed');
         }

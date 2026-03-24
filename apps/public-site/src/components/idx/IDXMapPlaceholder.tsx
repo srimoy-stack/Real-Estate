@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Listing } from '@repo/types';
 
 interface IDXMapPlaceholderProps {
@@ -143,15 +144,18 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
-                            <img
-                                src={
-                                    selectedListing.mainImage ||
-                                    selectedListing.images?.[0] ||
-                                    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=400'
-                                }
-                                alt={selectedListing.title}
-                                className="w-full h-36 object-cover"
-                            />
+                            <div className="relative h-36 w-full">
+                                <Image
+                                    src={
+                                        selectedListing.mainImage ||
+                                        selectedListing.images?.[0] ||
+                                        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=400'
+                                    }
+                                    alt={selectedListing.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
                             <div className="absolute top-2 left-2">
                                 <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
                                     {selectedListing.status === 'ACTIVE' ? 'For Sale' : selectedListing.status}
@@ -187,7 +191,7 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                                    MLS® {selectedListing.mlsNumber}
+                                    Property ID: {selectedListing.mlsNumber}
                                 </span>
                                 <Link
                                     href={`/listing/${selectedListing.mlsNumber}`}

@@ -15,6 +15,7 @@ export interface OnboardingPayload {
         address: string;
         timezone: string;
         logo?: string;
+        modules?: Record<string, boolean>;
     };
     adminUser: {
         name: string;
@@ -78,6 +79,9 @@ export interface ProvisioningStatus {
  * Orquestrates the complete onboarding of a new client.
  * This includes Org creation, User as CLIENT_ADMIN, Template assignments, and Website provisioning.
  */
+import { createOrganization, SubscriptionPlan } from './organizationService';
+import { orgWebsiteService } from './orgWebsiteService';
+
 export const onboardOrganization = async (
     payload: OnboardingPayload,
     onProgress?: (status: ProvisioningStatus) => void
@@ -97,16 +101,27 @@ export const onboardOrganization = async (
         if (onProgress) {
             for (const step of steps) {
                 onProgress(step);
-                await new Promise(resolve => setTimeout(resolve, 800)); // Controlled delay for UI feedback
+                await new Promise(resolve => setTimeout(resolve, 600)); // Controlled delay for UI feedback
             }
         }
 
-        // In a real environment:
-        // const response = await apiClient.post<{ organizationId: string }>('/super-admin/onboard', payload);
-        // return response.data;
+        // Persist the new organization in our mock store
+        const newOrg = await createOrganization({
+            name: payload.organization.name,
+            type: payload.organization.type,
+            email: payload.organization.email,
+            phone: payload.organization.phone,
+            domain: payload.website.domain,
+            template: payload.templates.mainWebsiteTemplateId,
+            allowedTemplates: [payload.templates.mainWebsiteTemplateId, ...payload.templates.additionalTemplateIds],
+            subscriptionPlan: SubscriptionPlan.PREMIUM,
+            adminEmail: payload.adminUser.email,
+            modules: payload.organization.modules,
+            logo: payload.organization.logo,
+        });
 
-        // Mock response for the dashboard
-        const mockId = `org_${Math.random().toString(36).substr(2, 9)}`;
+        // Provision default pages for the new website
+        await orgWebsiteService.provisionDefaultPages(newOrg.id, `ws_${newOrg.id}`);
 
         useNotificationStore.getState().addNotification({
             type: 'success',
@@ -114,7 +129,7 @@ export const onboardOrganization = async (
             message: `${payload.organization.name} has been successfully onboarded as a ${payload.organization.type}.`
         });
 
-        return { organizationId: mockId };
+        return { organizationId: newOrg.id };
     } catch (error) {
         useNotificationStore.getState().addNotification({
             type: 'error',
@@ -138,6 +153,7 @@ export const provisionOrganization = async (
             phone: state.orgDetails.phone,
             address: state.orgDetails.address,
             timezone: state.orgDetails.timezone,
+            modules: state.modules,
         },
         adminUser: {
             name: `${state.adminUser.firstName} ${state.adminUser.lastName}`,

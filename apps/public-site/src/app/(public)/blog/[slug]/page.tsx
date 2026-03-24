@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { blogService } from '@repo/services';
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface BlogPostPageProps {
     params: { slug: string };
@@ -45,7 +46,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
                 <h1 className="text-4xl font-black text-slate-900 mb-4 text-center">Article Not Found</h1>
-                <p className="text-slate-500 mb-8 max-w-md text-center">The story you're looking for might have been moved or unpublished.</p>
+                <p className="text-slate-500 mb-8 max-w-md text-center">The story you&apos;re looking for might have been moved or unpublished.</p>
                 <Link href="/blog" className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-900 transition-all">
                     Back to Journal
                 </Link>
@@ -83,8 +84,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {/* Featured Image */}
             {featuredImage && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
-                    <div className="aspect-[21/9] rounded-[48px] overflow-hidden shadow-2xl shadow-slate-300">
-                        <img src={featuredImage} className="w-full h-full object-cover" alt={title} />
+                    <div className="aspect-[21/9] rounded-[48px] overflow-hidden shadow-2xl shadow-slate-300 relative">
+                        <Image
+                            src={featuredImage}
+                            alt={title}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
                     </div>
                 </div>
             )}

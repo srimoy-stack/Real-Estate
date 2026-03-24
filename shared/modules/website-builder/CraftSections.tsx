@@ -121,6 +121,7 @@ export const ListingsSection = ({ content, filters, limit, variant, id, source, 
     // When source is 'shortcode', resolve filters from the centralized service
     const [resolvedFilters, setResolvedFilters] = React.useState<any>(filters || {});
     const [resolvedLimit, setResolvedLimit] = React.useState<number>(limit || 3);
+    const [resolvedSort, setResolvedSort] = React.useState<string>(props.sort || 'latest');
 
     React.useEffect(() => {
         if (source === 'shortcode' && shortcodeId) {
@@ -132,7 +133,8 @@ export const ListingsSection = ({ content, filters, limit, variant, id, source, 
                 const config = allConfigs.find((c: any) => c.id === shortcodeId);
                 if (config) {
                     setResolvedFilters(config.filters || {});
-                    setResolvedLimit(config.limit || 3);
+                    setResolvedLimit(config.filters?.limit || config.limit || 3);
+                    setResolvedSort(config.filters?.sort || config.sort || 'latest');
                 }
             } catch (err) {
                 console.warn('ListingsSection: Failed to resolve shortcode', shortcodeId, err);
@@ -140,11 +142,12 @@ export const ListingsSection = ({ content, filters, limit, variant, id, source, 
         } else {
             setResolvedFilters(filters || {});
             setResolvedLimit(limit || 3);
+            setResolvedSort(props.sort || 'latest');
         }
-    }, [source, shortcodeId, filters, limit]);
+    }, [source, shortcodeId, filters, limit, props.sort]);
 
     const combinedFilters = { ...resolvedFilters, ...props };
-    return <CraftWrapper id={id} child={<Component id={id} content={content || {}} filters={combinedFilters} limit={resolvedLimit} variant={variant} {...props} />} />;
+    return <CraftWrapper id={id} child={<Component id={id} content={content || {}} filters={combinedFilters} limit={resolvedLimit} sort={resolvedSort} variant={variant} {...props} />} />;
 };
 ListingsSection.displayName = 'ListingsSection';
 
@@ -164,6 +167,7 @@ export const FeaturedListingsSection = ({ content, filters, limit, variant, id, 
 
     const [resolvedFilters, setResolvedFilters] = React.useState<any>(filters || {});
     const [resolvedLimit, setResolvedLimit] = React.useState<number>(limit || 3);
+    const [resolvedSort, setResolvedSort] = React.useState<string>(props.sort || 'latest');
 
     React.useEffect(() => {
         if (source === 'shortcode' && shortcodeId) {
@@ -173,7 +177,8 @@ export const FeaturedListingsSection = ({ content, filters, limit, variant, id, 
                 const config = allConfigs.find((c: any) => c.id === shortcodeId);
                 if (config) {
                     setResolvedFilters(config.filters || {});
-                    setResolvedLimit(config.limit || 3);
+                    setResolvedLimit(config.filters?.limit || config.limit || 3);
+                    setResolvedSort(config.filters?.sort || config.sort || 'latest');
                 }
             } catch (err) {
                 console.warn('FeaturedListingsSection: Failed to resolve shortcode', shortcodeId, err);
@@ -181,11 +186,12 @@ export const FeaturedListingsSection = ({ content, filters, limit, variant, id, 
         } else {
             setResolvedFilters(filters || {});
             setResolvedLimit(limit || 3);
+            setResolvedSort(props.sort || 'latest');
         }
-    }, [source, shortcodeId, filters, limit]);
+    }, [source, shortcodeId, filters, limit, props.sort]);
 
     const combinedFilters = { ...resolvedFilters, featured: true, ...props };
-    return <CraftWrapper id={id} child={<Component id={id} content={content || {}} filters={combinedFilters} limit={resolvedLimit} variant={variant || "default"} {...props} />} />;
+    return <CraftWrapper id={id} child={<Component id={id} content={content || {}} filters={combinedFilters} limit={resolvedLimit} sort={resolvedSort} variant={variant || "default"} {...props} />} />;
 };
 FeaturedListingsSection.displayName = 'FeaturedListingsSection';
 
@@ -322,6 +328,8 @@ AgentDetailSection.displayName = 'AgentDetailSection';
 //  GENERIC SECTIONS
 // ═══════════════════════════════════════════════════════════
 
+import { ShortcodeParser } from '@repo/modules/listing-shortcodes/ShortcodeParser';
+
 export const TextSection = ({ text, variant, align, id }: {
     text?: string;
     variant?: 'standard' | 'lead' | 'muted';
@@ -336,12 +344,56 @@ export const TextSection = ({ text, variant, align, id }: {
         muted: 'text-sm text-slate-400 font-bold uppercase tracking-[0.15em] leading-loose',
     };
 
+    const content = text || 'Your content goes here. Write something compelling that describes your services or tells your brand story effectively.';
+    const shortcodes = ShortcodeParser.parse(content);
+
+    const renderContent = () => {
+        if (shortcodes.length === 0) {
+            return (
+                <p className={`${styles[activeVariant]} transition-all duration-300`}>
+                    {content}
+                </p>
+            );
+        }
+
+        // Simple shortcode replacement logic for demo
+        // In a real app we would split the text and interleave components
+        const parts = content.split(/\[\w+\s+[^\]]+\]/g);
+        return (
+            <div className="space-y-8">
+                {parts.map((part, i) => (
+                    <React.Fragment key={i}>
+                        {part && <p className={styles[activeVariant]}>{part}</p>}
+                        {shortcodes[i] && (
+                            <div className="py-8 border-y border-slate-50 my-10 bg-slate-50/30 rounded-3xl px-8">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-500 bg-white px-3 py-1 rounded-full shadow-sm">Injected dynamic Module</span>
+                                </div>
+                                {shortcodes[i].type === 'listings' ? (
+                                    <ListingsSection
+                                        source="shortcode"
+                                        shortcodeId={shortcodes[i].attributes.config}
+                                        limit={parseInt(shortcodes[i].attributes.limit || '3')}
+                                    />
+                                ) : shortcodes[i].type === 'agents' ? (
+                                    <AgentProfilesSection variant="mini" />
+                                ) : (
+                                    <div className="p-10 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Unknown Shortcode: {shortcodes[i].type}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </React.Fragment>
+                ))}
+            </div>
+        );
+    };
+
     return (
         <CraftWrapper id={id} child={
             <div id={id} className={`py-12 px-6 max-w-5xl mx-auto ${alignment[align || 'center']}`}>
-                <p className={`${styles[activeVariant]} transition-all duration-300`}>
-                    {text || 'Your content goes here. Write something compelling that describes your services or tells your brand story effectively.'}
-                </p>
+                {renderContent()}
             </div>
         } />
     );

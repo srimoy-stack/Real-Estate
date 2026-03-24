@@ -323,23 +323,84 @@ export const orgWebsiteService: OrgWebsiteService = {
     },
 
     provisionDefaultPages: async (organizationId: string, websiteId: string): Promise<void> => {
-        const homeExists = mockPages.some(p => p.websiteId === websiteId && p.slug === '/');
-        if (!homeExists) {
-            await orgWebsiteService.createPage(organizationId, {
-                websiteId,
-                title: 'Home',
-                slug: '/',
-                layoutConfig: {
-                    sections: [
-                        { type: 'hero' },
-                        { type: 'listings' },
-                        { type: 'agent_profiles' }
-                    ]
-                },
-                isPublished: true,
-                isPublic: true,
-            });
-        }
+        const existingPages = mockPages.filter(p => p.websiteId === websiteId);
+        if (existingPages.length > 0) return;
+
+        // Provision Home Page
+        await orgWebsiteService.createPage(organizationId, {
+            websiteId,
+            title: 'Home',
+            slug: '/',
+            layoutConfig: {
+                sections: [
+                    { type: 'hero' },
+                    { type: 'listings', filters: { featured: true }, limit: 4 },
+                    { type: 'heading', config: { text: 'Our Top Producers', align: 'center', level: 'h2', variant: 'underline' } },
+                    { type: 'agent_profiles', variant: 'grid' },
+                    { type: 'spacer', config: { variant: 'medium' } },
+                    { type: 'testimonials' },
+                    { type: 'contact' }
+                ]
+            },
+            isPublished: true,
+            isPublic: true,
+        });
+
+        // Provision About Page
+        await orgWebsiteService.createPage(organizationId, {
+            websiteId,
+            title: 'About Our Mission',
+            slug: '/about',
+            layoutConfig: {
+                sections: [
+                    { type: 'heading', config: { text: 'Redefining Real Estate', align: 'left', level: 'h1', variant: 'accent' } },
+                    {
+                        type: 'text',
+                        content: {
+                            text: 'We are more than just a brokerage. We are a family of experts dedicated to helping you find your perfect space. [listings config="luxury" limit="3"] Join us on our journey to innovate the housing market.',
+                            variant: 'lead',
+                            align: 'left'
+                        }
+                    },
+                    { type: 'stats' },
+                    { type: 'image', config: { variant: 'parallax', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1200' } },
+                ]
+            },
+            isPublished: true,
+            isPublic: true,
+        });
+
+        // Provision Contact Page
+        await orgWebsiteService.createPage(organizationId, {
+            websiteId,
+            title: 'Get In Touch',
+            slug: '/contact',
+            layoutConfig: {
+                sections: [
+                    { type: 'heading', config: { text: 'We would love to hear from you', align: 'center', level: 'h2' } },
+                    { type: 'contact' },
+                    { type: 'map' },
+                ]
+            },
+            isPublished: true,
+            isPublic: true,
+        });
+
+        // Provision Communities Page
+        await orgWebsiteService.createPage(organizationId, {
+            websiteId,
+            title: 'Our Neighborhoods',
+            slug: '/communities',
+            layoutConfig: {
+                sections: [
+                    { type: 'hero', variant: 'minimal', content: { headline: 'Discover Local Neighborhoods', subheadline: 'Expert guides to the places we call home.' } },
+                    { type: 'communities' },
+                    { type: 'gallery', config: { variant: 'masonry' } },
+                ]
+            },
+            isPublished: true,
+            isPublic: true,
+        });
     },
 
     updatePage: async (_organizationId: string, pageId: string, data: Partial<OrgWebsitePage>): Promise<OrgWebsitePage> => {

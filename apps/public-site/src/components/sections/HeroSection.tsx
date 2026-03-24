@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { SearchBar } from './SearchBar';
 
 export const HeroSection = () => {
@@ -8,10 +9,12 @@ export const HeroSection = () => {
         <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden">
             {/* Background Image with Parallax Effect (simulated) */}
             <div className="absolute inset-0 z-0">
-                <img
+                <Image
                     src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
                     alt="Luxury Home"
-                    className="w-full h-full object-cover scale-105 animate-slow-zoom"
+                    fill
+                    className="object-cover scale-105 animate-slow-zoom"
+                    priority
                 />
                 {/* Modern Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent" />
@@ -32,7 +35,7 @@ export const HeroSection = () => {
                             Find Your <span className="text-white italic">Dream Home</span> <br className="hidden md:block" /> With Confidence.
                         </h1>
                         <p className="text-lg md:text-xl text-slate-200 font-medium max-w-xl leading-relaxed">
-                            Explore our curated selection of premium listings across the country's most desirable communities. Experience a new standard of luxury living.
+                            Explore our curated selection of premium listings across the country&apos;s most desirable communities. Experience a new standard of luxury living.
                         </p>
                     </div>
 
@@ -44,7 +47,9 @@ export const HeroSection = () => {
                     <div className="flex flex-wrap items-center gap-8 pt-6">
                         <div className="flex -space-x-3 overflow-hidden">
                             {[1, 2, 3, 4].map(i => (
-                                <img key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-slate-900" src={`https://i.pravatar.cc/100?u=${i}`} alt="" />
+                                <div key={i} className="relative h-10 w-10">
+                                    <Image className="inline-block rounded-full ring-2 ring-slate-900" src={`https://i.pravatar.cc/100?u=${i}`} alt="" fill />
+                                </div>
                             ))}
                             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-600 ring-2 ring-slate-900 text-white text-[10px] font-bold">
                                 +2k

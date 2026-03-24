@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { blogService } from '@repo/services';
 import { BlogPost } from '@repo/types';
 
@@ -51,10 +52,11 @@ export const BlogSection = () => {
                     {posts.map((post) => (
                         <article key={post.id} className="group flex flex-col space-y-6">
                             <Link href={`/blog/${post.slug}`} className="relative aspect-[16/10] rounded-[32px] overflow-hidden block">
-                                <img
-                                    src={post.featuredImage}
+                                <Image
+                                    src={post.featuredImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                                     alt={post.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute top-6 left-6">
                                     <span className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-xl">

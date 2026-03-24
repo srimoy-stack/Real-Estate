@@ -35,7 +35,7 @@ export default function CareersPage() {
                             Build the <span className="text-emerald-600">Future</span> of Real Estate.
                         </h1>
                         <p className="mt-6 text-xl text-gray-500 leading-relaxed">
-                            We're looking for thinkers, doers, and rebels who want to change how the world finds home. Join a team where your work impacts millions of lives.
+                            We&apos;re looking for thinkers, doers, and rebels who want to change how the world finds home. Join a team where your work impacts millions of lives.
                         </p>
                     </div>
                 </div>
@@ -70,9 +70,9 @@ export default function CareersPage() {
 
                     <div className="mt-16 bg-emerald-600 p-12 rounded-[3rem] text-center text-white relative overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-xl" />
-                        <h3 className="text-2xl font-bold mb-4 italic">Don't see a role for you?</h3>
+                        <h3 className="text-2xl font-bold mb-4 italic">Don&apos;t see a role for you?</h3>
                         <p className="text-emerald-100 mb-8 max-w-lg mx-auto leading-relaxed">
-                            We're always looking for exceptional talent in engineering, data science, and brokerage operations.
+                            We&apos;re always looking for exceptional talent in engineering, data science, and brokerage operations.
                         </p>
                         <a href="mailto:careers@realestate.com" className="inline-block px-10 py-4 bg-white text-emerald-700 rounded-xl font-bold hover:bg-emerald-50 transition-all uppercase tracking-widest text-xs">
                             Drop us a line

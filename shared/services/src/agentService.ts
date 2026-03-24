@@ -34,7 +34,8 @@ export const agentService = {
             updatedAt: new Date().toISOString(),
         };
 
-        // In a real app we'd push to the mock store, for now we just notify
+        await mockApi.createAgent(newAgent);
+
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Agent Onboarded',
@@ -45,11 +46,7 @@ export const agentService = {
     },
 
     updateAgent: async (id: string, data: Partial<Agent>): Promise<Agent> => {
-        const agents = await mockApi.getAgents();
-        const agent = agents.find(a => a.id === id);
-        if (!agent) throw new Error('Agent not found');
-
-        const updated = { ...agent, ...data, updatedAt: new Date().toISOString() };
+        const updated = await mockApi.updateAgent(id, data);
 
         useNotificationStore.getState().addNotification({
             type: 'success',
@@ -60,7 +57,8 @@ export const agentService = {
         return updated;
     },
 
-    deleteAgent: async (_id: string): Promise<void> => {
+    deleteAgent: async (id: string): Promise<void> => {
+        await mockApi.deleteAgent(id);
         useNotificationStore.getState().addNotification({
             type: 'success',
             title: 'Agent Deleted',

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { communitiesService } from '@repo/services';
 import { Community } from '@repo/types';
 import { CommunityCard } from '@/components/communities/CommunityCard';
@@ -61,9 +62,10 @@ export default async function CommunitiesPage() {
                             </Link>
                         </div>
                         <div className="flex-1 w-full lg:h-[600px] h-[300px] bg-slate-800 relative">
-                            <img
+                            <Image
                                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1200"
-                                className="w-full h-full object-cover opacity-50 grayscale"
+                                fill
+                                className="object-cover opacity-50 grayscale"
                                 alt="Map"
                             />
                             <div className="absolute inset-0 flex items-center justify-center">

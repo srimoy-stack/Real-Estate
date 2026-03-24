@@ -1,6 +1,6 @@
 import { BaseEntity } from './index';
 
-export type ListingSortOrder = 'latest' | 'price_asc' | 'price_desc';
+export type ListingSortOrder = 'latest' | 'price_asc' | 'price_desc' | 'price-low-high' | 'price-high-low';
 
 export interface ListingSectionFilters {
     city?: string;

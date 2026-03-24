@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CATEGORIES = [
     { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800' },
@@ -22,7 +21,7 @@ export const PropertyCategories = () => {
                         Browse By <span className="text-indigo-600 italic">Category</span>
                     </h2>
                     <p className="text-slate-500 font-medium">
-                        Whether you're looking for a cozy studio or a sprawling commercial complex, we have the perfect space for your next move.
+                        Whether you&apos;re looking for a cozy studio or a sprawling commercial complex, we have the perfect space for your next move.
                     </p>
                 </div>
 
@@ -33,10 +32,11 @@ export const PropertyCategories = () => {
                             href={`/listings?type=${cat.title}`}
                             className="group relative h-72 rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
                         >
-                            <img
+                            <Image
                                 src={cat.image}
                                 alt={cat.title}
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
 

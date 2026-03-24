@@ -54,9 +54,9 @@ export const LeadCaptureForm = ({
         e.preventDefault();
         setError(null);
 
-        // Prevent duplicate rapid submissions (60 second cooldown)
+        // Prevent duplicate rapid submissions (5 second cooldown for demo)
         const now = Date.now();
-        if (lastSubmitTime && now - lastSubmitTime < 60000) {
+        if (lastSubmitTime && now - lastSubmitTime < 5000) {
             setError('Please wait a moment before sending another inquiry.');
             return;
         }

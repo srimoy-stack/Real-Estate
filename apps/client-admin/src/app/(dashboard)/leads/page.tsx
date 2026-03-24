@@ -71,7 +71,7 @@ export default function LeadsPage() {
             if (dateRange !== 'all') {
                 const now = new Date();
                 const leadDate = new Date(lead.createdAt);
-                
+
                 if (dateRange === 'today') {
                     matchesDate = leadDate.toDateString() === now.toDateString();
                 } else if (dateRange === '7d') {
@@ -150,17 +150,19 @@ export default function LeadsPage() {
 
                 <div className="flex gap-3">
                     <div className="px-6 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Capture</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Inbound Leads</p>
                         <p className="text-2xl font-black text-slate-900 leading-none">{leads.length}</p>
                     </div>
-                    <div className="px-6 py-4 bg-indigo-600 border border-indigo-500 rounded-3xl shadow-xl shadow-indigo-200">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">New This Week</p>
+                    <div className="px-6 py-4 bg-emerald-500 border border-emerald-400 rounded-3xl shadow-xl shadow-emerald-200">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">New Today</p>
                         <p className="text-2xl font-black text-white leading-none">
-                            {leads.filter(l => {
-                                const sevenDaysAgo = new Date();
-                                sevenDaysAgo.setDate(new Date().getDate() - 7);
-                                return new Date(l.createdAt) >= sevenDaysAgo;
-                            }).length}
+                            {leads.filter(l => new Date(l.createdAt).toDateString() === new Date().toDateString()).length}
+                        </p>
+                    </div>
+                    <div className="px-6 py-4 bg-indigo-600 border border-indigo-500 rounded-3xl shadow-xl shadow-indigo-200">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Contacted</p>
+                        <p className="text-2xl font-black text-white leading-none">
+                            {leads.filter(l => l.status === 'Contacted').length}
                         </p>
                     </div>
                 </div>
@@ -297,15 +299,22 @@ export default function LeadsPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            {lead.agentId ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-black text-indigo-600 border border-indigo-100">
-                                                        {agents.find(a => a.id === lead.agentId)?.name[0]}
+                                            {lead.assignedTo ? (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 rounded-full bg-indigo-900 flex items-center justify-center text-[9px] font-black text-white shadow-sm">
+                                                            {lead.assignedTo[0]}
+                                                        </div>
+                                                        <span className="text-xs font-black text-slate-900">{lead.assignedTo}</span>
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-700">{agents.find(a => a.id === lead.agentId)?.name}</span>
+                                                    {lead.isAutoAssigned && (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-indigo-50 text-[8px] font-black uppercase tracking-tighter text-indigo-600 border border-indigo-100">
+                                                            Auto Assigned
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ) : (
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">None</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Unassigned</span>
                                             )}
                                         </td>
                                         <td className="px-8 py-6">
@@ -343,11 +352,21 @@ export default function LeadsPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none">{selectedLead.name}</h2>
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <LeadStatusBadge status={selectedLead.status} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                            Captured {new Date(selectedLead.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </span>
+                                    <div className="flex flex-col gap-1 mt-2">
+                                        <div className="flex items-center gap-2">
+                                            <LeadStatusBadge status={selectedLead.status} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                Captured {new Date(selectedLead.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </span>
+                                        </div>
+                                        {selectedLead.assignedTo && (
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${selectedLead.isAutoAssigned ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                    {selectedLead.isAutoAssigned ? 'Auto Assigned' : 'Manual Assignment'}
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-700">to {selectedLead.assignedTo}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -1,9 +1,8 @@
 import { Lead, LeadStatus } from '@repo/types';
+import { mockAgents } from '../mock/agentsMock';
 
 /**
  * In-memory lead store.
- * All leads submitted from ANY form (property page, agent profile, contact page)
- * are stored here.  The array is the single source of truth for the mock.
  */
 const leadStore: Lead[] = [
     {
@@ -11,6 +10,8 @@ const leadStore: Lead[] = [
         websiteId: 'ws-1',
         listingId: 'L1',
         agentId: 'A1',
+        assignedTo: 'Sarah Mitchell',
+        isAutoAssigned: true,
         name: 'David Wilson',
         email: 'd.wilson@example.com',
         phone: '(416) 555-8888',
@@ -19,13 +20,15 @@ const leadStore: Lead[] = [
         source: 'listing_page',
         status: 'New',
         notes: [],
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
         updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     },
     {
         id: 'lead-2',
         websiteId: 'ws-1',
         agentId: 'A2',
+        assignedTo: 'Marcus Chen',
+        isAutoAssigned: true,
         name: 'Emily Blunt',
         email: 'emilyb@example.com',
         phone: '(604) 555-7777',
@@ -36,12 +39,15 @@ const leadStore: Lead[] = [
         notes: [
             { id: 'n-1', text: 'Left a voicemail. Waiting for callback.', author: 'System', createdAt: new Date(Date.now() - 3600000).toISOString() }
         ],
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
         updatedAt: new Date(Date.now() - 3600000).toISOString(),
     },
     {
         id: 'lead-3',
         websiteId: 'ws-1',
+        agentId: 'A3',
+        assignedTo: 'Jessica Reynolds',
+        isAutoAssigned: false,
         name: 'Michael Jordan',
         email: 'mj@example.com',
         phone: '(312) 555-2323',
@@ -49,13 +55,15 @@ const leadStore: Lead[] = [
         source: 'contact_page',
         status: 'Qualified',
         notes: [],
-        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
         updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     },
     {
         id: 'lead-4',
         websiteId: 'ws-1',
         agentId: 'A1',
+        assignedTo: 'Sarah Mitchell',
+        isAutoAssigned: true,
         name: 'Sarah Connor',
         email: 's.connor@example.com',
         phone: '(213) 555-1984',
@@ -63,12 +71,15 @@ const leadStore: Lead[] = [
         source: 'agent_profile',
         status: 'Closed',
         notes: [],
-        createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
+        createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
         updatedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
     },
     {
         id: 'lead-5',
         websiteId: 'ws-1',
+        agentId: 'A1',
+        assignedTo: 'Sarah Mitchell',
+        isAutoAssigned: true,
         name: 'Thomas Anderson',
         email: 'neo@matrix.com',
         phone: '(555) 010-1010',
@@ -77,8 +88,41 @@ const leadStore: Lead[] = [
         source: 'listing_page',
         status: 'New',
         notes: [],
-        createdAt: new Date(Date.now() - 1800000).toISOString(), // 30 mins ago
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
         updatedAt: new Date(Date.now() - 1800000).toISOString(),
+    },
+    {
+        id: 'lead-6',
+        websiteId: 'ws-1',
+        agentId: 'A2',
+        assignedTo: 'Marcus Chen',
+        isAutoAssigned: true,
+        name: 'Bruce Wayne',
+        email: 'bruce@wayne.com',
+        phone: '(123) 456-7890',
+        message: 'Interested in the commercial property on 5th Ave.',
+        mlsNumber: 'C1234567',
+        source: 'listing_page',
+        status: 'New',
+        notes: [],
+        createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    },
+    {
+        id: 'lead-7',
+        websiteId: 'ws-1',
+        agentId: 'A3',
+        assignedTo: 'Jessica Reynolds',
+        isAutoAssigned: true,
+        name: 'Diana Prince',
+        email: 'diana@themyscira.com',
+        phone: '(987) 654-3210',
+        message: 'Looking for a historical estate with large grounds.',
+        source: 'contact_page',
+        status: 'New',
+        notes: [],
+        createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
     },
 ];
 
@@ -96,7 +140,7 @@ export interface CreateLeadInput {
 
 export const leadsService = {
     /**
-     * Return all captured leads (most recent first).
+     * Return all captured leads.
      */
     getLeads: async (): Promise<Lead[]> => {
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -114,17 +158,34 @@ export const leadsService = {
     },
 
     /**
-     * Create a new lead from any submission source.
-     * Persists in the in-memory store and returns the new Lead.
+     * Create a new lead with routing logic.
      */
     submitLead: async (data: CreateLeadInput): Promise<Lead> => {
         await new Promise(resolve => setTimeout(resolve, 400));
+
+        // ROUTING LOGIC
+        // 1. Identify target agent (Direct Agent ID or Listing Agent)
+        let targetAgent = mockAgents.find(a => a.id === data.agentId);
+
+        // 2. Fallback: Identify by Listing ID (if we had a listing-to-agent map, we'd use it here)
+        // For simulation, we'll pick Sarah (A1) for property-source if no agentId given
+        if (!targetAgent && data.source === 'listing_page') {
+            targetAgent = mockAgents.find(a => a.id === 'A1');
+        }
+
+        // 3. Fallback: Random Assignment
+        if (!targetAgent) {
+            const randomIdx = Math.floor(Math.random() * mockAgents.length);
+            targetAgent = mockAgents[randomIdx];
+        }
 
         const newLead: Lead = {
             id: `lead_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
             websiteId: data.websiteId || 'ws-1',
             listingId: data.listingId,
-            agentId: data.agentId,
+            agentId: targetAgent.id,
+            assignedTo: targetAgent.name,
+            isAutoAssigned: true,
             name: data.name,
             email: data.email,
             phone: data.phone,
@@ -138,7 +199,7 @@ export const leadsService = {
         };
 
         leadStore.push(newLead);
-        console.log(`[Mock LeadsService] Lead captured (${newLead.source}):`, newLead.id, '→', newLead.name);
+        console.log(`[Mock LeadRouting] Email sent to ${targetAgent.name} (${targetAgent.email}) about new lead: ${newLead.id}`);
         return newLead;
     },
 
@@ -159,8 +220,13 @@ export const leadsService = {
     assignLead: async (id: string, agentId: string): Promise<Lead> => {
         const lead = leadStore.find(l => l.id === id);
         if (!lead) throw new Error(`Lead ${id} not found`);
+
+        const agent = mockAgents.find(a => a.id === agentId);
         lead.agentId = agentId;
+        lead.assignedTo = agent?.name || undefined;
+        lead.isAutoAssigned = false;
         lead.updatedAt = new Date().toISOString();
+
         return lead;
     },
 };

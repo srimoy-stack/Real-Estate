@@ -17,6 +17,7 @@ import {
     MLSListingFilters,
     MLSListingQueryResult,
 } from './listingModel';
+import { mlsDataProvider } from './mlsDataProvider';
 
 export interface SyncResult {
     inserted: number;
@@ -25,43 +26,28 @@ export interface SyncResult {
     timestamp: string;
 }
 
+import { mlsSyncSimulator } from './mlsSyncSimulator';
+
 // ─── Initialisation ──────────────────────────────────────────────────────────
-// Seed the store immediately so the app has data on first render.
+// Seed the store immediately and run an initial simulation sync if wanted
 import { MOCK_MLS_FEED } from './mockMLSFeed';
 listingStore.seed(MOCK_MLS_FEED);
 
+// Optional: Run one simulation pass on start to randomize the market immediately
+mlsSyncSimulator.runMockSync().then(stats => {
+    console.log(`[MLS Service] Platform hydrated: +${stats.inserted} new, ${stats.updated} modified.`);
+});
+
 /**
- * Project a full MLSListing down to the card-only fields for list pages.
- * This keeps the payload small when fetching grids / search results.
+ * Trigger a manual simulation sync pass for dev/demo purposes.
  */
-function toCard(l: MLSListing): MLSListingCard {
-    return {
-        mlsNumber: l.mlsNumber,
-        price: l.price,
-        status: l.status,
-        propertyType: l.propertyType,
-        address: l.address,
-        city: l.city,
-        province: l.province,
-        postalCode: l.postalCode,
-        bedrooms: l.bedrooms,
-        bathrooms: l.bathrooms,
-        squareFootage: l.squareFootage,
-        images: l.images.length > 0 ? [l.images[0]] : [],
-        isFeatured: l.isFeatured,
-        createdAt: l.createdAt,
-        description: l.description,
-        location: l.location,
-        agentName: l.agentName,
-    };
+export async function runSimulation(): Promise<{ inserted: number; updated: number; removed: number }> {
+    return mlsSyncSimulator.runMockSync();
 }
 
 // ─── Sync Engine ─────────────────────────────────────────────────────────────
 /**
  * Fetch listings from the MLS feed and sync into the store.
- * • Inserts new listings (duplicate-safe via MLS number)
- * • Updates changed listings
- * • Marks removed listings as 'Removed'
  */
 export async function syncMLSListings(): Promise<SyncResult> {
     console.log('[MLS Sync] Starting sync...');
@@ -97,116 +83,30 @@ export async function syncMLSListings(): Promise<SyncResult> {
 
 // ─── Query API ───────────────────────────────────────────────────────────────
 /**
- * Query listings with filtering, sorting, and pagination.
+ * Query listings with filtering, sorting, and pagination via Data Provider.
  */
 export async function getListings(filters: MLSListingFilters = {}): Promise<MLSListingQueryResult> {
-    // Simulate async data access
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    let results = listingStore.getAllListings();
-
-    // Default: hide 'Removed' unless explicitly requested
-    if (!filters.status) {
-        results = results.filter(l => l.status !== 'Removed');
-    }
-
-    // ── Filter phase ──────────────────────────────────────────────────────────
-    if (filters.ids && filters.ids.length > 0) {
-        results = results.filter(l => filters.ids!.includes(l.mlsNumber));
-    }
-
-    if (filters.city) {
-        const c = filters.city.toLowerCase();
-        results = results.filter(l => l.city.toLowerCase().includes(c));
-    }
-
-    if (filters.propertyType) {
-        const types = Array.isArray(filters.propertyType) ? filters.propertyType : [filters.propertyType];
-        results = results.filter(l => types.includes(l.propertyType));
-    }
-
-    if (filters.status) {
-        let statuses = Array.isArray(filters.status) ? (filters.status as string[]) : [filters.status as string];
-        // Map ACTIVE to 'For Sale' for compatibility with mock feed
-        if (statuses.includes('ACTIVE')) {
-            statuses = [...statuses, 'For Sale'];
-        }
-        results = results.filter(l => statuses.includes(l.status));
-    }
-
-
-    if (filters.minPrice !== undefined) results = results.filter(l => l.price >= filters.minPrice!);
-    if (filters.maxPrice !== undefined) results = results.filter(l => l.price <= filters.maxPrice!);
-    if (filters.bedrooms !== undefined) results = results.filter(l => l.bedrooms >= filters.bedrooms!);
-    if (filters.bathrooms !== undefined) results = results.filter(l => l.bathrooms >= filters.bathrooms!);
-    if (filters.featured !== undefined) results = results.filter(l => !!l.isFeatured === filters.featured);
-    if (filters.organizationId) results = results.filter(l => l.organizationId === filters.organizationId);
-
-    if (filters.keyword) {
-        const kw = filters.keyword.toLowerCase();
-        results = results.filter(l =>
-            l.address.toLowerCase().includes(kw) ||
-            l.city.toLowerCase().includes(kw) ||
-            l.mlsNumber.toLowerCase().includes(kw) ||
-            l.description.toLowerCase().includes(kw) ||
-            l.agentName.toLowerCase().includes(kw) ||
-            l.propertyType.toLowerCase().includes(kw)
-        );
-    }
-
-    // Map bounding box (for map-search pages)
-    if (filters.minLat !== undefined) results = results.filter(l => l.location.lat >= filters.minLat!);
-    if (filters.maxLat !== undefined) results = results.filter(l => l.location.lat <= filters.maxLat!);
-    if (filters.minLng !== undefined) results = results.filter(l => l.location.lng >= filters.minLng!);
-    if (filters.maxLng !== undefined) results = results.filter(l => l.location.lng <= filters.maxLng!);
-
-    // ── Sort phase ────────────────────────────────────────────────────────────
-    const sort = filters.sort || 'newest';
-    results.sort((a, b) => {
-        switch (sort) {
-            case 'price_asc': return a.price - b.price;
-            case 'price_desc': return b.price - a.price;
-            case 'newest':
-            default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }
-    });
-
-    const totalCount = results.length;
-
-    // ── Pagination ────────────────────────────────────────────────────────────
-    const limit = filters.limit ?? 12;
-    const page = filters.page ?? 1;
-    const start = (page - 1) * limit;
-    const paginated = results.slice(start, start + limit);
-
-    // ── Project to card fields ────────────────────────────────────────────────
-    return {
-        listings: paginated.map(toCard),
-        totalCount,
-    };
+    return mlsDataProvider.getListings(filters);
 }
 
 /**
- * Look up a single full listing by MLS number.
- * Returns the complete MLSListing (all fields) — used on property detail pages.
+ * Look up a single full listing by MLS number via Data Provider.
  */
 export async function getListingByMLS(mlsNumber: string): Promise<MLSListing | null> {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    return listingStore.getListing(mlsNumber) ?? null;
+    return mlsDataProvider.getListingByMLS(mlsNumber);
 }
 
 /**
  * Get related listings for a property detail page.
- * Scores by city match, property type match, and price proximity.
  */
 export async function getRelatedListings(mlsNumber: string, limit = 3): Promise<MLSListingCard[]> {
-    const source = listingStore.getListing(mlsNumber);
+    const source = await getListingByMLS(mlsNumber);
     if (!source) return [];
 
-    const all = listingStore.getAllListings().filter(l => l.mlsNumber !== mlsNumber && l.status !== 'Removed');
+    const { listings: all } = await getListings({ limit: 100 });
     const priceTolerance = 0.5;
 
-    const scored = all.map(l => {
+    const scored = all.filter(l => l.mlsNumber !== mlsNumber).map(l => {
         let score = 0;
         if (l.city.toLowerCase() === source.city.toLowerCase()) score += 3;
         if (l.propertyType === source.propertyType) score += 2;
@@ -218,7 +118,7 @@ export async function getRelatedListings(mlsNumber: string, limit = 3): Promise<
     });
 
     scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, limit).map(({ l }) => toCard(l));
+    return scored.slice(0, limit).map(({ l }) => l as MLSListingCard);
 }
 
 /**
@@ -236,4 +136,5 @@ export const mlsListingService = {
     getListingByMLS,
     getRelatedListings,
     getFeaturedListings,
+    runSimulation,
 };

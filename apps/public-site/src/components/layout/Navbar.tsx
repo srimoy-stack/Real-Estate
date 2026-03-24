@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { NavLink } from '@/types/website';
 
 interface NavbarProps {
@@ -34,7 +35,9 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
           {/* Brand */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
             {logoUrl ? (
-              <img src={logoUrl} alt={brandName} className="h-8 w-auto" />
+              <div className="relative h-8 w-32">
+                <Image src={logoUrl} alt={brandName} fill className="object-contain" />
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-md bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
@@ -52,7 +55,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
             <div className="relative w-full">
               <input
                 type="text"
-                placeholder="Search by city, address, or MLS®#..."
+                placeholder="Search by city, address, or Property ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
@@ -109,7 +112,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
               <div className="relative w-full">
                 <input
                   type="text"
-                  placeholder="Search by city, address, or MLS®#..."
+                  placeholder="Search by city, address, or Property ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"

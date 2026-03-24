@@ -1,6 +1,5 @@
-'use client';
-
 import React from 'react';
+import Image from 'next/image';
 import { Agent } from '@repo/types';
 
 interface AgentProfileBannerProps {
@@ -21,10 +20,12 @@ export const AgentProfileBanner: React.FC<AgentProfileBannerProps> = ({ agent })
                     {/* Photo */}
                     <div className="relative w-64 h-80 lg:w-80 lg:h-[450px] flex-shrink-0">
                         <div className="absolute -inset-4 bg-white/5 backdrop-blur-sm rounded-[3rem] border border-white/10" />
-                        <img
+                        <Image
                             src={agent.profilePhoto || 'https://via.placeholder.com/400x600'}
                             alt={agent.name}
-                            className="relative w-full h-full object-cover rounded-[2.5rem] shadow-2xl"
+                            fill
+                            className="relative object-cover rounded-[2.5rem] shadow-2xl"
+                            priority
                         />
                     </div>
 

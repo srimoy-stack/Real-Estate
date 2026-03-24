@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Community } from '@repo/types';
 
 interface CommunityCardProps {
@@ -9,10 +10,11 @@ interface CommunityCardProps {
 export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
     return (
         <Link href={`/communities/${community.slug}`} className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700 block">
-            <img
+            <Image
                 src={community.image}
                 alt={community.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent" />
 

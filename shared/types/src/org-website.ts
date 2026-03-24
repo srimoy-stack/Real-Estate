@@ -53,6 +53,8 @@ export interface OrgPageSectionConfig {
     content?: Record<string, any>;
     /** Optional limit for list sections */
     limit?: number;
+    /** Optional visual variant (e.g. 'luxury', 'minimal', 'grid') */
+    variant?: string;
     /**
      * Optional dynamic configuration for this section.
      * Supports future per-section settings (e.g. layout variants, theme overrides).

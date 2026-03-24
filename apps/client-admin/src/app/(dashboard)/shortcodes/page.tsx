@@ -10,6 +10,7 @@ interface ShortcodeUIModel {
     shortcodeName: string;
     filters: ShortcodeFilters;
     limit: number;
+    sort?: string;
     isActive: boolean;
 }
 
@@ -157,11 +158,26 @@ export default function ShortcodesPage() {
                         </div>
 
                         <div className="space-y-3 mb-6 bg-slate-50 p-4 rounded-3xl border border-slate-100">
+                            <div className="text-xs font-medium text-slate-700 uppercase tracking-widest text-[9px] mb-2 border-b border-slate-200 pb-1">Filter Summary</div>
                             {code.filters.city && <div className="text-xs font-medium text-slate-700">City: <span className="font-bold">{code.filters.city}</span></div>}
                             {code.filters.propertyType && <div className="text-xs font-medium text-slate-700">Type: <span className="font-bold">{code.filters.propertyType}</span></div>}
+                            {code.filters.status && <div className="text-xs font-medium text-slate-700">Status: <span className="font-bold uppercase">{code.filters.status}</span></div>}
                             {code.filters.minPrice && <div className="text-xs font-medium text-slate-700">Min Price: <span className="font-bold">${code.filters.minPrice.toLocaleString()}</span></div>}
                             {code.filters.maxPrice && <div className="text-xs font-medium text-slate-700">Max Price: <span className="font-bold">${code.filters.maxPrice.toLocaleString()}</span></div>}
-                            <div className="text-xs font-medium text-slate-700">Limit: <span className="font-bold">{code.limit} items</span></div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {code.filters.bedrooms && <div className="text-xs font-medium text-slate-700 font-mono">Beds: <span className="font-black text-indigo-600">{code.filters.bedrooms}+</span></div>}
+                                {code.filters.bathrooms && <div className="text-xs font-medium text-slate-700 font-mono">Baths: <span className="font-black text-indigo-600">{code.filters.bathrooms}+</span></div>}
+                            </div>
+                            <div className="pt-2 mt-2 border-t border-slate-200">
+                                <div className="text-xs font-medium text-slate-700 flex justify-between">
+                                    <span>Limit: <span className="font-bold">{code.filters.limit || code.limit} items</span></span>
+                                    <span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded font-black uppercase text-slate-600">
+                                        {(code.filters.sort || code.sort) === 'price-low-high' || (code.filters.sort || code.sort) === 'price_asc' ? 'Low to High' :
+                                            (code.filters.sort || code.sort) === 'price-high-low' || (code.filters.sort || code.sort) === 'price_desc' ? 'High to Low' :
+                                                'Latest'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="text-[10px] font-mono text-indigo-600 bg-indigo-50 p-3 rounded-xl break-all">

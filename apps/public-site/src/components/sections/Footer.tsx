@@ -26,7 +26,7 @@ export const Footer = () => {
                             </span>
                         </Link>
                         <p className="text-slate-500 font-medium leading-relaxed">
-                            Redefining the real estate experience through innovation, integrity, and unparalleled service across Canada's most desirable markets.
+                            Redefining the real estate experience through innovation, integrity, and unparalleled service across Canada&apos;s most desirable markets.
                         </p>
                         <div className="flex items-center gap-4">
                             {['fb', 'tw', 'ig', 'ln'].map(s => (
@@ -107,10 +107,6 @@ export const Footer = () => {
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Status: Optimal</span>
-                        </div>
-                        <div className="flex items-center gap-2 grayscale opacity-50">
-                            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5a/CREALogo.jpg/220px-CREALogo.jpg" className="h-4 w-auto" alt="CREA" />
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4c/MLS_Logo.png" className="h-4 w-auto" alt="MLS" />
                         </div>
                     </div>
                 </div>

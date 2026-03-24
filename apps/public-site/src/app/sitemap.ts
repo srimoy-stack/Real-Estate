@@ -36,12 +36,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             // Fetch dynamic website pages
             const pages = await orgWebsiteService.getPages('org-1', tenantId);
             pageRoutes = pages
-                .filter(p => p.isPublished && p.slug !== '/') // Skip '/' as it's in routes
-                .map(p => ({
+                .filter((p: any) => p.isPublished && p.slug !== '/' && !p.seoConfig?.noIndex) // Skip '/' and hidden pages
+                .map((p: any) => ({
                     url: `${baseUrl}/${p.slug.replace(/^\//, '')}`,
                     lastModified: new Date(p.updatedAt),
-                    changeFrequency: 'monthly' as const,
-                    priority: 0.7,
+                    changeFrequency: (p.sections?.some((s: any) => s.type === 'ListingsSection') ? 'daily' : 'weekly') as any,
+                    priority: p.sections?.some((s: any) => s.type === 'ListingsSection') ? 0.8 : 0.6,
                 }));
         } catch (e) {
             console.error('Sitemap generation failed for tenant:', tenantId, e);

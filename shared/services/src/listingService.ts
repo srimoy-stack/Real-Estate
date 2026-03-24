@@ -90,6 +90,8 @@ export const listingService = {
             status: filters.status as any,
             minPrice: filters.minPrice,
             maxPrice: filters.maxPrice,
+            bedrooms: filters.bedrooms,
+            bathrooms: filters.bathrooms,
             limit: limit,
             sort: sort === 'latest' ? 'newest' : (sort as any)
         });

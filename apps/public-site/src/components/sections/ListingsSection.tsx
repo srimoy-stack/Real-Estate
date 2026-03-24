@@ -91,7 +91,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [filterKey]);
+    }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ─── Loading State ─────────────────────────────────
     if (loading) {

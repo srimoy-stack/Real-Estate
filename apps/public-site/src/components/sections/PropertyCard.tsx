@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Listing } from '@repo/types';
 import { SaveButton } from '@/components/listings/SaveButton';
 
@@ -46,11 +45,11 @@ export const PropertyCard = ({ listing }: PropertyCardProps) => {
         >
             {/* Image Container — landscape ratio for consistent grid */}
             <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                <img
+                <Image
                     src={primaryImage}
                     alt={listing.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 {/* Status Overlay */}
@@ -80,10 +79,11 @@ export const PropertyCard = ({ listing }: PropertyCardProps) => {
                 {/* Agent Avatar */}
                 {listing.agentPhoto && (
                     <div className="absolute bottom-4 right-4">
-                        <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-xl overflow-hidden group-hover:rotate-3 transition-transform">
-                            <img
+                        <div className="relative w-10 h-10 rounded-xl bg-white p-0.5 shadow-xl overflow-hidden group-hover:rotate-3 transition-transform">
+                            <Image
                                 src={listing.agentPhoto}
-                                className="w-full h-full object-cover rounded-[10px]"
+                                fill
+                                className="object-cover rounded-[10px]"
                                 alt={listing.agentName}
                             />
                         </div>

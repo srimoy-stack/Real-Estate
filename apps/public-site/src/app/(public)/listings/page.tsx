@@ -58,9 +58,18 @@ export default async function ListingsPage({
         {/* Search Header */}
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
-              <span className="w-8 h-px bg-amber-600"></span>
-              Property Search
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
+                <span className="w-8 h-px bg-amber-600"></span>
+                Property Search
+              </div>
+              <div className="h-5 px-2 bg-emerald-50 text-emerald-600 rounded-full flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest border border-emerald-100 italic">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                Live MLS Sync
+              </div>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">
               Discover Your <span className="text-amber-600">Domain</span>.
@@ -95,13 +104,43 @@ export default async function ListingsPage({
           </div>
         </div>
 
+        {/* Active Filters & Search Info */}
+        <div className="mb-8 flex flex-wrap items-center gap-2">
+          {Object.entries(queryParams).map(([key, value]) => {
+            if (!value || ['page', 'limit', 'sort', 'status'].includes(key)) return null;
+            const displayValue = Array.isArray(value) ? value.join(', ') : value;
+            return (
+              <div key={key} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm transition-all hover:bg-slate-50">
+                <span className="text-slate-400">{key}:</span>
+                <span>{displayValue}</span>
+                <Link
+                  href={`/listings?${new URLSearchParams(
+                    Object.fromEntries(
+                      Object.entries(searchParams).filter(([k]) => k !== (key === 'propertyType' ? 'propertyType' : key))
+                    ) as any
+                  ).toString()}`}
+                  className="ml-1 hover:text-amber-600"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                </Link>
+              </div>
+            );
+          })}
+          {Object.keys(searchParams).filter(k => !['page', 'limit', 'sort', 'view'].includes(k)).length > 0 && (
+            <Link
+              href="/listings"
+              className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-700 ml-2"
+            >
+              Clear All
+            </Link>
+          )}
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Sidebar Filters */}
           <aside className="lg:w-80 flex-shrink-0">
             <div className="sticky top-28">
-              <Suspense fallback={<div className="h-[600px] bg-white rounded-3xl border border-slate-100 animate-pulse" />}>
-                <FilterSidebar />
-              </Suspense>
+              <FilterSidebar />
 
               <SaveSearchButton filters={queryParams as any} />
             </div>
@@ -136,7 +175,19 @@ export default async function ListingsPage({
               {/* Pagination */}
               {view === 'grid' && totalPages > 1 && (
                 <div className="mt-16 flex items-center justify-center gap-3">
-                  <button className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed transition-all">Prev</button>
+                  {page > 1 ? (
+                    <Link
+                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (page - 1).toString() }).toString()}`}
+                      className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all flex items-center"
+                    >
+                      Prev
+                    </Link>
+                  ) : (
+                    <span className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center cursor-not-allowed">
+                      Prev
+                    </span>
+                  )}
+
                   {[...Array(totalPages)].map((_, i) => (
                     <Link
                       key={i}
@@ -146,7 +197,19 @@ export default async function ListingsPage({
                       {i + 1}
                     </Link>
                   ))}
-                  <button className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all">Next</button>
+
+                  {page < totalPages ? (
+                    <Link
+                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (page + 1).toString() }).toString()}`}
+                      className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all flex items-center"
+                    >
+                      Next
+                    </Link>
+                  ) : (
+                    <span className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-300 flex items-center cursor-not-allowed">
+                      Next
+                    </span>
+                  )}
                 </div>
               )}
             </Suspense>

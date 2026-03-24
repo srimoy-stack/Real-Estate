@@ -17,6 +17,11 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
+  "dependencies": {
+    "@repo/auth": "*",
+    "@repo/services": "*",
+    "@repo/types": "*"
+  },
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

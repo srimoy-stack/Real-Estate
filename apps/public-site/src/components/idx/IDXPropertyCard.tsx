@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Listing } from '@repo/types';
 import { SaveButton } from '@/components/listings/SaveButton';
 
@@ -49,11 +50,11 @@ export const IDXPropertyCard: React.FC<IDXPropertyCardProps> = ({
         >
             {/* Image */}
             <div className="relative aspect-[16/10] overflow-hidden">
-                <img
+                <Image
                     src={primaryImage}
                     alt={listing.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                 />
 
                 {/* Status Badge */}
@@ -132,10 +133,10 @@ export const IDXPropertyCard: React.FC<IDXPropertyCardProps> = ({
                     )}
                 </div>
 
-                {/* MLS & Footer */}
+                {/* Property ID & Footer */}
                 <div className="flex items-center justify-between pt-3 border-t border-slate-50 mt-auto">
                     <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                        MLS® {listing.mlsNumber}
+                        Property ID: {listing.mlsNumber}
                     </span>
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
                         <svg className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">

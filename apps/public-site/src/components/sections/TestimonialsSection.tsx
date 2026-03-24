@@ -1,6 +1,5 @@
-'use client';
-
 import React from 'react';
+import Image from 'next/image';
 
 const TESTIMONIALS = [
     {
@@ -50,12 +49,12 @@ export const TestimonialsSection = () => {
                             </div>
 
                             <p className="text-lg text-slate-700 font-medium leading-relaxed italic mb-8">
-                                "{t.review}"
+                                &quot;{t.review}&quot;
                             </p>
 
                             <div className="mt-auto flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500">
-                                    <img src={t.photo} alt={t.name} className="w-full h-full object-cover" />
+                                <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500">
+                                    <Image src={t.photo} alt={t.name} fill className="object-cover" />
                                 </div>
                                 <div>
                                     <h4 className="font-extrabold text-slate-900 leading-none">{t.name}</h4>

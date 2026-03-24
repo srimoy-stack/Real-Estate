@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Listing } from '@repo/types';
 import { communitiesService, listingService } from '@repo/services';
 import { ListingCard } from '@/components/listings/ListingCard';
@@ -31,10 +32,12 @@ export default async function CityDetailPage({ params }: CityPageProps) {
         <div className="bg-white min-h-screen">
             {/* City Banner */}
             <section className="relative h-[60vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-                <img
+                <Image
                     src={community.image}
                     alt={community.name}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    priority
+                    className="object-cover"
                 />
                 <div className="absolute inset-0 bg-slate-900/60 transition-opacity duration-700" />
 
@@ -64,7 +67,7 @@ export default async function CityDetailPage({ params }: CityPageProps) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-3xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter">Living in <span className="text-indigo-600">{community.name}</span></h2>
                     <p className="text-slate-500 text-xl font-medium leading-relaxed italic">
-                        "{community.description}"
+                        &quot;{community.description}&quot;
                     </p>
 
                     <div className="mt-12 flex flex-wrap justify-center gap-4">
@@ -101,7 +104,7 @@ export default async function CityDetailPage({ params }: CityPageProps) {
                             <div className="text-4xl">🏝️</div>
                             <div className="space-y-2">
                                 <h3 className="text-xl font-black text-slate-900 uppercase">No Listings Found</h3>
-                                <p className="text-slate-400 font-medium">We couldn't find any active listings in {community.name} at this time.</p>
+                                <p className="text-slate-400 font-medium">We couldn&apos;t find any active listings in {community.name} at this time.</p>
                             </div>
                             <Link href="/search" className="inline-block text-indigo-600 font-black uppercase text-xs tracking-widest border-b-2 border-indigo-600 pb-1">Browse Other Areas</Link>
                         </div>

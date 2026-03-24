@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Listing } from '@repo/types';
 
 interface MapViewProps {
@@ -109,9 +110,10 @@ export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId, onM
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
-                            <img
+                            <Image
                                 src={selectedListing.mainImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
                                 alt={selectedListing.title}
                             />
                             <div className="absolute top-3 left-3 bg-indigo-600 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">

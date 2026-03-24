@@ -62,11 +62,12 @@ export const Sidebar = ({ collapsed, onToggle }: { collapsed?: boolean; onToggle
             )
         },
         {
-            label: 'MLS Integration',
-            href: '/mls-integration',
+            label: 'MLS / DDF Settings',
+            href: '/settings/ddf',
             icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12l0 3m0 0l-1-1m1 1l1-1" />
                 </svg>
             )
         },

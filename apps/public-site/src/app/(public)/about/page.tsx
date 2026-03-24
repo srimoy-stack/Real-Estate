@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
     title: 'About Us | Premier Real Estate Services',
@@ -17,7 +18,7 @@ export default function AboutPage() {
                             Redefining the <span className="text-emerald-600">Home Search</span> experience.
                         </h1>
                         <p className="mt-6 text-xl text-gray-500 leading-relaxed">
-                            We started with a simple mission: to make finding a home as easy as booking a hotel. Today, we're one of the fastest-growing real estate platforms in Canada.
+                            We started with a simple mission: to make finding a home as easy as booking a hotel. Today, we&apos;re one of the fastest-growing real estate platforms in Canada.
                         </p>
                     </div>
                 </div>
@@ -29,10 +30,11 @@ export default function AboutPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                         <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl">
                             <div className="absolute inset-0 bg-emerald-600/10 z-10" />
-                            <img
+                            <Image
                                 src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1073&q=80"
                                 alt="Modern architectural office"
-                                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                                fill
+                                className="object-cover grayscale hover:grayscale-0 transition-all duration-700"
                             />
                         </div>
                         <div className="space-y-8">

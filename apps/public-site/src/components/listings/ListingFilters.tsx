@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PropertyType } from '@repo/types';
 
 interface FilterState {
     minPrice: string;
@@ -161,14 +160,17 @@ export const ListingFilters = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-500">City</label>
-                        <input
-                            type="text"
+                        <select
                             name="city"
-                            placeholder="e.g. Toronto"
                             value={filters.city}
                             onChange={handleInputChange}
-                            className={inputClasses}
-                        />
+                            className={selectClasses}
+                        >
+                            <option value="">Any City</option>
+                            {['Toronto', 'Vancouver', 'Richmond Hill', 'Oakville', 'Burlington', 'Milton', 'Mississauga'].map(city => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-500">Postal Code</label>
@@ -194,8 +196,8 @@ export const ListingFilters = () => {
                             className={selectClasses}
                         >
                             <option value="">All Types</option>
-                            {Object.values(PropertyType).map(type => (
-                                <option key={type} value={type}>{type.replace('_', ' ')}</option>
+                            {['Condo', 'Detached', 'Townhouse', 'Semi-Detached', 'Duplex', 'Land'].map(type => (
+                                <option key={type} value={type}>{type}</option>
                             ))}
                         </select>
                     </div>

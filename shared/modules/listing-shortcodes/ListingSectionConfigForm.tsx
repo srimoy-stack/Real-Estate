@@ -80,6 +80,20 @@ export const ListingSectionConfigForm: React.FC<ListingSectionConfigFormProps> =
                 </label>
 
                 <label className="block space-y-2 mt-0">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Listing Status</span>
+                    <select
+                        value={formData.filters?.status || ''}
+                        onChange={e => setFormData({ ...formData, filters: { ...formData.filters, status: e.target.value || undefined } })}
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-500"
+                    >
+                        <option value="">Any Status</option>
+                        <option value="sale">For Sale</option>
+                        <option value="rent">For Rent</option>
+                        <option value="sold">Sold</option>
+                    </select>
+                </label>
+
+                <label className="block space-y-2 mt-0">
                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Min Price</span>
                     <input
                         type="number"
@@ -102,11 +116,40 @@ export const ListingSectionConfigForm: React.FC<ListingSectionConfigFormProps> =
                 </label>
 
                 <label className="block space-y-2 mt-0">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Min Bedrooms</span>
+                    <input
+                        type="number"
+                        placeholder="0"
+                        value={formData.filters?.bedrooms || ''}
+                        onChange={e => setFormData({ ...formData, filters: { ...formData.filters, bedrooms: Number(e.target.value) || undefined } })}
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-500"
+                    />
+                </label>
+
+                <label className="block space-y-2 mt-0">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Min Bathrooms</span>
+                    <input
+                        type="number"
+                        placeholder="0"
+                        value={formData.filters?.bathrooms || ''}
+                        onChange={e => setFormData({ ...formData, filters: { ...formData.filters, bathrooms: Number(e.target.value) || undefined } })}
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-500"
+                    />
+                </label>
+
+                <label className="block space-y-2 mt-0">
                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Grid Limit</span>
                     <input
                         type="number"
-                        value={formData.limit || 10}
-                        onChange={e => setFormData({ ...formData, limit: Number(e.target.value) || 1 })}
+                        value={formData.filters?.limit || formData.limit || 10}
+                        onChange={e => {
+                            const val = Number(e.target.value) || 1;
+                            setFormData({ 
+                                ...formData, 
+                                limit: val,
+                                filters: { ...formData.filters, limit: val } 
+                            });
+                        }}
                         className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-500"
                     />
                 </label>
@@ -114,13 +157,22 @@ export const ListingSectionConfigForm: React.FC<ListingSectionConfigFormProps> =
                 <label className="block space-y-2 mt-0">
                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Sort Order</span>
                     <select
-                        value={formData.sort || 'latest'}
-                        onChange={e => setFormData({ ...formData, sort: e.target.value as any })}
+                        value={formData.filters?.sort || formData.sort || 'latest'}
+                        onChange={e => {
+                            const val = e.target.value as any;
+                            setFormData({ 
+                                ...formData, 
+                                sort: val,
+                                filters: { ...formData.filters, sort: val } 
+                            });
+                        }}
                         className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-slate-900 font-bold outline-none focus:bg-white focus:border-indigo-500"
                     >
                         <option value="latest">Latest First</option>
-                        <option value="price_asc">Price (Low to High)</option>
-                        <option value="price_desc">Price (High to Low)</option>
+                        <option value="price-low-high">Price (Low to High)</option>
+                        <option value="price-high-low">Price (High to Low)</option>
+                        <option value="price_asc" className="hidden">Price (Low to High) - Legacy</option>
+                        <option value="price_desc" className="hidden">Price (High to Low) - Legacy</option>
                     </select>
                 </label>
             </div>

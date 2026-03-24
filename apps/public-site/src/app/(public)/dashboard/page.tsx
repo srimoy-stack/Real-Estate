@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@repo/auth';
+import Image from 'next/image';
 import { userSavedItemService, listingQueryApi } from '@repo/services';
 import { SavedSearch, Listing } from '@repo/types';
 
@@ -125,7 +126,12 @@ export default function UserDashboard() {
                                 {savedListings.map(listing => (
                                     <div key={listing.id} className="group relative bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100">
                                         <div className="aspect-[4/3] bg-slate-200 overflow-hidden relative">
-                                            <img src={listing.mainImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={listing.title} />
+                                            <Image
+                                                src={listing.mainImage}
+                                                alt={listing.title}
+                                                fill
+                                                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                            />
                                             <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/90 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest">
                                                 {listing.city}
                                             </div>

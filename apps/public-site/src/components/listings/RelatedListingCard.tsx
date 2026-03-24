@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { useAuth } from '@repo/auth';
 import { userSavedItemService } from '@repo/services';
@@ -58,11 +59,11 @@ export const RelatedListingCard = ({ listing }: RelatedListingCardProps) => {
         >
             {/* Image */}
             <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                <img
+                <Image
                     src={listing.images?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800'}
                     alt={listing.address}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    loading="lazy"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                 />
 
                 {/* Status Badge */}
@@ -83,10 +84,10 @@ export const RelatedListingCard = ({ listing }: RelatedListingCardProps) => {
                     </svg>
                 </button>
 
-                {/* MLS badge */}
+                {/* Property badge */}
                 <div className="absolute bottom-4 right-4">
                     <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider">
-                        MLS® {listing.mlsNumber}
+                        ID: {listing.mlsNumber}
                     </span>
                 </div>
             </div>

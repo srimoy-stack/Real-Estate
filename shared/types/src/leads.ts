@@ -13,6 +13,8 @@ export interface Lead {
     source: LeadSource;
     status: LeadStatus;
     notes: { id: string; text: string; author: string; createdAt: string }[];
+    assignedTo?: string; // Agent name for quick display
+    isAutoAssigned?: boolean;
     createdAt: string;
     updatedAt: string;
 }

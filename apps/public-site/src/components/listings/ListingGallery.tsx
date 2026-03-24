@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 
 interface ListingGalleryProps {
     images: string[];
@@ -12,6 +13,22 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
     const [currentIndex, setCurrentIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [imgLoaded, setImgLoaded] = useState<Record<number, boolean>>({});
+
+    const nextImage = useCallback(() => {
+        if (!images || images.length === 0) return;
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, [images]);
+
+    const prevImage = useCallback(() => {
+        if (!images || images.length === 0) return;
+        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    }, [images]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'Escape') setLightboxOpen(false);
+    }, [nextImage, prevImage]);
 
     if (!images || images.length === 0) {
         return (
@@ -26,15 +43,6 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
         );
     }
 
-    const nextImage = useCallback(() => setCurrentIndex((prev) => (prev + 1) % images.length), [images.length]);
-    const prevImage = useCallback(() => setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1)), [images.length]);
-
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === 'ArrowLeft') prevImage();
-        if (e.key === 'ArrowRight') nextImage();
-        if (e.key === 'Escape') setLightboxOpen(false);
-    }, [nextImage, prevImage]);
-
     return (
         <>
             {/* Main Gallery */}
@@ -47,11 +55,12 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                 aria-label={`Image gallery for ${title}`}
             >
                 <div className="aspect-[16/9] relative md:aspect-[21/9]">
-                    <img
+                    <Image
                         src={images[currentIndex]}
                         alt={`${title} - image ${currentIndex + 1}`}
+                        fill
                         className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-                        loading={currentIndex === 0 ? 'eager' : 'lazy'}
+                        priority={currentIndex === 0}
                         onLoad={() => setImgLoaded(prev => ({ ...prev, [currentIndex]: true }))}
                     />
 
@@ -105,7 +114,7 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                                     onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                                     className={`shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${idx === currentIndex ? 'border-white shadow-lg scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}
                                 >
-                                    <img src={img} alt={`thumbnail ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                                    <Image src={img} alt={`thumbnail ${idx + 1}`} fill className="w-full h-full object-cover" />
                                 </button>
                             ))}
                         </div>
@@ -151,11 +160,12 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                     </div>
 
                     {/* Image */}
-                    <div className="relative max-w-6xl max-h-[85vh] mx-auto px-20" onClick={(e) => e.stopPropagation()}>
-                        <img
+                    <div className="relative max-w-6xl w-full h-[85vh] mx-auto px-20" onClick={(e) => e.stopPropagation()}>
+                        <Image
                             src={images[currentIndex]}
                             alt={`${title} - image ${currentIndex + 1}`}
-                            className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+                            fill
+                            className="object-contain rounded-2xl"
                         />
                     </div>
 
@@ -183,9 +193,9 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                             <button
                                 key={idx}
                                 onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
-                                className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${idx === currentIndex ? 'border-white scale-110' : 'border-transparent opacity-40 hover:opacity-80'}`}
+                                className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all relative ${idx === currentIndex ? 'border-white scale-110' : 'border-transparent opacity-40 hover:opacity-80'}`}
                             >
-                                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                <Image src={img} alt="" fill className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
