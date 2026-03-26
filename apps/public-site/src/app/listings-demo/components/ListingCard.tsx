@@ -44,7 +44,9 @@ export function ListingCard({ listing, index }: ListingCardProps) {
             ? listing.Media[0].MediaURL
             : PLACEHOLDER_IMAGE;
 
-    const price = formatMLSPrice(listing.ListPrice, listing.LeaseAmount);
+    const price = listing.ListPrice || listing.LeaseAmount
+        ? formatMLSPrice(listing.ListPrice, listing.LeaseAmount)
+        : 'Price not available';
 
     return (
         <Link
@@ -64,10 +66,12 @@ export function ListingCard({ listing, index }: ListingCardProps) {
                     src={imageUrl}
                     alt={listing.UnparsedAddress || 'Property'}
                     fill
+                    unoptimized={true}
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={() => setImgError(true)}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
+
 
                 <div className={`absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
 

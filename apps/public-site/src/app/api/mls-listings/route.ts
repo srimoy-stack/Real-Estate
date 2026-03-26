@@ -58,9 +58,21 @@ export async function GET(request: NextRequest) {
             if (maxPrice) filters.push(`ListPrice le ${maxPrice}`);
         }
 
-        // ── City ────────────────────────────────────────────────────────────
-        const city = searchParams.get('city');
-        if (city) filters.push(`City eq '${city}'`);
+        // ── Geo Bounding Box ───────────────────────────────────────────────
+        const latMin = searchParams.get('latMin');
+        const latMax = searchParams.get('latMax');
+        const lngMin = searchParams.get('lngMin');
+        const lngMax = searchParams.get('lngMax');
+
+        if (latMin) filters.push(`Latitude ge ${latMin}`);
+        if (latMax) filters.push(`Latitude le ${latMax}`);
+        if (lngMin) filters.push(`Longitude ge ${lngMin}`);
+        if (lngMax) filters.push(`Longitude le ${lngMax}`);
+
+        // City filtering is handled CLIENT-SIDE via relevance scoring.
+        // DDF city names are inconsistent across boards, making server-side
+        // City eq 'X' unreliable. Geo bounds provide the spatial accuracy.
+
 
         // ── Beds / Baths ────────────────────────────────────────────────────
         const beds = searchParams.get('beds');
@@ -147,32 +159,43 @@ export async function GET(request: NextRequest) {
         const queryParams = new URLSearchParams();
         queryParams.set('$filter', filters.join(' and '));
 
-        // Cap $top to DDF v1 hard limit of 100
-        const requestedTop = parseInt(searchParams.get('top') || '12', 10);
+        // Cap $top to DDF v1 hard limit of 100, default to 100 for maximum throughput
+        const requestedTop = parseInt(searchParams.get('top') || '100', 10);
         queryParams.set('$top', String(Math.min(requestedTop, 100)));
         queryParams.set('$skip', searchParams.get('skip') || '0');
         queryParams.set('$count', 'true');
         queryParams.set('$orderby', 'ModificationTimestamp desc');
 
-        // Optimized $select — only fetch fields needed for the search grid
-        // Every field below is verified to exist in the DDF v1 schema
-        queryParams.set('$select', [
-            'ListingKey', 'ListingId', 'StandardStatus', 'ListPrice', 'LeaseAmount',
-            'UnparsedAddress', 'City', 'StateOrProvince', 'PostalCode', 'Country',
-            'BedroomsTotal', 'BathroomsTotalInteger', 'PropertySubType',
-            'LivingArea', 'LivingAreaUnits', 'YearBuilt', 'Stories',
-            'Latitude', 'Longitude', 'ParkingTotal',
-            'ModificationTimestamp', 'OriginalEntryTimestamp',
-            'CommonInterest', 'ListingURL', 'Media',
-            'PublicRemarks',
-            'ListAgentKey', 'ListOfficeKey',
-        ].join(','));
-
         const mlsUrl = `https://ddfapi.realtor.ca/odata/v1/Property?${queryParams.toString()}`;
-        console.log('[MLS Proxy] OData URL:', mlsUrl);
+        console.log('[MLS Proxy] FULL URL:', mlsUrl);
 
-        // ── 4. Fetch ────────────────────────────────────────────────────────
-        const mlsResponse = await fetch(mlsUrl, {
+
+        // ── 4. Fetch with Retry Logic ──────────────────────────────────────
+        const fetchWithRetry = async (url: string, options: RequestInit, retries = 2) => {
+            let lastErr: any;
+            for (let i = 0; i <= retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: AbortSignal.timeout(15000), // 15s timeout
+                    });
+
+                    if (response.ok) return response;
+
+                    // Only retry on 500 or timeout
+                    if (response.status < 500) return response;
+
+                    throw new Error(`DDF Status ${response.status}`);
+                } catch (err: any) {
+                    lastErr = err;
+                    console.warn(`[MLS Proxy] Attempt ${i + 1} failed:`, err.message);
+                    if (i < retries) await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+            throw lastErr;
+        };
+
+        const mlsResponse = await fetchWithRetry(mlsUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${access_token}`,
@@ -183,7 +206,15 @@ export async function GET(request: NextRequest) {
 
         if (mlsResponse.ok) {
             const data = await mlsResponse.json();
-            console.log(`[MLS Proxy] ✅ ${data.value?.length} listings (${data['@odata.count']} total)`);
+            console.log(`[MLS Proxy] ✅ Response Received. Total: ${data['@odata.count']}, Count in Value: ${data.value?.length}`);
+
+            // Log first listing key if exists for debugging
+            if (data.value && data.value.length > 0) {
+                console.log(`[MLS Proxy] First listing ID: ${data.value[0].ListingId}`);
+            } else {
+                console.warn('[MLS Proxy] ⚠️ Response "value" array is EMPTY but status was 200.');
+            }
+
             return NextResponse.json(data);
         }
 

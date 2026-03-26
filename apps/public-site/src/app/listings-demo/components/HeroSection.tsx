@@ -9,6 +9,7 @@ interface HeroSectionProps {
     listingType: 'Residential' | 'Commercial';
     onListingTypeChange: (type: 'Residential' | 'Commercial') => void;
     onSearch: () => void;
+    totalCount?: number;
 }
 
 export function HeroSection({
@@ -17,6 +18,7 @@ export function HeroSection({
     listingType,
     onListingTypeChange,
     onSearch,
+    totalCount,
 }: HeroSectionProps) {
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') onSearch();
@@ -125,7 +127,7 @@ export function HeroSection({
                         <svg className="h-4 w-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z" />
                         </svg>
-                        <span>500K+ Listings</span>
+                        <span>{totalCount ? `${totalCount.toLocaleString()}+` : '500K+'} Listings</span>
                     </div>
                     <div className="hidden sm:flex items-center gap-2 text-sm">
                         <svg className="h-4 w-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">

@@ -71,6 +71,7 @@ export interface MLSApiResponse {
     listings: MLSProperty[];
     nextLink: string | null;
     total: number;
+    totalCount?: number;
 }
 
 // ─── Filter State (mirrors Realtor.ca filter panel) ─────────────────────────
@@ -114,6 +115,12 @@ export interface FilterState {
 
     // City (from filter bar)
     city: string;
+
+    // Geo Bounds
+    latitudeMin?: number;
+    latitudeMax?: number;
+    longitudeMin?: number;
+    longitudeMax?: number;
 }
 
 export const DEFAULT_FILTERS: FilterState = {

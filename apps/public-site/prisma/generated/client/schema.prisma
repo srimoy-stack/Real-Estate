@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+  output     = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+}
+
+model Listing {
+  id         Int     @id @default(autoincrement())
+  listingKey String  @unique
+  listingId  String?
+
+  listPrice       Float?
+  standardStatus  String?
+  propertyType    String?
+  propertySubType String?
+
+  bedroomsTotal  Int?
+  bathroomsTotal Int?
+
+  address    String?
+  city       String?
+  province   String?
+  postalCode String?
+
+  latitude  Float?
+  longitude Float?
+
+  publicRemarks String?
+
+  agentName  String?
+  agentPhone String?
+  officeName String?
+
+  moreInformationLink String?
+
+  primaryPhoto String?
+
+  modificationTimestamp DateTime?
+  listingDate           DateTime?
+
+  rawData Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([listPrice])
+  @@index([modificationTimestamp])
+  @@index([listingDate])
+  @@index([createdAt])
+}
+
+model SyncLog {
+  id             Int       @id @default(autoincrement())
+  trigger        String // "cron" | "manual" | "external"
+  status         String // "running" | "success" | "failed"
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  durationMs     Int?
+  listingsSynced Int?
+  errorMessage   String?
+
+  @@index([startedAt])
+  @@index([status])
+}
