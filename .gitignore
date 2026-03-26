@@ -19,8 +19,5 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
-# shared/services/src/mls
-# shared/hooks
-# shared/services/tsconfig.json
-# shared/ui/tsconfig.json
-/generated/prisma
+
+
