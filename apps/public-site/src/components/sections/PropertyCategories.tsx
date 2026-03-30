@@ -3,12 +3,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CATEGORIES = [
-    { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800' },
-    { title: 'Residential', count: 850, image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800' },
-    { title: 'Single Family', count: 432, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800' },
-    { title: 'Apartment', count: 215, image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=800' },
-    { title: 'Condo', count: 328, image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800' },
-    { title: 'Multi Family', count: 96, image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800' },
+    { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?listingType=Commercial' },
+    { title: 'Residential', count: 850, image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800', href: '/search?listingType=Residential' },
+    { title: 'Single Family', count: 432, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
+    { title: 'Apartment', count: 215, image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
+    { title: 'Condo', count: 328, image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800', href: '/search?type=CONDO' },
+    { title: 'Multi Family', count: 96, image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
 ];
 
 export const PropertyCategories = () => {
@@ -29,7 +29,7 @@ export const PropertyCategories = () => {
                     {CATEGORIES.map((cat, i) => (
                         <Link
                             key={i}
-                            href={`/listings?type=${cat.title}`}
+                            href={cat.href}
                             className="group relative h-72 rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
                         >
                             <Image

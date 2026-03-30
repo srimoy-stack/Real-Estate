@@ -75,6 +75,13 @@ export interface ListingFilters {
     bedrooms?: number;
     bathrooms?: number;
     propertyType?: PropertyType | PropertyType[];
+    listingType?: 'Residential' | 'Commercial';
+    minSqft?: number;
+    maxSqft?: number;
+    minLandSize?: number;
+    maxLandSize?: number;
+    minYearBuilt?: number;
+    maxYearBuilt?: number;
     city?: string;
     postalCode?: string;
     keyword?: string;

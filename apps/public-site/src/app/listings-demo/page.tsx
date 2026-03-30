@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { HeroSection } from './components/HeroSection';
 import { FilterBar } from './components/FilterBar';
 import { ListingCard } from './components/ListingCard';
 import { ListingGridSkeleton } from './components/Skeletons';
 import { EmptyState, ErrorState } from './components/StateDisplays';
-import { fetchAggregatedListings, scoreListing } from './api';
+import { fetchAggregatedListings } from './api';
 
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from './types';
 import { resolveGeoBounds } from './utils';
@@ -39,25 +39,6 @@ export default function ListingsDemoPage() {
     const searchIdRef = useRef<number>(0);
     const resultsRef = useRef<HTMLDivElement>(null);
 
-    const selectedCity = filters.city || 'Toronto';
-
-    // ─── Phase 3: UI-Only Render Limit (Top 50) ──────────────────────
-    const activeListings = useMemo(() => {
-        return listings; // Show all listings returned by the batch/page
-    }, [listings]);
-
-    const primaryListings = useMemo(() => {
-        if (!activeListings.length) return [];
-        const search = selectedCity.toLowerCase();
-        return activeListings.filter(l => scoreListing(l, search) > 0);
-    }, [activeListings, selectedCity]);
-
-    const nearbyListings = useMemo(() => {
-        if (!activeListings.length) return [];
-        const search = selectedCity.toLowerCase();
-        return activeListings.filter(l => scoreListing(l, search) === 0);
-    }, [activeListings, selectedCity]);
-
     // Initial search
     const handleSearch = useCallback(async (customFilters?: FilterState) => {
         const currentSearchId = ++searchIdRef.current;
@@ -85,7 +66,7 @@ export default function ListingsDemoPage() {
 
             setListings(data.listings);
             setFilteredTotal(data.total);
-            setGlobalTotalCount(data.totalCount || 0);
+            setGlobalTotalCount(data.platformTotal || data.totalCount || 0);
             setTotalPages(Math.ceil(data.total / PAGE_SIZE)); 
             setCurrentPage(1);
 
@@ -136,11 +117,11 @@ export default function ListingsDemoPage() {
     }, [handleSearch, filters.listingType]);
 
     const handleSearchQueryChange = (query: string) => {
-        setFilters((prev) => ({ ...prev, searchQuery: query }));
+        setFilters((prev: any) => ({ ...prev, searchQuery: query }));
     };
 
     const handleListingTypeChange = (type: 'Residential' | 'Commercial') => {
-        setFilters((prev) => ({ ...prev, listingType: type }));
+        setFilters((prev: any) => ({ ...prev, listingType: type }));
     };
 
     return (
@@ -166,12 +147,12 @@ export default function ListingsDemoPage() {
                     <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-                                Showing results for {filters.city}
-                                <span className="text-gray-400 font-medium text-base ml-2">(including nearby areas)</span>
+                                Showing results for {filters.city || 'All Cities'}
+                                {!filters.city && <span className="text-gray-400 font-medium text-base ml-2">(including nearby areas)</span>}
                             </h2>
                             <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">
-                                {globalTotalCount.toLocaleString()} total platform properties · Found {filteredTotal.toLocaleString()} match for your search ·
-                                <span className="text-emerald-600 ml-1">{(filters.city || 'ALL CITIES').toUpperCase()} & SURROUNDINGS</span>
+                                {globalTotalCount.toLocaleString()} total platform properties · Found {filteredTotal.toLocaleString()} {filteredTotal === 1 ? 'match' : 'matches'} for your search ·
+                                <span className="text-emerald-600 ml-1">{(filters.city || 'ALL CITIES').toUpperCase()}</span>
                             </p>
                         </div>
 
@@ -199,35 +180,20 @@ export default function ListingsDemoPage() {
 
                 {!isLoading && listings.length > 0 && (
                     <div className="flex flex-col gap-12">
-                        {primaryListings.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="h-px flex-1 bg-slate-200" />
-                                    <div className="px-5 py-2 rounded-full bg-emerald-600 text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">
-                                        Top results for {selectedCity} · {primaryListings.length.toLocaleString()}
-                                    </div>
-                                    <div className="h-px flex-1 bg-slate-200" />
+                        <section>
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="h-px flex-1 bg-slate-200" />
+                                <div className="px-5 py-2 rounded-full bg-emerald-600 text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">
+                                    {(filters.city || 'Results').toUpperCase()} · {filteredTotal.toLocaleString()} MATCHES
                                 </div>
-                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                    {primaryListings.map((l, i) => <ListingCard key={l.ListingKey || `p-${i}`} listing={l} index={i} />)}
-                                </div>
-                            </section>
-                        )}
-
-                        {nearbyListings.length > 0 && (
-                            <section aria-label="Nearby Results">
-                                <div className="flex items-center gap-4 mb-6 mt-4">
-                                    <div className="h-px flex-1 bg-slate-100" />
-                                    <div className="px-5 py-2 rounded-full bg-slate-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border border-slate-200/50">
-                                        Nearby listings · {nearbyListings.length.toLocaleString()}
-                                    </div>
-                                    <div className="h-px flex-1 bg-slate-100" />
-                                </div>
-                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 opacity-80 transition-opacity hover:opacity-100">
-                                    {nearbyListings.map((l, i) => <ListingCard key={l.ListingKey || `s-${i}`} listing={l} index={i + primaryListings.length} />)}
-                                </div>
-                            </section>
-                        )}
+                                <div className="h-px flex-1 bg-slate-200" />
+                            </div>
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {listings.map((l: MLSProperty, i: number) => (
+                                    <ListingCard key={l.ListingKey || `l-${i}`} listing={l} index={i} />
+                                ))}
+                            </div>
+                        </section>
                     </div>
                 )}
 

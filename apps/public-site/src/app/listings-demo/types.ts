@@ -53,6 +53,7 @@ export interface MLSProperty {
     Heating?: string[];
     LotSizeArea?: number | null;
     LotSizeUnits?: string | null;
+    PropertyAttachedYN?: boolean | null;
     View?: string[];
     AssociationFee?: number | null;
     AssociationFeeFrequency?: string | null;
@@ -60,11 +61,19 @@ export interface MLSProperty {
     TaxYear?: number | null;
     ZoningDescription: string | null;
     SubdivisionName: string | null;
-    PropertyAttachedYN: boolean | null;
     Rooms: MLSRoom[];
+    isFeatured?: boolean;
     // Agent & Office (from api.txt spec)
     ListAgentKey: string | null;
     ListOfficeKey: string | null;
+    agentName?: string | null;
+    agentPhone?: string | null;
+    officeName?: string | null;
+    // DDF Compliance fields (injected by compliance layer)
+    moreInformationLink?: string | null;
+    primaryPhotoUrl?: string | null;
+    mediaJson?: any[] | null;
+    _ddfCompliant?: boolean;
 }
 
 export interface MLSApiResponse {
@@ -113,9 +122,10 @@ export interface FilterState {
     // Row 5: Keywords
     keywords: string;
 
-    // City (from filter bar)
     city: string;
-
+    featured: boolean;
+    sortBy: string;
+    order: 'asc' | 'desc';
     // Geo Bounds
     latitudeMin?: number;
     latitudeMax?: number;
@@ -149,6 +159,9 @@ export const DEFAULT_FILTERS: FilterState = {
     maxYearBuilt: '',
     keywords: '',
     city: '',
+    featured: false,
+    sortBy: 'newest',
+    order: 'desc',
 };
 
 // ─── Constants (all verified against live CREA DDF OData API) ───────────────
@@ -187,6 +200,15 @@ export const OWNERSHIP_TYPES = [
 
 export const BED_OPTIONS = ['Any', '1+', '2+', '3+', '4+', '5+'];
 export const BATH_OPTIONS = ['Any', '1+', '2+', '3+', '4+'];
+
+export const SORT_OPTIONS = [
+    { label: 'Newest', value: 'newest' },
+    { label: 'Price (Low to High)', value: 'price_asc' },
+    { label: 'Price (High to Low)', value: 'price_desc' },
+    { label: 'Bedrooms', value: 'beds' },
+    { label: 'Square Footage', value: 'sqft' },
+    { label: 'Built Year', value: 'year' },
+];
 
 export const PRICE_RANGES = {
     min: ['', '50000', '100000', '200000', '300000', '500000', '750000', '1000000'],

@@ -10,6 +10,13 @@ import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
 import { PropertyStats } from '@/components/listings/PropertyStats';
 import { StickyInquirySidebar } from '@/components/listings/StickyInquirySidebar';
 import { SaveButton } from '@/components/listings/SaveButton';
+import { RealtorBadge } from '@/app/listings-demo/components/RealtorBadge';
+import { 
+    fireDDFAnalyticsPing, 
+    extractClientIP, 
+    resolveMoreInformationLink 
+} from '@/lib/ddf-compliance';
+import { headers } from 'next/headers';
 
 interface ListingDetailProps {
     params: { mlsNumber: string };
@@ -103,6 +110,22 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
     const listing = await listingService.getByMLS(params.mlsNumber);
     if (!listing) return notFound();
 
+    // ── DDF Compliance: Analytics Ping ─────────────────────────────────
+    const headerList = headers();
+    const ip = extractClientIP(headerList);
+    fireDDFAnalyticsPing({
+        listingId: listing.mlsNumber,
+        ip: ip
+    });
+
+    const moreInfoLink = resolveMoreInformationLink({
+        listingId: listing.mlsNumber,
+        listingKey: (listing as any).listingKey || listing.mlsNumber,
+        moreInformationLink: (listing as any).moreInformationLink,
+        rawData: (listing as any).rawData
+    });
+
+
     const relatedListings = await listingService.getRelatedListings(listing, 4);
     const formattedPrice = new Intl.NumberFormat('en-CA', {
         style: 'currency',
@@ -155,7 +178,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                 <nav id="listing-breadcrumb" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 overflow-hidden whitespace-nowrap">
                     <Link href="/" className="hover:text-indigo-600 transition-colors">Home</Link>
                     <svg className="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                    <Link href="/listings" className="hover:text-indigo-600 transition-colors">Listings</Link>
+                    <Link href="/search" className="hover:text-indigo-600 transition-colors">Search</Link>
                     <svg className="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                     <span className="text-slate-500">{listing.city}</span>
                 </nav>
@@ -268,7 +291,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                         <section id="agent-profile" className="bg-slate-50/50 p-12 rounded-[48px] border border-slate-100 flex flex-col md:flex-row gap-12">
                             <div className="w-48 h-48 rounded-[32px] overflow-hidden shadow-2xl shrink-0 relative">
                                 <Image
-                                    src={listing.agentPhoto || 'https://i.pravatar.cc/300'}
+                                    src={listing.agentPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(listing.agentName || 'Agent')}&background=random&color=fff&bold=true`}
                                     alt={listing.agentName}
                                     fill
                                     className="object-cover"
@@ -277,7 +300,10 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                             <div className="space-y-6 flex-1">
                                 <div>
                                     <h3 className="text-3xl font-black text-slate-900">{listing.agentName}</h3>
-                                    <p className="text-indigo-600 font-black text-xs uppercase tracking-[0.2em] mt-2">Certified Listing Agent</p>
+                                    <p className="text-indigo-600 font-black text-[10px] uppercase tracking-[0.2em] mt-2">Licensed Real Estate Salesperson</p>
+                                    {listing.brokerageName && (
+                                        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">{listing.brokerageName}</p>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <a href={`tel:${listing.agentPhone}`} className="flex flex-col space-y-1">
@@ -298,9 +324,16 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                         </section>
                     </div>
 
-                    {/* Right Column: Sidebar */}
-                    <div className="lg:col-span-4">
+                    <div className="lg:col-span-4 space-y-8">
                         <StickyInquirySidebar listing={listing as any} />
+                        
+                        {/* DDF Compliance Badge */}
+                        <div className="bg-slate-50/50 p-8 rounded-[32px] border border-slate-100">
+                            <RealtorBadge 
+                                moreInformationLink={moreInfoLink}
+                                variant="full" 
+                            />
+                        </div>
                     </div>
                 </div>
 

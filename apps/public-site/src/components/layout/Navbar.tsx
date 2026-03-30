@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import type { NavLink } from '@/types/website';
 
 interface NavbarProps {
@@ -14,87 +15,88 @@ interface NavbarProps {
 export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+  };
 
   return (
     <>
-      {/* Top Accent Bar */}
-      <div className="w-full h-1 bg-gradient-to-r from-rose-400 via-rose-300 to-amber-300" />
-
-      {/* Notification Bar */}
-      <div className="w-full bg-rose-50 border-b border-rose-100 py-2 px-4 text-center">
-        <p className="text-xs text-gray-600 font-medium">
-          We&apos;re updating our services for an even better experience.{' '}
-          <Link href="/contact" className="text-rose-600 font-semibold hover:underline">
-            Learn more
-          </Link>
-        </p>
-      </div>
-
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm">
-        <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-[100] w-full border-b border-white/10 bg-white/70 backdrop-blur-3xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] transition-all duration-500">
+        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
             {logoUrl ? (
-              <div className="relative h-8 w-32">
+              <div className="relative h-10 w-36">
                 <Image src={logoUrl} alt={brandName} fill className="object-contain" />
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-md bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">RE</span>
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-xl bg-brand-red shadow-lg shadow-brand-red/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+                  <span className="text-white text-[10px] font-black tracking-tighter uppercase italic">RE</span>
                 </div>
-                <span className="text-lg font-bold tracking-tight text-gray-900">
-                  {brandName}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-lg font-black tracking-tight text-slate-900 leading-none">
+                    {brandName.split(' ')[0]} <span className="text-brand-red">{brandName.split(' ').slice(1).join(' ')}</span>
+                  </span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Exclusive Real Estate</span>
+                </div>
               </div>
             )}
           </Link>
-
-          {/* Search Bar — Zolo-style */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search by city, address, or Property ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-              />
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          {/* Search Bar — Professional & Integrated */}
+          <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-lg mx-12">
+            <div className="relative w-full group/search">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-brand-red transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    placeholder="Search by city, address, or MLS®..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-11 pl-11 pr-4 rounded-xl bg-slate-100/60 border border-transparent focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-brand-red/5 outline-none transition-all text-[13px] font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-semibold"
+                />
             </div>
-          </div>
+          </form>
 
           {/* Desktop links */}
-          <ul className="hidden items-center gap-1 md:flex">
-            {links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link
+          <div className="hidden items-center gap-6 md:flex">
+            <ul className="flex items-center gap-1.5">
+                {links.map((link) => (
+                <li key={link.href}>
+                    <Link
+                    href={link.href}
+                    className="rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 transition-all hover:bg-slate-50 hover:text-brand-red"
+                    >
+                    {link.label}
+                    </Link>
+                </li>
+                ))}
+            </ul>
+            
+            <div className="h-4 w-px bg-slate-200" />
+            
+            <Link
                 href="/contact"
-                className="ml-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-700 shadow-sm hover:shadow-md"
-              >
-                Contact
-              </Link>
-            </li>
-          </ul>
+                className="rounded-xl bg-brand-red h-10 px-6 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-900 hover:scale-105 active:scale-95 shadow-lg shadow-brand-red/10"
+            >
+                Inquire
+            </Link>
+          </div>
 
           {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 md:hidden"
+            className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-red hover:text-white transition-all md:hidden"
             aria-label="Toggle navigation"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               {mobileOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -106,35 +108,47 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="border-t border-gray-200 bg-white md:hidden">
-            {/* Mobile search */}
-            <div className="px-4 pt-3">
-              <div className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Search by city, address, or Property ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-                />
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
+          <div className="border-t border-slate-100 bg-white/95 backdrop-blur-xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="px-4 py-6 space-y-6">
+                {/* Mobile search */}
+                <form onSubmit={handleSearchSubmit} className="relative w-full">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by city, address, or MLS®..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 rounded-2xl bg-slate-100 border-none outline-none font-bold text-slate-900 placeholder:text-slate-400"
+                    />
+                </form>
+
+                <ul className="space-y-2">
+                {links.map((link) => (
+                    <li key={link.href}>
+                    <Link
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center h-14 px-5 rounded-2xl text-sm font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                    >
+                        {link.label}
+                    </Link>
+                    </li>
+                ))}
+                    <li>
+                        <Link
+                            href="/contact"
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center justify-center h-14 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20"
+                        >
+                            Contact Agent
+                        </Link>
+                    </li>
+                </ul>
             </div>
-            <ul className="space-y-1 px-4 py-3">
-              {links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block rounded-md px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         )}
       </header>

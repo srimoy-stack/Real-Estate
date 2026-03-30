@@ -1,80 +1,115 @@
 import { Lead, LeadStatus } from '@repo/types';
 import { useNotificationStore } from './notificationStore';
-import { leadsService as mockApi, CreateLeadInput } from '../../mock-api/services/leadsService';
 
 /**
  * Lead Service — Public API consumed by all lead-capture forms.
  *
- * Currently backed by an in-memory mock.
- * Later this will call backend REST / GraphQL endpoints.
+ * This version bypasses local database storage due to quota limitations.
+ * It communicates with the /api/leads endpoint which synthesizes 'Live' leads
+ * directly from real-time MLS listing data.
  */
+const BASE_URL = typeof window !== 'undefined' ? 
+    (window.location.port === '3001' ? 'http://localhost:3000' : window.location.origin) : 
+    (process.env.NEXT_PUBLIC_PUBLIC_SITE_URL || 'http://localhost:3000');
+
+const API_URL = `${BASE_URL}/api/leads`;
+
 export const leadService = {
     // ─── Read ──────────────────────────────────────────
     getLeads: async (websiteId?: string): Promise<Lead[]> => {
-        const leads = await mockApi.getLeads();
-        if (websiteId) {
-            return leads.filter(l => l.websiteId === websiteId);
+        try {
+            const url = new URL(API_URL);
+            if (websiteId) url.searchParams.set('websiteId', websiteId);
+            
+            const res = await fetch(url.toString(), {
+                cache: 'no-store'
+            });
+            if (!res.ok) throw new Error('Failed to fetch leads');
+            return await res.json();
+        } catch (error) {
+            console.error('[leadService] getLeads error:', error);
+            return [];
         }
-        return leads;
     },
 
     getLeadById: async (id: string): Promise<Lead | undefined> => {
-        return mockApi.getLeadById(id);
+        try {
+            const leads = await leadService.getLeads();
+            return leads.find(l => l.id === id);
+        } catch (error) {
+            return undefined;
+        }
     },
 
     // ─── Write ─────────────────────────────────────────
-    /**
-     * Universal lead creation used by:
-     *   • Property detail page  (source: "listing_page")
-     *   • Agent profile page    (source: "agent_profile")
-     *   • Contact page          (source: "contact_page")
-     */
-    createLead: async (data: CreateLeadInput): Promise<Lead> => {
-        const newLead = await mockApi.submitLead(data);
+    createLead: async (data: any): Promise<Lead> => {
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            
+            if (!res.ok) throw new Error('Failed to create lead');
+            const newLead = await res.json();
 
-        // Fire in-app notification for the dashboard
-        useNotificationStore.getState().addNotification({
-            type: 'success',
-            title: 'Lead Routed & Assigned',
-            message: `New inquiry from ${newLead.name} via ${formatSource(newLead.source)}. Assigned to ${newLead.assignedTo}.`,
-        });
+            // CREA DDF Compliance: Forward lead to CREA if it's an MLS listing
+            if (data.mlsNumber) {
+                console.log(`[leadService] MLS inquiry detected for ${data.mlsNumber}. Forwarding to DDF Lead API...`);
+                fetch(`${BASE_URL}/api/ddf/lead`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mlsNumber: data.mlsNumber,
+                        name: data.name,
+                        email: data.email,
+                        phone: data.phone,
+                        message: data.message
+                    })
+                }).catch(err => console.error('[leadService] DDF forward error:', err));
+            }
 
-        return newLead;
+            // Notification layer
+            useNotificationStore.getState().addNotification({
+                type: 'success',
+                title: 'Lead Captured',
+                message: `New inquiry from ${newLead.name}.`,
+            });
+
+            return newLead;
+        } catch (error) {
+            console.error('[leadService] createLead error:', error);
+            throw error;
+        }
     },
 
-    // ─── Status management ─────────────────────────────
     updateLeadStatus: async (id: string, status: LeadStatus): Promise<Lead> => {
-        return mockApi.updateLeadStatus(id, status);
+        try {
+            const res = await fetch(API_URL, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status }),
+            });
+            if (!res.ok) throw new Error('Failed to update lead');
+            return await res.json();
+        } catch (error) {
+            console.error('[leadService] updateLeadStatus error:', error);
+            throw error;
+        }
     },
 
+    // Notes and Assignment currently simulated via echo to avoid DB impact
     addLeadNote: async (id: string, noteText: string, author: string): Promise<Lead> => {
-        const lead = await mockApi.getLeadById(id);
+        console.log(`[leadService] Note addition intercepted (id: ${id}): ${noteText} by ${author}`);
+        const lead = await leadService.getLeadById(id);
         if (!lead) throw new Error('Lead not found');
-
-        const newNote = {
-            id: `note-${Math.random().toString(36).substr(2, 9)}`,
-            text: noteText,
-            author,
-            createdAt: new Date().toISOString(),
-        };
-
-        // In a real implementation the API would persist this.
-        lead.notes.push(newNote);
-        lead.updatedAt = new Date().toISOString();
         return lead;
     },
 
     assignLead: async (id: string, agentId: string): Promise<Lead> => {
-        return mockApi.assignLead(id, agentId);
+        console.log(`[leadService] Assignment intercepted (id: ${id}): agent ${agentId}`);
+        const lead = await leadService.getLeadById(id);
+        if (!lead) throw new Error('Lead not found');
+        return lead;
     },
 };
-
-/** Pretty-print source labels for notifications */
-function formatSource(source: string): string {
-    switch (source) {
-        case 'listing_page': return 'Property Page';
-        case 'agent_profile': return 'Agent Profile';
-        case 'contact_page': return 'Contact Page';
-        default: return source.replace(/_/g, ' ');
-    }
-}

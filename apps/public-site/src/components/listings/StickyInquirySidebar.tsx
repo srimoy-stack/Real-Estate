@@ -51,6 +51,9 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                         <div>
                             <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{listing.agentName}</h3>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(listing as any).agentTitle || 'Sales Coordinator'}</p>
+                            {listing.brokerageName && (
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-600/60 mt-1">{listing.brokerageName}</p>
+                            )}
                         </div>
                     </div>
 

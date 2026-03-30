@@ -54,11 +54,11 @@ export async function getMLSAccessToken() {
  * Includes a retry mechanism for improved reliability.
  */
 async function fetchNewToken(retries = 2): Promise<string> {
-    const clientId = process.env.MLS_CLIENT_ID;
-    const clientSecret = process.env.MLS_CLIENT_SECRET;
+    const clientId = process.env.MLS_CLIENT_ID || process.env.DDF_CLIENT_ID;
+    const clientSecret = process.env.MLS_CLIENT_SECRET || process.env.DDF_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-        throw new Error('MLS_CLIENT_ID or MLS_CLIENT_SECRET NOT CONFIGURED');
+        throw new Error('MLS_CLIENT_ID/SECRET or DDF_CLIENT_ID/SECRET NOT CONFIGURED');
     }
 
     let lastError: any = null;

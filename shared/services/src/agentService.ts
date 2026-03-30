@@ -8,7 +8,21 @@ export const agentService = {
     },
 
     getAgents: async (): Promise<Agent[]> => {
-        return await mockApi.getAgents();
+        try {
+            const baseUrl = typeof window === 'undefined' 
+                ? process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+                : '';
+            const response = await fetch(`${baseUrl}/api/internal-agents`, { cache: 'no-store' });
+            const agents = await response.json();
+            if (!Array.isArray(agents) || agents.length === 0) {
+                console.warn('[Agent Service] No real agents returned, using mock data.');
+                return await mockApi.getAgents();
+            }
+            return agents;
+        } catch (error) {
+            console.error('[Agent Service] Failed to fetch real agents:', error);
+            return await mockApi.getAgents();
+        }
     },
 
     getAgentsByOrganization: async (organizationId: string): Promise<Agent[]> => {
@@ -17,12 +31,12 @@ export const agentService = {
     },
 
     getAgentById: async (id: string): Promise<Agent | undefined> => {
-        const agents = await mockApi.getAgents();
+        const agents = await agentService.getAgents();
         return agents.find(a => a.id === id);
     },
 
     getAgentBySlug: async (slug: string): Promise<Agent | undefined> => {
-        const agents = await mockApi.getAgents();
+        const agents = await agentService.getAgents();
         return agents.find(a => a.slug === slug);
     },
 

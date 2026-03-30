@@ -48,13 +48,15 @@ export const ListingShortcode: React.FC<ListingShortcodeProps> = ({ attributes }
     if (attributes.bathrooms) filters.bathrooms = parseInt(attributes.bathrooms, 10);
     if (attributes.featured === 'true') filters.featured = true;
 
-    const limit = attributes.limit ? parseInt(attributes.limit, 10) : 6;
-    const sort = (attributes.sort as ListingSortOrder) || 'latest';
+    const limit = attributes.limit ? parseInt(attributes.limit, 10) : undefined;
+    const sort = (attributes.sort as ListingSortOrder) || undefined;
     const title = attributes.title;
     const subtitle = attributes.subtitle;
+    const configName = attributes.config;
 
     return (
         <ListingsSection
+            configName={configName}
             filters={filters}
             limit={limit}
             sort={sort}

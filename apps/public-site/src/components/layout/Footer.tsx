@@ -1,145 +1,136 @@
 import Link from 'next/link';
-import type { FooterColumn, SocialLinksConfig, NavLink } from '@repo/types';
+import Image from 'next/image';
+import type { FooterColumn, SocialLinksConfig } from '@repo/types';
+import { RealtorBadge } from '@/components/listings/RealtorBadge';
 
 interface FooterProps {
   brandName: string;
   columns: FooterColumn[];
-  footerLinks: NavLink[];
   socialLinks?: SocialLinksConfig;
   copyrightText?: string;
 }
 
-export function Footer({ brandName, columns, footerLinks, socialLinks, copyrightText }: FooterProps) {
+export function Footer({ brandName, columns, socialLinks, copyrightText }: FooterProps) {
   return (
-    <footer className="bg-white border-t border-gray-200">
+    <footer className="bg-white border-t border-slate-200">
       {/* Main Footer Content */}
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-12">
           {/* Brand column */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-md bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">RE</span>
-              </div>
-              <p className="text-lg font-bold text-gray-900">{brandName}</p>
+          <div className="lg:col-span-4 space-y-8">
+            <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-brand-red shadow-lg shadow-brand-red/20 flex items-center justify-center transition-transform duration-500 hover:scale-105">
+                  <span className="text-white text-[10px] font-black tracking-tighter uppercase italic">RE</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl font-black tracking-tight text-slate-900 leading-none">
+                    {brandName.split(' ')[0]} <span className="text-brand-red">{brandName.split(' ').slice(1).join(' ')}</span>
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Exclusive Real Estate</span>
+                </div>
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed max-w-sm mb-6">
-              Connecting buyers with their dream properties. Trusted by thousands of
-              families across Canada for reliable real estate solutions.
+            
+            <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
+              Discover a new standard of property exploration. We provide 
+              unparalleled access to premium MLS® listings across Canada with real-time 
+              market intelligence and expert architectural insights.
             </p>
+
             {socialLinks && (
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 {socialLinks.facebook && (
                   <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" aria-label="Facebook">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg>
+                    className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-red hover:text-white transition-all border border-slate-100 shadow-sm" aria-label="Facebook">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg>
                   </a>
                 )}
                 {socialLinks.instagram && (
                   <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" aria-label="Instagram">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" /></svg>
-                  </a>
-                )}
-                {socialLinks.twitter && (
-                  <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" aria-label="Twitter">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" /></svg>
-                  </a>
-                )}
-                {socialLinks.linkedin && (
-                  <a href={socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" aria-label="LinkedIn">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z" /></svg>
+                    className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-red hover:text-white transition-all border border-slate-100 shadow-sm" aria-label="Instagram">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" /></svg>
                   </a>
                 )}
               </div>
             )}
           </div>
 
-          {/* Dynamic columns */}
-          {columns.map((col) => (
-            <div key={col.id}>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                {col.title}
-              </h3>
-              <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.id}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Spacer for desktop */}
+          <div className="hidden lg:block lg:col-span-1" />
 
-          {/* Footer links row */}
-          {footerLinks.length > 0 && (
+          {/* Dynamic columns */}
+          <div className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8">
+            {columns.map((col) => (
+                <div key={col.id}>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 mb-6">
+                    {col.title}
+                </h3>
+                <ul className="space-y-4">
+                    {col.links.map((link) => (
+                    <li key={link.id}>
+                        <Link
+                        href={link.href}
+                        className="text-xs font-bold text-slate-500 hover:text-brand-red transition-colors uppercase tracking-widest"
+                        >
+                        {link.label}
+                        </Link>
+                    </li>
+                    ))}
+                </ul>
+                </div>
+            ))}
+
+            {/* Compliance Column */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Legal</h3>
-              <ul className="space-y-2.5">
-                {footerLinks.filter(l => l.isVisible).map((link) => (
-                  <li key={link.id}>
-                    <Link
-                      href={link.href}
-                      target={link.isExternal ? '_blank' : undefined}
-                      className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 mb-6 italic">Compliance</h3>
+                <div className="space-y-4">
+                    <RealtorBadge />
+                </div>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Are You a REALTOR? CTA Section — Zolo-inspired */}
-        <div className="mt-12 pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-gray-500">
-              {brandName}, Brokerage &bull;{' '}
-              <Link href="/contact" className="text-gray-700 hover:text-emerald-600 font-medium transition-colors">Contact</Link>
-              {' '}&bull;{' '}
-              <Link href="/privacy" className="text-gray-700 hover:text-emerald-600 font-medium transition-colors">Privacy & Terms</Link>
-              {' '}&bull;{' '}
-              <Link href="/sitemap" className="text-gray-700 hover:text-emerald-600 font-medium transition-colors">Sitemap</Link>
+        {/* Industry Trust Section */}
+        <div className="mt-20 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-6 opacity-60">
+                <Image src="https://www.realtor.ca/images/en-ca/realtor_ca_logo.svg" alt="REALTOR.ca" width={100} height={24} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
+                <div className="h-6 w-px bg-slate-200" />
+                <Image src="https://www.crea.ca/wp-content/uploads/2019/07/CREA-Logo_EN.svg" alt="CREA" width={80} height={20} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
+            </div>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
+                The trademarks REALTOR®, REALTORS® and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA) 
+                and identify real estate professionals who are members of CREA. The trademarks MLS®, Multiple Listing Service® and 
+                the associated logos are owned by CREA and identify the quality of services provided by real estate professionals who are members of CREA.
             </p>
           </div>
-          <div className="text-center md:text-right">
-            <p className="text-lg font-bold text-gray-900 mb-2">Are You a REALTOR®?</p>
+          
+          <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red leading-none italic">Verified MLS® Partner</span>
             <Link
               href="/contact"
-              className="inline-block px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
+              className="px-8 py-3.5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-xl hover:bg-brand-red transition-all shadow-xl shadow-slate-900/10 active:scale-95"
             >
-              Join Today!
+              Contact Specialist
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-100 bg-gray-50/50">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">
+      {/* Bottom Legal / Copyright */}
+      <div className="bg-slate-50 py-10 border-t border-slate-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
               {copyrightText ?? `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`}
             </p>
-            <p className="text-[10px] text-gray-400 leading-relaxed max-w-2xl text-center sm:text-right">
-              The REALTOR® trademark is controlled by the Canadian Real Estate Association (CREA) and identifies
-              real estate professionals who are members of CREA.
-            </p>
+            <div className="flex items-center gap-8">
+                <Link href="/privacy" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-red transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-red transition-colors">Terms of Use</Link>
+                <a href="https://www.crea.ca/accessibility" target="_blank" rel="noopener" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-brand-red transition-colors">Accessibility</a>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Bottom Accent Bar */}
-      <div className="w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400" />
     </footer>
   );
 }

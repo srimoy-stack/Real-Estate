@@ -35,6 +35,9 @@ export interface MLSListing {
     virtualTourUrl?: string;
     createdAt: string;
     updatedAt: string;
+    // DDF Compliance & Integration
+    ddfListingKey?: string;
+    ddfMemberKey?: string;
 }
 
 /** Lightweight card projection – only fields needed for listing cards */
@@ -57,17 +60,30 @@ export type MLSListingCard = Pick<
     | 'description'
     | 'location'
     | 'agentName'
+    | 'agentPhone'
+    | 'agentEmail'
+    | 'agentPhoto'
+    | 'brokerageName'
+    | 'ddfListingKey'
+    | 'ddfMemberKey'
 >;
 
 export interface MLSListingFilters {
     ids?: string[];             // Fetch specific listings by MLS numbers
     city?: string;
     propertyType?: MLSPropertyType | MLSPropertyType[];
+    listingType?: 'Residential' | 'Commercial';
     status?: MLSStatus | MLSStatus[];
     minPrice?: number;
     maxPrice?: number;
     bedrooms?: number;
     bathrooms?: number;
+    minSqft?: number;
+    maxSqft?: number;
+    minLandSize?: number;
+    maxLandSize?: number;
+    minYearBuilt?: number;
+    maxYearBuilt?: number;
     keyword?: string;
     featured?: boolean;
     organizationId?: string;

@@ -12,22 +12,29 @@ export default function LeadsPage() {
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
+    const fetchLeads = async () => {
+        setLoading(true);
+        try {
+            const data = await leadService.getLeads();
+            setLeads(data);
+        } catch (error) {
+            console.error('Failed to fetch leads:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        (async () => {
-            setLoading(true);
-            try {
-                const data = await leadService.getLeads();
-                setLeads(data);
-            } catch (error) {
-                console.error('Failed to fetch leads:', error);
-            } finally {
-                setLoading(false);
-            }
-        })();
+        fetchLeads();
     }, []);
 
     const filtered = useMemo(() => leads.filter(l => {
-        if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.email.toLowerCase().includes(search.toLowerCase())) return false;
+        const matchesSearch = !search || 
+            l.name.toLowerCase().includes(search.toLowerCase()) || 
+            l.email.toLowerCase().includes(search.toLowerCase()) ||
+            l.mlsNumber?.toLowerCase().includes(search.toLowerCase());
+        
+        if (!matchesSearch) return false;
         if (filterStatus && l.status !== filterStatus) return false;
         return true;
     }), [leads, search, filterStatus]);
@@ -35,8 +42,7 @@ export default function LeadsPage() {
     const handleUpdateStatus = async (id: string, status: LeadStatus) => {
         try {
             const updated = await leadService.updateLeadStatus(id, status);
-            setLeads(prev => prev.map(l => l.id === id ? updated : l));
-            if (selectedLead?.id === id) setSelectedLead(updated);
+            setLeads(prev => prev.map(l => l.id === id ? { ...l, status: updated.status } : l));
             setOpenMenuId(null);
         } catch (error) {
             alert('Failed to update lead status');
@@ -72,10 +78,31 @@ export default function LeadsPage() {
                             <h4 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight border-l-4 border-slate-900 pl-6 mb-2 uppercase">
                                 {selectedLead.name}
                             </h4>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-7">Captured from: <span className="text-indigo-600 underline decoration-indigo-100 underline-offset-4 uppercase">{selectedLead.source.replace(/_/g, ' ')}</span></p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-7">Source Origin: <span className="text-indigo-600 underline decoration-indigo-100 underline-offset-4 uppercase">{selectedLead.source.replace(/_/g, ' ')}</span></p>
                         </div>
 
                         <div className="space-y-8">
+                            {/* Property Context */}
+                            <div className="p-8 bg-slate-900 rounded-[32px] text-white shadow-xl shadow-slate-200">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Contextual Metadata</p>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Target Property</p>
+                                        <p className="text-lg font-black uppercase tracking-tight">{(selectedLead as any).metadata?.propertyAddress || 'General Platform Inquiry'}</p>
+                                    </div>
+                                    <div className="flex justify-between items-end pt-4 border-t border-white/10">
+                                        <div>
+                                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">MLS® Number</p>
+                                            <p className="text-sm font-black uppercase">{selectedLead.mlsNumber || 'N/A'}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Listing Agent</p>
+                                            <p className="text-sm font-black uppercase">{(selectedLead as any).metadata?.listingAgent || 'Direct Office'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
@@ -84,8 +111,8 @@ export default function LeadsPage() {
                                     </span>
                                 </div>
                                 <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inquiry Time</p>
-                                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{new Date(selectedLead.createdAt).toLocaleDateString()}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Capture Time</p>
+                                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{new Date(selectedLead.createdAt).toLocaleString()}</p>
                                 </div>
                             </div>
 
@@ -128,8 +155,23 @@ export default function LeadsPage() {
                         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-600 leading-none">Intelligence Throughput</span>
                     </div>
                     <div>
-                        <h1 className="text-6xl font-black tracking-tight text-slate-900 leading-none uppercase">Leads</h1>
-                        <p className="text-xl font-medium text-slate-400 mt-4 tracking-tighter">Monitoring captured intent across all ecosystem deployments.</p>
+                        <div className="flex items-center gap-6">
+                            <h1 className="text-6xl font-black tracking-tight text-slate-900 leading-none uppercase flex items-center gap-6">
+                                Leads
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full animate-pulse shadow-sm shadow-emerald-100">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Live Flow Active</span>
+                                </div>
+                            </h1>
+                            <button 
+                                onClick={fetchLeads}
+                                className="p-3 hover:bg-slate-50 rounded-xl transition-all border border-slate-100 text-slate-400 hover:text-indigo-600 flex items-center gap-2"
+                            >
+                                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Refresh Feed</span>
+                            </button>
+                        </div>
+                        <p className="text-xl font-medium text-slate-400 mt-4 tracking-tighter italic">Institutional Real-Time Intelligence Feed: Synchronized with CREA DDF Global Network.</p>
                     </div>
                 </div>
             </div>
@@ -157,7 +199,7 @@ export default function LeadsPage() {
                         type="text"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="SEARCH PROTOCOL BY NAME OR DATA..."
+                        placeholder="FILTER BY NAME, EMAIL OR MLS#..."
                         className="w-full pl-14 pr-6 py-4 bg-slate-50 border-none rounded-[20px] text-[10px] font-black uppercase tracking-widest text-slate-900 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
                     />
                 </div>
@@ -169,7 +211,7 @@ export default function LeadsPage() {
                     >
                         <option value="">Status Profile: ALL</option>
                         {STATUS_OPTIONS.map(s => (
-                            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+                            <option key={s} value={s}>{s}</option>
                         ))}
                     </select>
                 </div>
@@ -182,8 +224,9 @@ export default function LeadsPage() {
                         <thead>
                             <tr className="border-b border-slate-50">
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Capture Identity</th>
+                                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contextual Property</th>
+                                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Listing Agent</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Routing Status</th>
-                                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Source Origin</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Capture Time</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
                             </tr>
@@ -191,7 +234,7 @@ export default function LeadsPage() {
                         <tbody className="divide-y divide-slate-50">
                             {loading ? (
                                 Array(5).fill(0).map((_, i) => (
-                                    <tr key={i}><td colSpan={5} className="px-10 py-10 animate-pulse"><div className="h-6 bg-slate-50 rounded-lg w-full" /></td></tr>
+                                    <tr key={i}><td colSpan={6} className="px-10 py-10 animate-pulse"><div className="h-6 bg-slate-50 rounded-lg w-full" /></td></tr>
                                 ))
                             ) : filtered.map(lead => (
                                 <tr
@@ -211,15 +254,21 @@ export default function LeadsPage() {
                                         </div>
                                     </td>
                                     <td className="px-10 py-8">
+                                        <div className="max-w-[200px]">
+                                            <p className="text-[10px] font-black text-slate-900 uppercase truncate">{(lead as any).metadata?.propertyAddress || 'GENERAL INQUIRY'}</p>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1">MLS®: {lead.mlsNumber || 'N/A'}</p>
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-8">
+                                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{(lead as any).metadata?.listingAgent || 'SYSTEM DEFAULT'}</span>
+                                    </td>
+                                    <td className="px-10 py-8">
                                         <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusColor(lead.status)}`}>
                                             <div className={`h-1.5 w-1.5 rounded-full ${lead.status === 'New' ? 'bg-blue-500 animate-pulse' :
                                                 lead.status === 'Contacted' ? 'bg-amber-500' :
                                                     lead.status === 'Qualified' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                            {lead.status.replace(/_/g, ' ')}
+                                            {lead.status}
                                         </span>
-                                    </td>
-                                    <td className="px-10 py-8">
-                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{lead.source.replace(/_/g, ' ')}</span>
                                     </td>
                                     <td className="px-10 py-8">
                                         <div className="flex flex-col">
@@ -243,15 +292,15 @@ export default function LeadsPage() {
                                         {openMenuId === lead.id && (
                                             <div className="absolute right-10 top-20 w-52 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 py-2 flex flex-col items-start overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                                 <p className="px-5 py-2 text-[8px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 w-full mb-1">Status Patch</p>
-                                                <button onClick={(e) => { e.stopPropagation(); handleUpdateStatus(lead.id, 'Contacted' as any); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-slate-600 hover:text-indigo-600 transition-colors text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Mark Contacted
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleUpdateStatus(lead.id, 'Qualified' as any); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-slate-600 hover:text-emerald-600 transition-colors text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Mark Qualified
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleUpdateStatus(lead.id, 'Closed' as any); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Mark Closed
-                                                </button>
+                                                {STATUS_OPTIONS.map(status => (
+                                                    <button 
+                                                        key={status}
+                                                        onClick={(e) => { e.stopPropagation(); handleUpdateStatus(lead.id, status as LeadStatus); }} 
+                                                        className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-slate-600 hover:text-indigo-600 transition-colors text-[9px] font-black uppercase tracking-widest flex items-center gap-2"
+                                                    >
+                                                        <div className={`h-1.5 w-1.5 rounded-full ${getStatusColor(status).split(' ')[0].replace('bg-', 'bg-').replace('50', '500')}`} /> {status}
+                                                    </button>
+                                                ))}
                                                 <div className="h-px bg-slate-50 w-full my-1" />
                                                 <button onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setOpenMenuId(null); }} className="w-full text-left px-5 py-2.5 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
                                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> View Intelligence
@@ -270,12 +319,10 @@ export default function LeadsPage() {
                         <div className="w-20 h-20 rounded-[30px] bg-slate-50 flex items-center justify-center">
                             <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] max-w-xs leading-loose">No active lead signals match the current protocol filters.</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] max-w-xs leading-loose">No active intelligence match the current protocol filters.</p>
                     </div>
                 )}
             </div>
         </div>
     );
 }
-
-

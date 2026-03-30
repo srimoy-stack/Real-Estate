@@ -42,6 +42,10 @@ function mapToLegacyListing(l: MLSListing | MLSListingCard): Listing {
         longitude: l.location.lng,
         location: l.location,
         agentName: l.agentName,
+        agentPhone: l.agentPhone,
+        agentEmail: l.agentEmail,
+        agentPhoto: l.agentPhoto,
+        brokerageName: l.brokerageName,
         images: l.images,
         mainImage: l.images[0] || '',
         features: (l as MLSListing).features || [],
@@ -92,6 +96,7 @@ export const listingService = {
             maxPrice: filters.maxPrice,
             bedrooms: filters.bedrooms,
             bathrooms: filters.bathrooms,
+            featured: filters.featured,
             limit: limit,
             sort: sort === 'latest' ? 'newest' : (sort as any)
         });

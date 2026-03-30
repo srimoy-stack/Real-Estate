@@ -59,55 +59,51 @@ export default function MapBasedSearchPage() {
         <main className="min-h-screen bg-white">
             <div className="flex flex-col lg:flex-row h-[calc(100vh-72px)] overflow-hidden">
 
-                {/* Left Panel: Filters and Grid */}
-                <aside className={`flex-1 flex flex-col h-full bg-slate-50 border-r border-slate-100 transition-all duration-500 overflow-hidden ${showMap ? 'lg:w-[55%] xl:w-[45%]' : 'lg:w-full'
+                {/* Left Panel: Filters and Grid — Realtor.ca High-Density Style */}
+                <aside className={`flex-1 flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-500 overflow-hidden ${showMap ? 'lg:w-[50%] xl:w-[45%]' : 'lg:w-full'
                     }`}>
 
-                    {/* Filter Header */}
-                    <div className="bg-white p-6 border-b border-slate-100 shadow-sm z-10">
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tighter">
-                                World <span className="text-indigo-600">Explorer</span>.
-                            </h1>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                    {totalCount} Properties Found
+                    {/* Compact Filter Header */}
+                    <div className="bg-white p-5 border-b border-slate-100 shadow-sm z-10">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                            <div className="flex flex-col">
+                                <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                                    Properties <span className="text-brand-red">in {filters.city || 'Canada'}</span>
+                                </h1>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                    {totalCount.toLocaleString()} Listings Found
                                 </span>
-                                <button
-                                    onClick={() => setShowMap(!showMap)}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all"
-                                >
-                                    {showMap ? 'Hide Map' : 'Show Map'}
-                                </button>
                             </div>
+                            <button
+                                onClick={() => setShowMap(!showMap)}
+                                className="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-red hover:text-white transition-all shadow-sm"
+                            >
+                                {showMap ? 'Hide Map' : 'Show Map View'}
+                            </button>
                         </div>
 
-                        {/* Filter Bar */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-                            <select
+                        {/* Professional Compact Filter Bar */}
+                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+                            <input
+                                placeholder="City/MLS®"
                                 value={filters.city}
                                 onChange={(e) => handleFilterChange('city', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
-                            >
-                                <option value="">All Cities</option>
-                                <option value="Toronto">Toronto</option>
-                                <option value="Vancouver">Vancouver</option>
-                                <option value="Mississauga">Mississauga</option>
-                            </select>
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700 focus:bg-white focus:border-brand-red outline-none transition-all placeholder:text-slate-300"
+                            />
 
                             <select
                                 value={filters.propertyType}
                                 onChange={(e) => handleFilterChange('propertyType', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700 outline-none appearance-none cursor-pointer hover:bg-slate-100 transition-colors"
                             >
-                                <option value="">Property Type</option>
+                                <option value="">Prop Type</option>
                                 {Object.values(PropertyType).map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
                             </select>
 
                             <select
                                 value={filters.minPrice}
                                 onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
                             >
                                 <option value="">Min Price</option>
                                 <option value="500000">$500k</option>
@@ -118,7 +114,7 @@ export default function MapBasedSearchPage() {
                             <select
                                 value={filters.maxPrice}
                                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
                             >
                                 <option value="">Max Price</option>
                                 <option value="1000000">$1M</option>
@@ -129,7 +125,7 @@ export default function MapBasedSearchPage() {
                             <select
                                 value={filters.bedrooms}
                                 onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
                             >
                                 <option value="">Beds</option>
                                 <option value="1">1+</option>
@@ -141,7 +137,7 @@ export default function MapBasedSearchPage() {
                             <select
                                 value={filters.bathrooms}
                                 onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
-                                className="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-400 outline-none transition-all"
+                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
                             >
                                 <option value="">Baths</option>
                                 <option value="1">1+</option>
@@ -151,22 +147,22 @@ export default function MapBasedSearchPage() {
                         </div>
                     </div>
 
-                    {/* Listings Scrollable Area */}
-                    <div className="flex-1 overflow-y-auto p-6 scroll-smooth custom-scrollbar">
+                    {/* Listings Scrollable Area — dense grid */}
+                    <div className="flex-1 overflow-y-auto p-5 scroll-smooth custom-scrollbar bg-slate-50/30">
                         {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {[1, 2, 4, 5, 6].map(i => (
-                                    <div key={i} className="aspect-[4/3] bg-white rounded-3xl animate-pulse shadow-sm" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[1, 2, 3, 4, 5, 6].map(i => (
+                                    <div key={i} className="aspect-[4/5] bg-white rounded-2xl animate-pulse border border-slate-100" />
                                 ))}
                             </div>
                         ) : listings.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
                                 {listings.map((listing) => (
                                     <div
                                         key={listing.id}
                                         onMouseEnter={() => setActiveListingId(listing.id)}
                                         onMouseLeave={() => setActiveListingId(null)}
-                                        className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                                        className="animate-in fade-in slide-in-from-bottom-2 duration-300"
                                     >
                                         <PropertyCard listing={listing} />
                                     </div>
@@ -174,13 +170,14 @@ export default function MapBasedSearchPage() {
                             </div>
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
-                                <div className="text-5xl">🏘️</div>
-                                <h3 className="text-xl font-black text-slate-900 italic">No properties match your filters.</h3>
+                                <span className="text-4xl">🔎</span>
+                                <h3 className="text-lg font-black text-slate-900 uppercase">No Listings Found</h3>
+                                <p className="text-xs text-slate-400 font-bold max-w-xs">Adjust your filters to discover more properties in the MLS® network.</p>
                                 <button
                                     onClick={() => setFilters({ city: '', propertyType: '' as any, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '' })}
-                                    className="text-xs font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors"
+                                    className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red hover:underline"
                                 >
-                                    Reset Filters
+                                    Reset Discovery
                                 </button>
                             </div>
                         )}
@@ -193,7 +190,6 @@ export default function MapBasedSearchPage() {
                         <MapView
                             listings={listings}
                             activeListingId={activeListingId}
-                            onMapUpdate={fetchListings}
                         />
                     </section>
                 )}

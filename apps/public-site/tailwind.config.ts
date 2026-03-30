@@ -9,24 +9,24 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
+          red: '#e11b22', // Realtor.ca Signature Red
           navy: '#0F172A',
-          blue: '#2563EB',
-          gold: '#C8A951',
+          charcoal: '#333333',
         },
         neutral: {
-          bg: '#F8FAFC',
+          bg: '#f9fafb',
           card: '#FFFFFF',
-          border: '#E2E8F0',
+          border: '#eeeeee',
           text: {
-            primary: '#0F172A',
-            secondary: '#475569',
-            muted: '#94A3B8',
+            primary: '#222222',
+            secondary: '#666666',
+            muted: '#999999',
           },
         },
         status: {
-          success: '#16A34A',
-          warning: '#F59E0B',
-          error: '#DC2626',
+          success: '#1ea066',
+          warning: '#f0ad4e',
+          error: '#d9534f',
         },
       },
       fontFamily: {

@@ -2,11 +2,11 @@
  * Helper to fetch a fresh access token from CREA Identity Server.
  */
 export async function getMLSAccessToken() {
-    const clientId = process.env.MLS_CLIENT_ID;
-    const clientSecret = process.env.MLS_CLIENT_SECRET;
+    const clientId = process.env.MLS_CLIENT_ID || process.env.DDF_CLIENT_ID;
+    const clientSecret = process.env.MLS_CLIENT_SECRET || process.env.DDF_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-        throw new Error('MLS_CLIENT_ID or MLS_CLIENT_SECRET is not configured in environment variables.');
+        throw new Error('MLS_CLIENT_ID or MLS_CLIENT_SECRET (or DDF_ equivalents) is not configured in environment variables.');
     }
 
     const tokenUrl = 'https://identity.crea.ca/connect/token';

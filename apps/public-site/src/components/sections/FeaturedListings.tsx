@@ -13,8 +13,7 @@ import { ListingsSection } from './ListingsSection';
 export const FeaturedListings: React.FC = () => {
     return (
         <ListingsSection
-            filters={{ featured: true }}
-            limit={6}
+            limit={20}
             sort="latest"
             title="Premium Collection"
             subtitle="Explore our hand-picked properties representing the pinnacle of design, location, and value in today's most desirable markets."

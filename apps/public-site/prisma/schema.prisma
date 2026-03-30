@@ -17,49 +17,75 @@ model User {
 }
 
 model Listing {
-  id                     Int      @id @default(autoincrement())
-  listingKey             String   @unique
-  listingId              String?
+  id                    Int       @id @default(autoincrement())
+  listingKey            String    @unique
+  listingId             String?
+  listPrice             Float?
+  standardStatus        String?
+  propertyType          String?
+  propertySubType       String?
+  bedroomsTotal         Int?
+  bathroomsTotal        Int?
+  address               String?
+  city                  String?
+  province              String?
+  postalCode            String?
+  latitude              Float?
+  longitude             Float?
+  publicRemarks         String?
+  livingArea            Float?
+  yearBuilt             Int?
 
-  listPrice              Float?
-  standardStatus         String?
-  propertyType           String?
-  propertySubType        String?
+  agentName             String?
+  agentPhone            String?
+  officeName            String?
 
-  bedroomsTotal          Int?
-  bathroomsTotal         Int?
+  moreInformationLink   String?
+  primaryPhotoUrl       String?   @map("primary_photo_url")
+  photosChangeTimestamp DateTime? @map("photos_change_timestamp")
+  mediaJson             Json?     @map("media_json")
 
-  address                String?
-  city                   String?
-  province               String?
-  postalCode             String?
+  primaryPhoto          String?
+  isFeatured            Boolean   @default(false)
+  isActive              Boolean   @default(true)
 
-  latitude               Float?
-  longitude              Float?
+  modificationTimestamp DateTime?
+  listingDate           DateTime?
 
-  publicRemarks          String?
+  rawData               Json?
 
-  agentName              String?
-  agentPhone             String?
-  officeName             String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  moreInformationLink    String?
-
-  primaryPhoto           String?
-
-  modificationTimestamp  DateTime?
-  listingDate            DateTime?
-
-  rawData                Json?
-
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
+  @@index([modificationTimestamp])
   @@index([city])
   @@index([listPrice])
-  @@index([modificationTimestamp])
   @@index([listingDate])
   @@index([createdAt])
+  @@index([isActive, city, listPrice])
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  websiteId      String?
+  listingId      String?
+  agentId        String?
+  mlsNumber      String?
+  name           String
+  email          String
+  phone          String?
+  message        String?
+  source         String   @default("listing_page")
+  status         String   @default("New")
+  assignedTo     String?
+  isAutoAssigned Boolean  @default(false)
+  notes          Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
 }
 
 model SyncLog {

@@ -15,6 +15,7 @@ export interface Lead {
     notes: { id: string; text: string; author: string; createdAt: string }[];
     assignedTo?: string; // Agent name for quick display
     isAutoAssigned?: boolean;
+    metadata?: Record<string, any>; 
     createdAt: string;
     updatedAt: string;
 }

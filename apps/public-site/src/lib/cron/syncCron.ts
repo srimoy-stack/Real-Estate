@@ -1,10 +1,10 @@
-import cron from 'node-cron';
 import { syncListings } from '../syncListings';
+import { runDeltaSync } from '../deltaSync';
 import { prisma } from '../prisma';
+import { withActive } from '../listings-utils';
+import { flushListingsCache } from '../redis';
 
-let cronInitialized = false;
-
-const COOLDOWN_MS = 10 * 60 * 1000; // 10-minute cooldown between syncs
+const COOLDOWN_MS = 1 * 60 * 1000; // 1-minute cooldown for delta sync
 
 /**
  * Check if a sync is currently running or was completed recently (within cooldown).
@@ -36,8 +36,9 @@ async function canRunSync(): Promise<{ allowed: boolean; reason?: string }> {
  * Core sync executor. Handles logging to DB, timing, and error capture.
  */
 async function executeSyncWithLogging(
-  trigger: 'cron' | 'manual' | 'external'
-): Promise<{ success: boolean; message: string; durationMs?: number; listingsSynced?: number }> {
+  trigger: 'cron' | 'manual' | 'external',
+  type: 'delta' | 'full' = 'delta'
+): Promise<{ success: boolean; message: string; durationMs?: number; listingsSynced?: number; details?: any }> {
   const guard = await canRunSync();
   if (!guard.allowed) {
     console.log(`[SYNC] Blocked (${trigger}): ${guard.reason}`);
@@ -50,15 +51,24 @@ async function executeSyncWithLogging(
   });
 
   const startTime = Date.now();
-  console.log(`[SYNC] Starting MLS sync (trigger=${trigger}) at ${new Date().toISOString()}`);
+  console.log(`[SYNC] Starting ${type.toUpperCase()} MLS sync (trigger=${trigger}) at ${new Date().toISOString()}`);
 
   try {
-    await syncListings();
+    let result: any;
+    if (type === 'full') {
+        // Fallback to legacy full sync if requested
+        await syncListings();
+    } else {
+        // Modern Delta Sync (Senior Engineer Implementation)
+        result = await runDeltaSync(false);
+    }
 
     const durationMs = Date.now() - startTime;
+    const activeCount = await prisma.listing.count({ where: withActive() });
+    const inactiveCount = await prisma.listing.count({ where: { isActive: false } });
+    const totalListings = activeCount + inactiveCount;
 
-    // Count total listings as a rough "synced" metric
-    const totalListings = await prisma.listing.count();
+    console.log(`[Sync Engine] Finished. Active: ${activeCount}, Inactive: ${inactiveCount}, Total: ${totalListings}`);
 
     await prisma.syncLog.update({
       where: { id: log.id },
@@ -70,8 +80,17 @@ async function executeSyncWithLogging(
       },
     });
 
-    console.log(`[SYNC] Completed (trigger=${trigger}) in ${durationMs}ms — ${totalListings} listings in DB`);
-    return { success: true, message: 'Sync completed successfully.', durationMs, listingsSynced: totalListings };
+    // ── Invalidate listing cache so fresh data is served immediately ────
+    await flushListingsCache();
+
+    console.log(`[SYNC] Completed in ${durationMs}ms — ${totalListings} listings in DB`);
+    return { 
+        success: true, 
+        message: 'Sync completed successfully.', 
+        durationMs, 
+        listingsSynced: totalListings,
+        details: result
+    };
   } catch (err) {
     const durationMs = Date.now() - startTime;
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -89,23 +108,6 @@ async function executeSyncWithLogging(
     console.error(`[SYNC] Failed (trigger=${trigger}) after ${durationMs}ms:`, errorMessage);
     return { success: false, message: `Sync failed: ${errorMessage}`, durationMs };
   }
-}
-
-// ─── Local/Dev: In-process cron (only works with persistent server) ───
-
-export function startSyncCron() {
-  if (cronInitialized) {
-    console.log('[CRON] Already initialized, skipping duplicate setup.');
-    return;
-  }
-
-  cronInitialized = true;
-
-  cron.schedule('0 10 * * *', () => {
-    executeSyncWithLogging('cron');
-  });
-
-  console.log('[CRON] MLS sync cron scheduled — runs daily at 10:00 AM');
 }
 
 // ─── Production: Called by API route (external scheduler or manual) ───

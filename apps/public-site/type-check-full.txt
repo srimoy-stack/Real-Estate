@@ -1,0 +1,20 @@
+
+> public-site@0.1.0 type-check
+> tsc --noEmit
+
+src/app/(public)/search/page.tsx(6,24): error TS6133: 'ListingStatus' is declared but its value is never read.
+src/app/(public)/search/page.tsx(13,1): error TS6133: 'SearchBar' is declared but its value is never read.
+src/app/(public)/search/page.tsx(39,45): error TS2339: Property 'totalCount' does not exist on type '{ page: number; pageSize: number; total: number; totalPages: number; }'.
+src/app/listings-demo/[id]/page.tsx(215,100): error TS2339: Property 'PropertyAttachedYN' does not exist on type 'MLSProperty'.
+src/app/listings-demo/page.tsx(3,59): error TS6133: 'useMemo' is declared but its value is never read.
+src/app/listings-demo/page.tsx(9,35): error TS6133: 'scoreListing' is declared but its value is never read.
+src/app/listings-demo/page.tsx(41,11): error TS6133: 'selectedCity' is declared but its value is never read.
+src/components/layout/Footer.tsx(12,46): error TS6133: 'footerLinks' is declared but its value is never read.
+src/components/listings/SearchFilters.tsx(5,1): error TS6133: 'PropertyType' is declared but its value is never read.
+npm error Lifecycle script `type-check` failed with error:
+npm error code 1
+npm error path /home/lenovo/Desktop/Real Estate/apps/public-site
+npm error workspace public-site@0.1.0
+npm error location /home/lenovo/Desktop/Real Estate/apps/public-site
+npm error command failed
+npm error command sh -c tsc --noEmit

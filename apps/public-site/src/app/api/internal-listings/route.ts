@@ -1,116 +1,96 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
-import { buildWhereClause, ListingQuery } from '../../../lib/listings-utils';
+import { ListingQuery, fetchRankedListings } from '../../../lib/listings-utils';
+import { enrichListingsWithCompliance } from '../../../lib/ddf-compliance';
+import { buildCacheKey, getCached, setCache } from '../../../lib/redis';
+
+const CACHE_TTL_SECONDS = 60;
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+    const start = performance.now();
     const { searchParams } = new URL(request.url);
 
     try {
-        // ── 1. Parse Query Params ───────────────────────────────────────────
+        // ── 0. Redis Cache Check ───────────────────────────────────────────
+        const cacheKey = buildCacheKey(searchParams);
+        const cached = await getCached(cacheKey);
 
-        const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+        if (cached) {
+            const duration = performance.now() - start;
+            console.log(`[Listings API] CACHE HIT | Key: ${cacheKey.substring(0, 80)}… | Duration: ${duration.toFixed(2)}ms`);
+            return NextResponse.json(cached);
+        }
+
+        // ── 1. Parse Initial Params ──────────────────────────────────────────
+        let page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
         const limit = Math.min(parseInt(searchParams.get('limit') || '90', 10), 100);
-        const skip = (page - 1) * limit;
 
         const baseQuery: ListingQuery = {
             city: searchParams.get('city'),
-            minPrice: searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined,
-            maxPrice: searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined,
-            beds: searchParams.get('beds') ? parseInt(searchParams.get('beds')!, 10) : undefined,
-            baths: searchParams.get('baths') ? parseInt(searchParams.get('baths')!, 10) : undefined,
+            minPrice: (searchParams.get('minPrice') && !isNaN(parseFloat(searchParams.get('minPrice')!))) ? parseFloat(searchParams.get('minPrice')!) : undefined,
+            maxPrice: (searchParams.get('maxPrice') && !isNaN(parseFloat(searchParams.get('maxPrice')!))) ? parseFloat(searchParams.get('maxPrice')!) : undefined,
+            min_price: (searchParams.get('min_price') && !isNaN(parseFloat(searchParams.get('min_price')!))) ? parseFloat(searchParams.get('min_price')!) : undefined,
+            max_price: (searchParams.get('max_price') && !isNaN(parseFloat(searchParams.get('max_price')!))) ? parseFloat(searchParams.get('max_price')!) : undefined,
+            beds: (searchParams.get('beds') && searchParams.get('beds') !== 'Any') ? parseInt(searchParams.get('beds')!.replace('+', ''), 10) : undefined,
+            baths: (searchParams.get('baths') && searchParams.get('baths') !== 'Any') ? parseInt(searchParams.get('baths')!.replace('+', ''), 10) : undefined,
             propertyType: searchParams.get('propertyType'),
-            q: searchParams.get('searchQuery') || searchParams.get('q'),
-            // Parse Geo Params
+            type: searchParams.get('type'),
+            q: searchParams.get('q'),
+            search: searchParams.get('search') || searchParams.get('searchQuery'),
             latMin: searchParams.get('latMin') ? parseFloat(searchParams.get('latMin')!) : undefined,
             latMax: searchParams.get('latMax') ? parseFloat(searchParams.get('latMax')!) : undefined,
             lngMin: searchParams.get('lngMin') ? parseFloat(searchParams.get('lngMin')!) : undefined,
             lngMax: searchParams.get('lngMax') ? parseFloat(searchParams.get('lngMax')!) : undefined,
+            featured: searchParams.get('featured') === 'true' ? true : searchParams.get('featured') === 'false' ? false : undefined,
+            listingType: searchParams.get('listingType') as any,
+            minSqft: (searchParams.get('minSqft') && !isNaN(parseFloat(searchParams.get('minSqft')!))) ? parseFloat(searchParams.get('minSqft')!) : undefined,
+            maxSqft: (searchParams.get('maxSqft') && !isNaN(parseFloat(searchParams.get('maxSqft')!))) ? parseFloat(searchParams.get('maxSqft')!) : undefined,
+            minYearBuilt: (searchParams.get('minYearBuilt') && !isNaN(parseInt(searchParams.get('minYearBuilt')!, 10))) ? parseInt(searchParams.get('minYearBuilt')!, 10) : undefined,
+            maxYearBuilt: (searchParams.get('maxYearBuilt') && !isNaN(parseInt(searchParams.get('maxYearBuilt')!, 10))) ? parseInt(searchParams.get('maxYearBuilt')!, 10) : undefined,
+            sortBy: searchParams.get('sort_by') || searchParams.get('sortBy'),
+            order: (searchParams.get('order') || 'desc') as any,
+            keywords: searchParams.get('keywords'),
+            agentName: searchParams.get('agentName'),
+            agentId: searchParams.get('agentId'),
+            useRanking: !!(searchParams.get('q') || searchParams.get('search') || searchParams.get('searchQuery') || searchParams.get('keywords'))
         };
 
-        // ── 2. Determine Strategy (Relaxation) ────────────────────────────────
-        let where = buildWhereClause(baseQuery);
-        let total = await prisma.listing.count({ where });
-        let relaxationLevel = 'None';
+        // ── 2. Execute Search (engine handles expansion + total) ────────────
+        const skip = (page - 1) * limit;
+        const { listings: listingsRaw, total, relaxationLevel = 'None' } = await fetchRankedListings(
+            prisma,
+            baseQuery,
+            limit,
+            skip
+        );
 
-        // ── 2.5 Progressive Relaxation (Non-ID Only) ───────────────────
-        // If results are empty, try removing filters step-by-step
-        const isIdSearch = baseQuery.q && (/^[A-Z]\d+$/i.test(baseQuery.q) || /^\d{5,}$/.test(baseQuery.q));
+        // Recalculate pagination from engine's total (which includes expanded results)
+        const totalPages = Math.ceil(total / limit);
+        if (page < 1) page = 1;
+        if (page > totalPages && totalPages > 0) page = totalPages;
 
-        if (!isIdSearch && total === 0) {
-            // Step 1: Remove propertyType
-            where = buildWhereClause({ ...baseQuery, propertyType: 'Any' });
-            total = await prisma.listing.count({ where });
-            if (total > 0) relaxationLevel = 'Step 1: PropertyType Removed';
+        // ── 3. Freshness + Platform Total ──────────────────────────────────
+        const [lastSync, platformTotal] = await Promise.all([
+            prisma.syncLog.findFirst({
+                where: { status: 'success' },
+                orderBy: { startedAt: 'desc' },
+                select: { completedAt: true }
+            }),
+            prisma.listing.count({ where: { isActive: true } })
+        ]);
 
-            if (total === 0) {
-                // Step 2: Remove beds/baths
-                where = buildWhereClause({ ...baseQuery, propertyType: 'Any', beds: 0, baths: 0 });
-                total = await prisma.listing.count({ where });
-                if (total > 0) relaxationLevel = 'Step 2: Beds/Baths Removed';
-            }
-
-            if (total === 0) {
-                // Step 3: Fallback to city-only
-                where = buildWhereClause({ city: baseQuery.city });
-                total = await prisma.listing.count({ where });
-                if (total > 0) relaxationLevel = 'Step 3: City Fallback';
-            }
-
-            if (relaxationLevel !== 'None') {
-                console.warn(`[API] Relaxation triggered: ${relaxationLevel} for query in ${baseQuery.city}`);
-            }
-        }
-
-        // ── 3. Execute Final Data Query (Guaranteed Consistent) ──────────────
-        // Strategy: If relaxation moved the count below our skip, reset skip to 0 to avoid empty pages.
-        let effectiveSkip = skip;
-        if (effectiveSkip >= total && total > 0) {
-            effectiveSkip = 0;
-            console.log(`[API] Skip reset to 0 (Total: ${total}, Requested Skip: ${skip})`);
-        }
-
-        const listingsRaw = await prisma.listing.findMany({
-            where,
-            take: limit,
-            skip: effectiveSkip,
-            orderBy: {
-                createdAt: 'desc'
-            },
-            select: {
-                id: true,
-                listingKey: true,
-                listingId: true,
-                listPrice: true,
-                standardStatus: true,
-                propertySubType: true,
-                address: true,
-                city: true,
-                province: true,
-                postalCode: true,
-                latitude: true,
-                longitude: true,
-                bedroomsTotal: true,
-                bathroomsTotal: true,
-                publicRemarks: true,
-                modificationTimestamp: true,
-                primaryPhoto: true,
-                rawData: true
-            }
-        });
-
-        const totalCount = await prisma.listing.count(); // Global count for trust-building
-
-        // ── 4. Map to PascalCase (Legacy Format Support) ───────────────────
-        const listings = listingsRaw.map((listing: any) => {
-            const raw = listing.rawData || {};
-
+        // ── 4. Mapping ─────────────────────────────────────────────────────
+        const mappedListings = listingsRaw.map((listing: any) => {
+            const raw = (listing.rawData as any) || {};
             return {
                 ...raw,
+                listingKey: listing.listingKey,
                 ListingKey: listing.listingKey,
                 ListingId: listing.listingId,
                 ListPrice: listing.listPrice,
+                standardStatus: listing.standardStatus,
                 StandardStatus: listing.standardStatus,
                 PropertySubType: listing.propertySubType,
                 UnparsedAddress: listing.address,
@@ -123,35 +103,57 @@ export async function GET(request: NextRequest) {
                 BathroomsTotalInteger: listing.bathroomsTotal,
                 PublicRemarks: listing.publicRemarks,
                 ModificationTimestamp: listing.modificationTimestamp?.toISOString(),
-                ListingDate: (listing.listingDate || raw.ListingDate)?.toString(),
-                Media: raw.Media || (listing.primaryPhoto ? [
-                    {
-                        MediaURL: listing.primaryPhoto,
-                        MediaCategory: 'Property Photo',
-                        PreferredPhotoYN: true
-                    }
-                ] : [])
+                agentName: listing.agentName || raw.ListAgentFullName,
+                agentPhone: listing.agentPhone || raw.ListAgentDirectPhone,
+                officeName: listing.officeName || raw.ListOfficeName,
+                moreInformationLink: listing.moreInformationLink || raw.ListingURL || null,
+                primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
+                Media: listing.mediaJson || raw.Media || (() => {
+                    const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || null;
+                    if (photoUrl) return [{ MediaURL: photoUrl, PreferredPhotoYN: true, Order: 0 }];
+                    // Try to extract from rawData photo fields
+                    const rawPhoto = raw.Photo?.[0]?.HighResPath || raw.Photo?.[0]?.LargePhotoPath || raw.Photo?.[0]?.MedResPath || null;
+                    if (rawPhoto) return [{ MediaURL: rawPhoto, PreferredPhotoYN: true, Order: 0 }];
+                    return [];
+                })()
             };
         });
 
-        const totalPages = Math.ceil(total / limit);
+        // ── DDF Compliance: Enrich all listings with required fields ────────
+        const listings = enrichListingsWithCompliance(mappedListings);
 
-        // ── 5. Standardized Response ───────────────────────────────────────
-        return NextResponse.json({
-            data: listings,
+        // ── 5. Performance Logging ─────────────────────────────────────────
+        const duration = performance.now() - start;
+        console.log(`[Listings API] CACHE MISS | Duration: ${duration.toFixed(2)}ms | Page: ${page} | Total: ${total} | Results: ${listings.length} | Expansion: ${relaxationLevel}`);
+
+        // ── 6. Response ────────────────────────────────────────────────────
+        const responseBody = {
             total,
-            page: effectiveSkip === 0 ? 1 : page,
-            limit,
+            platformTotal,
+            page,
+            pageSize: limit,
             totalPages,
-            // Consistency fields
-            totalCount, 
-            relaxationLevel,
-            // Legacy field (deprecated but kept for UI stability)
-            listings: listings
-        });
+            lastSyncedAt: lastSync?.completedAt?.toISOString(),
+            listings,
+            meta: { 
+                total, 
+                platformTotal,
+                page, 
+                limit, 
+                totalPages, 
+                relaxationLevel,
+                expanded: relaxationLevel !== 'None',
+                durationMs: parseFloat(duration.toFixed(2))
+            }
+        };
+
+        // ── 7. Cache the response (fire-and-forget, non-blocking) ──────────
+        setCache(cacheKey, responseBody, CACHE_TTL_SECONDS);
+
+        return NextResponse.json(responseBody);
 
     } catch (err: any) {
-        console.error('[Internal Proxy] Error:', err.message);
+        console.error('[Internal Proxy] FATAL:', err.message);
         return NextResponse.json(
             { error: 'Internal Server Error', message: err.message },
             { status: 500 }

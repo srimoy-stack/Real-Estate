@@ -140,9 +140,28 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                        {listing.propertyType.replace('_', ' ')}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                            MLS® {listing.mlsNumber}
+                        </span>
+                        {/* CREA DDF Required: Powered by REALTOR.ca badge */}
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <a
+                                href="https://www.realtor.ca/en"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center"
+                            >
+                                <Image
+                                    src="https://www.realtor.ca/images/en-ca/powered_by_realtor.svg"
+                                    alt="Powered by: REALTOR.ca"
+                                    width={70}
+                                    height={20}
+                                    className="opacity-50 hover:opacity-100 transition-opacity"
+                                />
+                            </a>
+                        </div>
+                    </div>
                     <div className="px-4 py-2 bg-slate-900 group-hover:bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">
                         View Details
                     </div>

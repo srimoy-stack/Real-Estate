@@ -1,14 +1,13 @@
 import { MLSProperty, MLSApiResponse, FilterState } from './types';
-import { expandGeoBounds } from './utils';
 
 interface FetchListingsResponse extends MLSApiResponse {
     listings: MLSProperty[];
     nextLink: string | null;
     total: number;
     totalCount?: number;
+    platformTotal?: number;
 }
 
-const MIN_LISTING_THRESHOLD = 20;
 const USE_INTERNAL_API = true; // Toggle to switch between local Sync DB and Live MLS Proxy
 
 /**
@@ -32,57 +31,30 @@ export async function fetchAggregatedListings(
             batches.map(page =>
                 fetchListings(filters, page, pageSize).catch(err => {
                     console.error(`[MLS Aggregator] Batch ${page} failed:`, err);
-                    return { listings: [], total: 0, totalCount: 0, nextLink: null };
+                    return { listings: [], total: 0, totalCount: 0, platformTotal: 0, nextLink: null };
                 })
             )
         );
 
-        let allListings = results.flatMap(r => r.listings);
-        let totalCount = results[0]?.total || 0;
-
-        // ── Step 2: Deduplicate by ListingId ───────────────────────────
+        // ── Step 2: Extract & Deduplicate (Task 3.1) ───────────────────────────
         const seen = new Set<string>();
-        const uniqueListings = allListings.filter(l => {
+        const uniqueListings = results.flatMap(r => r.listings).filter(l => {
             const id = l.ListingId || l.ListingKey;
             if (!id || seen.has(id)) return false;
             seen.add(id);
             return true;
         });
 
-        // ── Step 3: Optional Geo Expansion if too few results ──────────
-        if (uniqueListings.length < MIN_LISTING_THRESHOLD) {
-            console.log(`[MLS Aggregator] Low yield (${uniqueListings.length}). Expanding bounds...`);
-            const expandedBounds = expandGeoBounds({
-                latitudeMin: filters.latitudeMin ?? 0,
-                latitudeMax: filters.latitudeMax ?? 0,
-                longitudeMin: filters.longitudeMin ?? 0,
-                longitudeMax: filters.longitudeMax ?? 0,
-            }, 0.20); // 20% expansion
-
-            try {
-                const resExp = await fetchListings({ ...filters, ...expandedBounds }, 1, pageSize);
-
-                // Add new ones
-                resExp.listings.forEach(l => {
-                    const id = l.ListingId || l.ListingKey;
-                    if (id && !seen.has(id)) {
-                        uniqueListings.push(l);
-                        seen.add(id);
-                    }
-                });
-                totalCount = Math.max(totalCount, resExp.total);
-            } catch (err) {
-                console.warn('[MLS Aggregator] Geo expansion failed:', err);
-            }
-        }
+        // ── Step 3: NO expansion (Task 3.1) ────────────────────────────────────
+        // Geo-expansion is removed to guarantee 1:1 total correspondence.
 
         const sortedListings = sortListings(uniqueListings, filters);
-        console.log(`[MLS Aggregator] Final unique count: ${sortedListings.length}`);
-
+        
         return {
             listings: sortedListings,
-            total: totalCount,
-            totalCount: results[0]?.totalCount || 0,
+            total: results[0]?.total || 0, // Backend total is the source of truth
+            totalCount: results[0]?.totalCount || results[0]?.total || 0,
+            platformTotal: results[0]?.platformTotal || 0,
             nextLink: null
         };
 
@@ -93,31 +65,63 @@ export async function fetchAggregatedListings(
 }
 
 /**
- * RELEVANCE SCORING & SORTING
+ * RELEVANCE SCORING & SORTING (Mirrors Backend Weighted Ranking)
  */
-export function scoreListing(listing: MLSProperty, searchCity: string): number {
-    if (!searchCity) return 0;
-    let score = 0;
+export function scoreListing(listing: MLSProperty, query: string): number {
+    if (!query) return 0;
+    const q = query.toLowerCase().trim();
     const city = (listing.City || '').toLowerCase();
     const addr = (listing.UnparsedAddress || '').toLowerCase();
     const remarks = (listing.PublicRemarks || '').toLowerCase();
 
-    if (city.includes(searchCity) || searchCity.includes(city)) score += 10;
-    if (addr.includes(searchCity)) score += 5;
-    if (remarks.includes(searchCity)) score += 2;
+    let score = 0;
+    // Weighted search ranking: Address (3), City exact (2), Remarks (1)
+    if (addr.includes(q)) score += 3;
+    if (city === q) score += 2; // Exact match only — prevents cross-city pollution
+    if (remarks.includes(q)) score += 1;
+    
+    // Exact match bonuses (Professional UI heuristic)
+    if (addr === q) score += 10;
+    
     return score;
 }
 
 export function sortListings(listings: MLSProperty[], filters: FilterState): MLSProperty[] {
-    const searchCity = (filters.city || '').toLowerCase().trim();
+    // Use searchQuery/keywords for relevance scoring — city is a filter, not a search term
+    const searchStr = (filters.searchQuery || filters.keywords || '').toLowerCase().trim();
+    const { sortBy, order } = filters;
+    const isDesc = order === 'desc';
+
     return [...listings].sort((a, b) => {
-        const scoreA = scoreListing(a, searchCity);
-        const scoreB = scoreListing(b, searchCity);
-        if (scoreA !== scoreB) return scoreB - scoreA;
-        const tA = a.ModificationTimestamp || '';
-        const tB = b.ModificationTimestamp || '';
-        if (tA !== tB) return tB.localeCompare(tA);
-        return (b.ListPrice || 0) - (a.ListPrice || 0);
+        // If sorting by Newest/Initial, and a search exists, prioritize relevance
+        if ((sortBy === 'newest' || !sortBy) && searchStr) {
+            const scoreA = scoreListing(a, searchStr);
+            const scoreB = scoreListing(b, searchStr);
+            if (scoreA !== scoreB) return scoreB - scoreA;
+        }
+
+        switch (sortBy) {
+            case 'price':
+            case 'price_asc':
+            case 'price_desc':
+                return isDesc ? (b.ListPrice || 0) - (a.ListPrice || 0) : (a.ListPrice || 0) - (b.ListPrice || 0);
+            case 'beds':
+            case 'bedrooms':
+                return isDesc ? (b.BedroomsTotal || 0) - (a.BedroomsTotal || 0) : (a.BedroomsTotal || 0) - (b.BedroomsTotal || 0);
+            case 'year':
+            case 'yearBuilt':
+                return isDesc ? (b.YearBuilt || 0) - (a.YearBuilt || 0) : (a.YearBuilt || 0) - (b.YearBuilt || 0);
+            case 'sqft':
+            case 'livingArea':
+                return isDesc ? (b.LivingArea || 0) - (a.LivingArea || 0) : (a.LivingArea || 0) - (b.LivingArea || 0);
+            case 'newest':
+            case 'date':
+            case 'updated':
+            default:
+                const timeA = new Date(a.ModificationTimestamp || 0).getTime();
+                const timeB = new Date(b.ModificationTimestamp || 0).getTime();
+                return isDesc ? timeB - timeA : timeA - timeB;
+        }
     });
 }
 
@@ -134,13 +138,53 @@ export async function fetchListings(
     if (USE_INTERNAL_API) {
         try {
             const internalParams = new URLSearchParams();
-            if (filters.city) internalParams.set('city', filters.city);
-            if (filters.minPrice) internalParams.set('minPrice', filters.minPrice);
-            if (filters.maxPrice) internalParams.set('maxPrice', filters.maxPrice);
-            if (filters.searchQuery) {
-                internalParams.set('q', filters.searchQuery);
-                internalParams.set('searchQuery', filters.searchQuery);
-            }
+
+            // Helper: only set param if value is a non-empty trimmed string
+            const setParam = (key: string, val: any) => {
+                if (val === undefined || val === null) return;
+                const s = String(val).trim();
+                if (s && s !== 'undefined' && s !== 'null') {
+                    internalParams.set(key, s);
+                }
+            };
+
+            // City — exact filter, trim whitespace
+            setParam('city', filters.city);
+
+            // Price — only valid numeric strings
+            setParam('minPrice', filters.minPrice);
+            setParam('maxPrice', filters.maxPrice);
+
+            // Beds/Baths — strip "+" suffix, skip "Any"
+            if (filters.beds && filters.beds !== 'Any') setParam('beds', filters.beds.replace('+', ''));
+            if (filters.baths && filters.baths !== 'Any') setParam('baths', filters.baths.replace('+', ''));
+
+            // Physical attributes
+            setParam('minSqft', filters.minSqft);
+            setParam('maxSqft', filters.maxSqft);
+            setParam('minYearBuilt', filters.minYearBuilt);
+            setParam('maxYearBuilt', filters.maxYearBuilt);
+
+            // Types — skip "Any"
+            if (filters.propertyType && filters.propertyType !== 'Any') setParam('propertyType', filters.propertyType);
+            setParam('listingType', filters.listingType);
+            if (filters.featured) internalParams.set('featured', 'true');
+            setParam('keywords', filters.keywords);
+
+            // Sorting
+            setParam('sort_by', filters.sortBy);
+            setParam('order', filters.order);
+
+            // Geo bounds — only valid finite numbers
+            if (filters.latitudeMin != null && Number.isFinite(filters.latitudeMin)) setParam('latMin', filters.latitudeMin);
+            if (filters.latitudeMax != null && Number.isFinite(filters.latitudeMax)) setParam('latMax', filters.latitudeMax);
+            if (filters.longitudeMin != null && Number.isFinite(filters.longitudeMin)) setParam('lngMin', filters.longitudeMin);
+            if (filters.longitudeMax != null && Number.isFinite(filters.longitudeMax)) setParam('lngMax', filters.longitudeMax);
+
+            // Search query — trimmed
+            const q = (filters.searchQuery || '').trim();
+            if (q) internalParams.set('q', q);
+
             internalParams.set('page', page.toString());
             internalParams.set('limit', pageSize.toString());
 
@@ -149,12 +193,15 @@ export async function fetchListings(
             });
 
             if (internalRes.ok) {
-                const data = await internalRes.json();
+                const response = await internalRes.json();
+                const { listings, total, totalPages, page, meta, platformTotal } = response;
+                
                 return {
-                    listings: data.listings || [],
-                    total: data.total || 0,
-                    totalCount: data.totalCount || 0,
-                    nextLink: data.page < data.totalPages ? 'next' : null
+                    listings: listings || [],
+                    total: total || meta?.total || 0,
+                    totalCount: total || meta?.total || 0,
+                    platformTotal: platformTotal || meta?.platformTotal || 0,
+                    nextLink: page < totalPages ? 'next' : null
                 };
             }
         } catch (err) {

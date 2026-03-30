@@ -26,6 +26,7 @@ export async function syncListings() {
                 '$top': PREFERRED_PAGE_SIZE.toString(),
                 '$skip': skip.toString(),
                 '$count': 'true',
+                '$expand': 'Media',
                 '$orderby': 'ModificationTimestamp desc'
             });
 
@@ -51,8 +52,8 @@ export async function syncListings() {
             }
 
             for (const item of rawListings) {
-                // Mapping DDF fields to our defined Listing model
-                const primaryMedia = item.Media && item.Media.length > 0 ? item.Media[0].MediaURL : null;
+                const photosTime = item.PhotosChangeTimestamp ? new Date(item.PhotosChangeTimestamp) : null;
+                const media = processMedia(item.Media || []);
 
                 try {
                     await prisma.listing.upsert({
@@ -75,11 +76,15 @@ export async function syncListings() {
                             agentName: item.ListAgentFullName,
                             agentPhone: item.ListAgentDirectPhone,
                             officeName: item.ListOfficeName,
-                            moreInformationLink: item.OriginalEntryTimestamp ? item.OriginalEntryTimestamp : null, // Mapped fallback if needed
-                            primaryPhoto: primaryMedia,
+                            moreInformationLink: item.ListingURL || null,
+                            primaryPhoto: media.primary,
+                            primaryPhotoUrl: media.primary,
+                            photosChangeTimestamp: photosTime,
+                            mediaJson: media.array,
                             modificationTimestamp: item.ModificationTimestamp ? new Date(item.ModificationTimestamp) : null,
                             listingDate: item.ListingDate ? new Date(item.ListingDate) : (item.OriginalEntryTimestamp ? new Date(item.OriginalEntryTimestamp) : null),
-                            rawData: item
+                            rawData: item,
+                            isActive: true
                         },
                         create: {
                             listingKey: item.ListingKey,
@@ -100,10 +105,15 @@ export async function syncListings() {
                             agentName: item.ListAgentFullName,
                             agentPhone: item.ListAgentDirectPhone,
                             officeName: item.ListOfficeName,
-                            primaryPhoto: primaryMedia,
+                            moreInformationLink: item.ListingURL || null,
+                            primaryPhoto: media.primary,
+                            primaryPhotoUrl: media.primary,
+                            photosChangeTimestamp: photosTime,
+                            mediaJson: media.array,
                             modificationTimestamp: item.ModificationTimestamp ? new Date(item.ModificationTimestamp) : null,
                             listingDate: item.ListingDate ? new Date(item.ListingDate) : (item.OriginalEntryTimestamp ? new Date(item.OriginalEntryTimestamp) : null),
-                            rawData: item
+                            rawData: item,
+                            isActive: true
                         }
                     });
                     totalSynced++;
@@ -133,3 +143,18 @@ export async function syncListings() {
 
     console.log(`[MLS Sync] ✨ Finished! Total listings managed: ${totalSynced}`);
 }
+
+function processMedia(media: any[]): { primary: string | null; array: any[] } {
+    if (!media || media.length === 0) return { primary: null, array: [] };
+    const processed = media.map(m => ({
+        MediaURL: m.MediaURL,
+        Order: m.Order || 0,
+        MediaModificationTimestamp: m.MediaModificationTimestamp || null
+    })).sort((a, b) => a.Order - b.Order);
+    const primaryObj = processed.find(m => m.Order === 0) || processed[0];
+    return {
+        primary: primaryObj?.MediaURL || null,
+        array: processed
+    };
+}
+

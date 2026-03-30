@@ -33,6 +33,8 @@ export interface ListingsSectionProps {
     className?: string;
     /** Card variant: 'default' | 'idx' */
     variant?: 'default' | 'idx';
+    /** Name of a managed shortcode configuration */
+    configName?: string;
 }
 
 // ─── Component ─────────────────────────────────────────
@@ -46,6 +48,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     viewAllHref = '/listings',
     className = '',
     variant = 'default',
+    configName,
 }) => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -53,7 +56,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     const [error, setError] = useState<string | null>(null);
 
     // Memoize filter key to avoid unnecessary refetches
-    const filterKey = useMemo(() => JSON.stringify({ filters, limit, sort }), [filters, limit, sort]);
+    const filterKey = useMemo(() => JSON.stringify({ configName, filters, limit, sort }), [configName, filters, limit, sort]);
 
     useEffect(() => {
         let cancelled = false;
@@ -63,18 +66,43 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 setLoading(true);
                 setError(null);
 
-                // Map sort to the format expected by listingsService
-                const results = await listingService.getBySectionConfig(
-                    filters,
-                    limit,
-                    sort
-                );
+                let results: Listing[] = [];
+
+                if (configName) {
+                    // ── Branch A: Managed Shortcode Config ─────────────
+                    const params = new URLSearchParams();
+                    // Inline filters override config - pass them as query params
+                    if (filters.city) params.set('city', filters.city);
+                    if (filters.propertyType) params.set('propertyType', String(filters.propertyType));
+                    if (filters.status) params.set('status', String(filters.status));
+                    if (filters.minPrice) params.set('minPrice', String(filters.minPrice));
+                    if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
+                    if (filters.bedrooms) params.set('bedrooms', String(filters.bedrooms));
+                    if (filters.bathrooms) params.set('bathrooms', String(filters.bathrooms));
+                    if (limit) params.set('limit', String(limit));
+                    if (sort) params.set('sort', String(sort));
+
+                    const response = await fetch(`/api/shortcode/${configName}?${params.toString()}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        results = data.listings;
+                    } else {
+                        throw new Error(data.message || 'Config not found');
+                    }
+                } else {
+                    // ── Branch B: Standard Search (Inline Only) ────────
+                    results = await listingService.getBySectionConfig(
+                        filters,
+                        limit || 6,
+                        sort || 'latest'
+                    );
+                }
 
                 if (!cancelled) {
                     setListings(results);
                     setTotalCount(results.length);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('[ListingsSection] Failed to fetch listings:', err);
                 if (!cancelled) {
                     setError('Unable to load listings. Please try again later.');

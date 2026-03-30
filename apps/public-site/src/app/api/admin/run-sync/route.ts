@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { runSyncFromAPI } from '@/lib/cron/syncCron';
 
+export const runtime = 'nodejs';
+
 const ADMIN_SYNC_SECRET = process.env.ADMIN_SYNC_SECRET;
 
 // Prevent Netlify/Vercel from timing out — allow long-running sync
