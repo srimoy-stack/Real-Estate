@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 interface ListingGalleryProps {
     images: string[];
@@ -55,13 +55,14 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                 aria-label={`Image gallery for ${title}`}
             >
                 <div className="aspect-[16/9] relative md:aspect-[21/9]">
-                    <Image
+                    <SafeImage
                         src={images[currentIndex]}
                         alt={`${title} - image ${currentIndex + 1}`}
                         fill
                         className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                         priority={currentIndex === 0}
                         onLoad={() => setImgLoaded(prev => ({ ...prev, [currentIndex]: true }))}
+                        seed={`gallery-main-${currentIndex}-${images[currentIndex]}`}
                     />
 
                     {/* Loading skeleton */}
@@ -114,7 +115,13 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                                     onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                                     className={`shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${idx === currentIndex ? 'border-white shadow-lg scale-110' : 'border-transparent opacity-50 hover:opacity-100'}`}
                                 >
-                                    <Image src={img} alt={`thumbnail ${idx + 1}`} fill className="w-full h-full object-cover" />
+                                    <SafeImage 
+                                        src={img} 
+                                        alt={`thumbnail ${idx + 1}`} 
+                                        fill 
+                                        className="w-full h-full object-cover" 
+                                        seed={`gallery-thumb-${idx}-${img}`}
+                                    />
                                 </button>
                             ))}
                         </div>
@@ -161,11 +168,12 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
 
                     {/* Image */}
                     <div className="relative max-w-6xl w-full h-[85vh] mx-auto px-20" onClick={(e) => e.stopPropagation()}>
-                        <Image
+                        <SafeImage
                             src={images[currentIndex]}
                             alt={`${title} - image ${currentIndex + 1}`}
                             fill
                             className="object-contain rounded-2xl"
+                            seed={`gallery-lightbox-${currentIndex}-${images[currentIndex]}`}
                         />
                     </div>
 
@@ -195,7 +203,13 @@ export const ListingGallery: React.FC<ListingGalleryProps> = ({ images, title, v
                                 onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                                 className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all relative ${idx === currentIndex ? 'border-white scale-110' : 'border-transparent opacity-40 hover:opacity-80'}`}
                             >
-                                <Image src={img} alt="" fill className="w-full h-full object-cover" />
+                                <SafeImage 
+                                    src={img} 
+                                    alt="" 
+                                    fill 
+                                    className="w-full h-full object-cover" 
+                                    seed={`gallery-lightbox-thumb-${idx}-${img}`}
+                                />
                             </button>
                         ))}
                     </div>

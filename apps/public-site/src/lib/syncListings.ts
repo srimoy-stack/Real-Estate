@@ -26,7 +26,6 @@ export async function syncListings() {
                 '$top': PREFERRED_PAGE_SIZE.toString(),
                 '$skip': skip.toString(),
                 '$count': 'true',
-                '$expand': 'Media',
                 '$orderby': 'ModificationTimestamp desc'
             });
 

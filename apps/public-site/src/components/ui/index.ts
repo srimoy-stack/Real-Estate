@@ -5,8 +5,9 @@
  *   import { UnifiedPropertyCard, formatPrice } from '@/components/ui';
  */
 
-// The ONE card
+// Shared components
 export { UnifiedPropertyCard } from './UnifiedPropertyCard';
+export { SafeImage } from './SafeImage';
 export type { default as UnifiedPropertyCardDefault } from './UnifiedPropertyCard';
 
 // Data normalization

@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { listingService } from '@repo/services';
 import { ListingGallery } from '@/components/listings/ListingGallery';
-import { UnifiedPropertyCard } from '@/components/ui';
+import {
+  UnifiedPropertyCard,
+  SafeImage,
+} from '@/components/ui';
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
 import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
 import { PropertyStats } from '@/components/listings/PropertyStats';
@@ -527,13 +529,14 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               id="agent-profile"
               className="flex flex-col gap-12 rounded-[48px] border border-slate-100 bg-slate-50/50 p-12 md:flex-row"
             >
-              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl">
-                <Image
+              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl bg-slate-100">
+                <SafeImage
                   src={
                     agentPhoto ||
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=random&color=fff&bold=true`
                   }
                   alt={agentName}
+                  seed={agentName}
                   fill
                   className="object-cover"
                 />

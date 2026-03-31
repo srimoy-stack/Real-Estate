@@ -119,9 +119,9 @@ export function normalizeListing(listing: any): NormalizedProperty {
 
   return {
     _normalized: true,
-    id: listing.id || listing.mlsNumber || '',
-    mlsNumber: listing.mlsNumber || '',
-    href: `/listing/${listing.mlsNumber}`,
+    id: String(listing.id || listing.listingKey || listing.mlsNumber || ''),
+    mlsNumber: listing.mlsNumber || listing.listingId || '',
+    href: `/listing/${listing.mlsNumber || listing.listingId || listing.listingKey || listing.id}`,
 
     category,
 
@@ -178,7 +178,7 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
     _normalized: true,
     id: listing.ListingKey || listing.ListingId || '',
     mlsNumber: listing.ListingId || listing.ListingKey || '',
-    href: `/listings-demo/${listing.ListingKey}`,
+    href: `/listing/${listing.ListingId || listing.ListingKey}`,
 
     category,
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   resolveStatus,
@@ -11,6 +11,7 @@ import {
   typography,
 } from './design-tokens';
 import { NormalizedProperty, autoNormalize } from './normalize-property';
+import { SafeImage } from './SafeImage';
 
 // ─── Props ───────────────────────────────────────────────────────
 interface UnifiedPropertyCardProps {
@@ -18,24 +19,6 @@ interface UnifiedPropertyCardProps {
   listing: any;
   /** Stagger animation index */
   index?: number;
-}
-
-// ─── Fast Image Component ────────────────────────────────────────
-function FastImage({ src, alt, seed }: { src: string; alt: string; seed: string | number }) {
-  const [error, setError] = useState(false);
-  const finalSrc = error ? getFallbackImage(seed) : src;
-
-  return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={finalSrc}
-      alt={alt}
-      loading="lazy"
-      decoding="async"
-      onError={() => setError(true)}
-      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-    />
-  );
 }
 
 // ─── Icons ───────────────────────────────────────────────────────
@@ -139,7 +122,13 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
         {/* Gradient overlay for readability */}
         <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         
-        <FastImage src={imageUrl} alt={displayTitle} seed={seed} />
+        <SafeImage 
+          src={imageUrl} 
+          alt={displayTitle} 
+          seed={seed}
+          fill
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+        />
 
         {/* ── Badges ── */}
         <div className="absolute inset-x-3 top-3 z-[3] flex items-start justify-between">
