@@ -6,6 +6,7 @@ import {
   fireDDFAnalyticsPing,
   extractClientIP,
 } from '../../../../lib/ddf-compliance';
+import { isValidImageUrl } from '../../../../lib/server-listing-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,19 +67,12 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
         agentName: listing.agentName || raw.ListAgentFullName || null,
         agentPhone: listing.agentPhone || raw.ListAgentDirectPhone || null,
         agentEmail: raw.ListAgentEmail || null,
-        agentPhoto: raw.ListAgentPhoto || null,
+        agentPhoto: raw.ListAgentPhoto && isValidImageUrl(raw.ListAgentPhoto) ? raw.ListAgentPhoto : null,
         officeName: listing.officeName || raw.ListOfficeName || null,
         moreInformationLink: listing.moreInformationLink || raw.ListingURL || null,
-        primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
+        primaryPhotoUrl: (listing.primaryPhotoUrl || listing.primaryPhoto as string) && isValidImageUrl(listing.primaryPhotoUrl || listing.primaryPhoto as string) ? (listing.primaryPhotoUrl || listing.primaryPhoto as string) : null,
         isFeatured: listing.isFeatured,
         Media: (() => {
-          const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
-          const isValidImageUrl = (url: string) => {
-            if (!url || url.length < 10) return false;
-            if (NON_IMAGE.test(url)) return false;
-            try { const u = new URL(url); if (u.pathname === '/' || u.pathname === '') return false; } catch { return false; }
-            return true;
-          };
           if (Array.isArray(listing.mediaJson) && (listing.mediaJson as any[]).length > 0) {
             const valid = (listing.mediaJson as any[]).filter(
               (m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL)

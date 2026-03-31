@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { listingQueryApi } from '@repo/services';
+import { searchListingsDirect } from '@/lib/server-listing-service';
 import { InternalListingStatus } from '@repo/types';
 import { UnifiedPropertyCard } from '@/components/ui';
 import { ListingFilters as FilterSidebar } from '@/components/listings/ListingFilters';
@@ -48,7 +48,7 @@ export default async function ListingsPage({
   };
 
   // 2. Fetch Data
-  const { listings, totalCount } = await listingQueryApi.searchListings(queryParams);
+  const { listings, totalCount } = await searchListingsDirect(queryParams);
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
@@ -169,7 +169,7 @@ export default async function ListingsPage({
                   </div>
                 )
               ) : (
-                <MapWithNoSSR initialListings={listings} />
+                <MapWithNoSSR initialListings={listings as any} />
               )}
 
               {/* Pagination */}

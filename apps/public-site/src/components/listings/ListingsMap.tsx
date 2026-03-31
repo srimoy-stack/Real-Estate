@@ -1,4 +1,4 @@
-'use client';
+                                                                                         'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -8,7 +8,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ListingCardField } from '@repo/services';
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -55,28 +54,28 @@ function MapEventHandler({ onBoundsChange }: MapEventHandlerProps) {
 }
 
 interface ListingsMapProps {
-    initialListings: ListingCardField[];
+    initialListings: any[];
 }
 
 export function ListingsMap({ initialListings }: ListingsMapProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [listings, setListings] = useState<ListingCardField[]>(initialListings);
+    const [listings, setListings] = useState<any[]>(initialListings);
 
     // Calculate initial center based on available listings
     const center = useMemo(() => {
         // Default center (Toronto approximate)
         const defaultCenter: [number, number] = [43.6532, -79.3832];
-        const withCoords = initialListings.filter(l => l.latitude && l.longitude);
+        const withCoords = initialListings.filter(l => (l.latitude || l.Latitude) && (l.longitude || l.Longitude));
         if (withCoords.length > 0) {
-            const avgLat = withCoords.reduce((sum, l) => sum + l.latitude!, 0) / withCoords.length;
-            const avgLng = withCoords.reduce((sum, l) => sum + l.longitude!, 0) / withCoords.length;
+            const avgLat = withCoords.reduce((sum, l) => sum + (l.latitude || l.Latitude || 0), 0) / withCoords.length;
+            const avgLng = withCoords.reduce((sum, l) => sum + (l.longitude || l.Longitude || 0), 0) / withCoords.length;
             return [avgLat, avgLng] as [number, number];
         }
         return defaultCenter;
     }, [initialListings]);
 
-    // Update listings when props change (e.g., from server-side filtering)
+    // Update listings when props change
     useEffect(() => {
         setListings(initialListings);
     }, [initialListings]);
@@ -87,12 +86,7 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
         current.set('maxLat', bounds.maxLat.toString());
         current.set('minLng', bounds.minLng.toString());
         current.set('maxLng', bounds.maxLng.toString());
-
-        // Remove page param to reset pagination when map moves
         current.delete('page');
-
-        // We use shallow routing to update the URL without full a page reload if possible,
-        // but Next.js App Router relies on router.push for server component re-rendering.
         router.push(`/listings?${current.toString()}`, { scroll: false });
     };
 
@@ -117,38 +111,40 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                     spiderfyOnMaxZoom={true}
                 >
                     {listings.map((listing) => {
-                        if (!listing.latitude || !listing.longitude) return null;
+                        const lat = listing.latitude || listing.Latitude;
+                        const lng = listing.longitude || listing.Longitude;
+                        if (!lat || !lng) return null;
+
+                        const id = listing.id || listing.mlsNumber || listing.ListingKey || listing.listingKey;
 
                         return (
                             <Marker
-                                key={listing.id}
-                                position={[listing.latitude, listing.longitude]}
+                                key={id}
+                                position={[lat, lng]}
                                 icon={customIcon}
                             >
                                 <Popup className="custom-popup" closeButton={false} minWidth={240}>
                                     <div className="p-0 space-y-3">
                                         <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
                                             <Image
-                                                src={listing.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
-                                                alt={listing.address}
+                                                src={(listing.images && listing.images[0]) || listing.primaryPhotoUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
+                                                alt={listing.address || listing.UnparsedAddress || 'Property'}
                                                 fill
                                                 className="object-cover"
                                             />
                                             <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-md text-[9px] font-black uppercase tracking-widest text-slate-900">
-                                                {listing.propertyType}
+                                                {listing.propertyType || listing.PropertyType}
                                             </div>
                                         </div>
                                         <div className="px-4 pb-4 space-y-2">
-                                            <p className="text-xl font-black text-slate-900">${listing.price.toLocaleString()}</p>
-                                            <p className="text-xs font-medium text-slate-500 line-clamp-1">{listing.address}</p>
-
+                                            <p className="text-xl font-black text-slate-900">${(listing.price || listing.ListPrice || 0).toLocaleString()}</p>
+                                            <p className="text-xs font-medium text-slate-500 line-clamp-1">{listing.address || listing.UnparsedAddress}</p>
                                             <div className="flex items-center gap-3 pt-2 text-[10px] font-bold text-slate-400">
-                                                <span>🛏️ {listing.bedrooms} Beds</span>
-                                                <span>🛁 {listing.bathrooms} Baths</span>
+                                                <span>🛏️ {listing.bedrooms ?? listing.BedroomsTotal ?? 0} Beds</span>
+                                                <span>🛁 {listing.bathrooms ?? listing.BathroomsTotalInteger ?? 0} Baths</span>
                                             </div>
-
                                             <Link
-                                                href={`/listing/${listing.mlsNumber}`}
+                                                href={`/listing/${listing.mlsNumber || listing.ListingKey}`}
                                                 className="block w-full py-2 mt-3 text-center bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 transition-colors"
                                             >
                                                 View Details
@@ -162,7 +158,6 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                 </MarkerClusterGroup>
             </MapContainer>
 
-            {/* Custom Leaflet Styles */}
             <style jsx global>{`
                 .leaflet-popup-content-wrapper {
                     padding: 0;
@@ -179,13 +174,12 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                     visibility: hidden;
                 }
                 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
-                    background-color: rgba(217, 119, 6, 0.6); /* Amber 600 */
+                    background-color: rgba(217, 119, 6, 0.6);
                 }
                 .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
                     background-color: rgb(217, 119, 6);
                     color: white;
                     font-weight: 900;
-                    font-family: inherit;
                 }
             `}</style>
         </div>

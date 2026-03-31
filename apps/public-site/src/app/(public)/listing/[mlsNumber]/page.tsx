@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { listingService } from '@repo/services';
+import { 
+  getListingByMlsDirect, 
+  getRelatedListingsDirect 
+} from '@/lib/server-listing-service';
 import { ListingGallery } from '@/components/listings/ListingGallery';
 import {
   UnifiedPropertyCard,
@@ -53,7 +56,7 @@ function displayStat(val: any, suffix = ''): string {
 
 // ─── SEO Metadata ─────────────────────────────────────────────────
 export async function generateMetadata({ params }: ListingDetailProps): Promise<Metadata> {
-  const listing = await listingService.getByMLS(params.mlsNumber);
+  const listing = await getListingByMlsDirect(params.mlsNumber);
   const website = getWebsiteFromHeaders();
 
   if (!listing) return { title: 'Listing Not Found' };
@@ -158,7 +161,7 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
 
 // ─── Page Component ───────────────────────────────────────────────
 export default async function DynamicListingPage({ params }: ListingDetailProps) {
-  const listing = await listingService.getByMLS(params.mlsNumber);
+  const listing = await getListingByMlsDirect(params.mlsNumber);
   if (!listing) return notFound();
 
   // ── DDF Compliance: Analytics Ping ─────────────────────────────────
@@ -177,15 +180,15 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
   });
 
   // ── Derived values (null-safe) ─────────────────────────────────────
-  const relatedListings = await listingService.getRelatedListings(listing, 4);
-  const formattedPrice = formatListingPrice(listing.price, listing.currency || 'CAD');
+  const relatedListings = await getRelatedListingsDirect(listing, 4);
+  const formattedPrice = formatListingPrice(listing.price, (listing as any).currency || 'CAD');
   const address = safeStr(listing.address, 'Address unavailable');
   const city = safeStr(listing.city, 'Unknown City');
   const province = safeStr(listing.province);
   const postalCode = safeStr(listing.postalCode);
   const description = safeStr(listing.description);
   const propertyType = safeStr(listing.propertyType, 'Property');
-  const title = safeStr(listing.title) || `${propertyType} in ${city}`;
+  const title = safeStr((listing as any).title) || `${propertyType} in ${city}`;
   const agentName = safeStr(listing.agentName, 'Listing Agent');
   const agentPhone = safeStr(listing.agentPhone);
   const agentEmail = safeStr(listing.agentEmail);
@@ -334,7 +337,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                       Property ID: {listing.mlsNumber}
                     </p>
                   </div>
-                  <SaveButton listingId={listing.id} variant="full" />
+                  <SaveButton listingId={listing.mlsNumber} variant="full" />
                 </div>
               </div>
 
