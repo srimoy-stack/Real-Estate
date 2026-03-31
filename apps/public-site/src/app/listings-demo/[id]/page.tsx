@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { fetchListingDetail } from '../api';
 import { MLSProperty } from '../types';
 import { RealtorBadge } from '../components/RealtorBadge';
@@ -93,7 +93,7 @@ export default function ListingDetailPage() {
                 <section className="mb-12">
                     <div className="relative aspect-[21/9] overflow-hidden rounded-[2.5rem] bg-gray-100 shadow-2xl">
                         {media.length > 0 ? (
-                            <Image src={media[activeImage]?.MediaURL} alt={listing.UnparsedAddress} fill className="object-cover" priority />
+                            <SafeImage src={media[activeImage]?.MediaURL} alt={listing.UnparsedAddress} fill className="object-cover" priority />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center text-gray-400">No Image</div>
                         )}
@@ -102,7 +102,7 @@ export default function ListingDetailPage() {
                         <div className="mt-6 flex gap-3 overflow-x-auto pb-4 no-scrollbar">
                             {media.slice(0, 20).map((img, idx) => (
                                 <button key={idx} onClick={() => setActiveImage(idx)} className={`relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-2xl ${activeImage === idx ? 'ring-4 ring-emerald-500' : 'opacity-70'}`}>
-                                    <Image src={img.MediaURL} alt="Gallery" fill className="object-cover" />
+                                    <SafeImage src={img.MediaURL} alt="Gallery" fill className="object-cover" />
                                 </button>
                             ))}
                         </div>

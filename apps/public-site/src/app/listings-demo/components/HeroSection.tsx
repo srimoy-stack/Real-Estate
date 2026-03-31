@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 interface HeroSectionProps {
     searchQuery: string;
@@ -28,7 +28,7 @@ export function HeroSection({
         <section className="relative w-full overflow-hidden" style={{ minHeight: '480px' }}>
             {/* Background Image */}
             <div className="absolute inset-0">
-                <Image
+                <SafeImage
                     src="/images/hero-listings.png"
                     alt="Luxury real estate"
                     fill

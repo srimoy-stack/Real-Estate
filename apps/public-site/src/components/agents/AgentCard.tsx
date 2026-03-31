@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { Agent } from '@repo/types';
 
 interface AgentCardProps {
@@ -11,7 +11,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent }) => {
     return (
         <div className="group bg-white rounded-[2rem] overflow-hidden border border-slate-100 hover:border-indigo-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
             <div className="relative aspect-[4/5] overflow-hidden">
-                <Image
+                <SafeImage
                     src={agent.profilePhoto || 'https://via.placeholder.com/400x500'}
                     alt={agent.name}
                     fill

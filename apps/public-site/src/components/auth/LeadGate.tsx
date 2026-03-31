@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { useAuth } from '@repo/auth';
 import { authService } from '@repo/services';
 
@@ -67,7 +67,7 @@ export const LeadGate = () => {
 
                 {/* Visual Header */}
                 <div className="relative h-48 bg-slate-900 overflow-hidden flex items-center justify-center">
-                    <Image
+                    <SafeImage
                         src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800"
                         alt="Luxury Architecture"
                         fill

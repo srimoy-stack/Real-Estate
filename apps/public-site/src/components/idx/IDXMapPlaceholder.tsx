@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { Listing } from '@repo/types';
 
 interface IDXMapPlaceholderProps {
@@ -145,7 +145,7 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                                 </svg>
                             </button>
                             <div className="relative h-36 w-full">
-                                <Image
+                                <SafeImage
                                     src={
                                         selectedListing.mainImage ||
                                         selectedListing.images?.[0] ||

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { Community } from '@repo/types';
 
 interface CommunityCardProps {
@@ -10,7 +10,7 @@ interface CommunityCardProps {
 export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
     return (
         <Link href={`/communities/${community.slug}`} className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-700 block">
-            <Image
+            <SafeImage
                 src={community.image}
                 alt={community.name}
                 fill

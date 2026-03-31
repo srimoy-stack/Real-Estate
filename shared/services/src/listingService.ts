@@ -74,6 +74,7 @@ function mapToLegacyListing(l: MLSListing | MLSListingCard): Listing {
     agentEmail: l.agentEmail || undefined,
     agentPhoto: l.agentPhoto || undefined,
     brokerageName: l.brokerageName || undefined,
+    moreInformationLink: l.moreInformationLink || null,
     images,
     mainImage: images[0] || '',
     features: (l as MLSListing).features || [],

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 const CITIES = [
     { name: 'Toronto', count: 432, image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800' },
@@ -39,7 +39,7 @@ export const CommunitiesSection = () => {
                             className="group flex flex-col items-center gap-4 p-4 rounded-[32px] bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-xl transition-all duration-500"
                         >
                             <div className="relative w-full aspect-square rounded-[24px] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
-                                <Image
+                                <SafeImage
                                     src={city.image}
                                     alt={city.name}
                                     fill

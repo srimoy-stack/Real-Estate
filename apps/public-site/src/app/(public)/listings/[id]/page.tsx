@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { listingService } from '@repo/services';
 import { ListingStatus, Listing } from '@repo/types';
 import { LeadCaptureForm } from '@/components/listings/LeadCaptureForm';
@@ -125,7 +125,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
       <div className="mx-auto max-w-[1440px] px-0 md:px-4 lg:px-6 pt-6">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 h-[500px] md:h-[600px] rounded-xl overflow-hidden shadow-2xl">
           <div className="md:col-span-6 relative h-full overflow-hidden group cursor-pointer">
-            <Image
+            <SafeImage
               src={listing.mainImage}
               alt={listing.title}
               fill
@@ -137,7 +137,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
           <div className="hidden md:grid md:col-span-6 grid-cols-2 grid-rows-2 gap-2 h-full">
             {listing.images.slice(0, 4).map((img: string, i: number) => (
               <div key={i} className="relative overflow-hidden group cursor-pointer">
-                <Image
+                <SafeImage
                   src={img}
                   alt={`${listing.title} gallery ${i}`}
                   fill
@@ -378,7 +378,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                 <div className="h-px bg-slate-200 flex-1" />
               </div>
               <div className="relative h-[400px] w-full bg-slate-100 rounded-[40px] overflow-hidden group">
-                <Image src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" alt="Map Placeholder" fill className="object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all duration-1000" />
+                <SafeImage src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" alt="Map Placeholder" fill className="object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all duration-1000" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button className="px-10 py-5 bg-white shadow-2xl rounded-2xl flex items-center gap-4 hover:scale-105 transition-transform duration-500">
                     <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center shadow-lg shadow-amber-600/20">
@@ -403,7 +403,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                 ].map((item, i) => (
                   <div key={i} className="group cursor-pointer">
                     <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                      <Image src={item.img} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <SafeImage src={item.img} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-900">Featured</div>
                     </div>
                     <h3 className="text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors mb-1">{item.title}</h3>

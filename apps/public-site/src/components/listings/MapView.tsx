@@ -1,9 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { SafeImage, resolvePrice } from '@/components/ui';
 import { Listing } from '@repo/types';
+
+// Fix for default marker icons in Next.js
+if (typeof window !== 'undefined') {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
+}
+
+// Declare icons as nullable to avoid SSR errors
+let customIcon: any = null;
+let activeIcon: any = null;
+
+// Initialize on client
+if (typeof window !== 'undefined') {
+    customIcon = new L.DivIcon({
+        className: 'custom-div-icon',
+        html: `<div class="w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-lg"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+    });
+
+    activeIcon = new L.DivIcon({
+        className: 'custom-div-icon active',
+        html: `<div class="w-5 h-5 bg-red-600 rounded-full border-2 border-white shadow-xl animate-pulse"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+    });
+}
 
 interface MapViewProps {
     listings: Listing[];
@@ -12,136 +46,130 @@ interface MapViewProps {
 }
 
 /**
- * MapView Component
- * Renders a premium map placeholder with interactive markers.
+ * BoundsUpdater component to sync map view with listings
  */
+function BoundsUpdater({ listings }: { listings: Listing[] }) {
+    const map = useMap();
+    
+    useEffect(() => {
+        const geotagged = listings.filter(l => l.latitude && l.longitude);
+        if (geotagged.length > 0) {
+            const bounds = L.latLngBounds(geotagged.map(l => [l.latitude!, l.longitude!] as [number, number]));
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        }
+    }, [listings, map]);
+    
+    return null;
+}
+
 export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId }) => {
     const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
 
-    // Filter listings with coordinates
-    const geotaggedListings = listings.filter(l => l.latitude && l.longitude);
+    const geotaggedListings = useMemo(() => 
+        listings.filter(l => 
+            (l.latitude && l.longitude) || 
+            (l.location && l.location.lat && l.location.lng)
+        ),
+    [listings]);
 
-    // Normalize coordinates for the SVG viewport
-    const bounds = geotaggedListings.length > 0
-        ? {
-            minLat: Math.min(...geotaggedListings.map(l => l.latitude!)),
-            maxLat: Math.max(...geotaggedListings.map(l => l.latitude!)),
-            minLng: Math.min(...geotaggedListings.map(l => l.longitude!)),
-            maxLng: Math.max(...geotaggedListings.map(l => l.longitude!)),
+    const getCoords = (l: any): [number, number] => {
+        if (l.latitude && l.longitude) return [l.latitude, l.longitude];
+        if (l.location && l.location.lat && l.location.lng) return [l.location.lat, l.location.lng];
+        return [0, 0];
+    };
+
+    const center: [number, number] = useMemo(() => {
+        if (geotaggedListings.length > 0) {
+            const coords = geotaggedListings.map(getCoords);
+            const avgLat = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+            const avgLng = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+            return [avgLat, avgLng];
         }
-        : { minLat: 43.6, maxLat: 43.7, minLng: -79.4, maxLng: -79.3 };
-
-    const latRange = (bounds.maxLat - bounds.minLat) || 0.1;
-    const lngRange = (bounds.maxLng - bounds.minLng) || 0.1;
-    const padding = 0.1;
-
-    const getPos = (lat: number, lng: number) => ({
-        x: ((lng - bounds.minLng) / lngRange) * (1 - 2 * padding) + padding,
-        y: 1 - (((lat - bounds.minLat) / latRange) * (1 - 2 * padding) + padding),
-    });
-
-    const formatPrice = (val: number) =>
-        new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(val);
+        return [43.6532, -79.3832]; // Default Toronto
+    }, [geotaggedListings]);
 
     return (
-        <div className="relative w-full h-full bg-[#f8f9fa] rounded-[32px] overflow-hidden border border-slate-200 group shadow-inner">
-            {/* Map Placeholder Visuals — Refined for professional look */}
-            <div className="absolute inset-0 opacity-[0.15]">
-                <svg width="100%" height="100%" className="absolute inset-0">
-                    <defs>
-                        <pattern id="mapGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-                            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#222" strokeWidth="0.5" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#mapGrid)" />
-                </svg>
-            </div>
+        <div className="relative w-full h-full bg-[#f8f9fa] rounded-[32px] overflow-hidden border border-slate-200 group shadow-inner z-0">
+            <MapContainer
+                center={center}
+                zoom={12}
+                scrollWheelZoom={true}
+                className="h-full w-full"
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                />
+                
+                <BoundsUpdater listings={listings} />
 
-            {/* Price Markers — Realtor.ca Style */}
-            <div className="absolute inset-0 z-10">
                 {geotaggedListings.map(listing => {
-                    const pos = getPos(listing.latitude!, listing.longitude!);
                     const isActive = activeListingId === listing.id || selectedListing?.id === listing.id;
+                    const priceText = resolvePrice(listing.price, (listing as any).leaseAmount, (listing as any).leaseRatePerSqft, 'residential').text;
+                    const pos = getCoords(listing);
 
                     return (
-                        <button
+                        <Marker
                             key={listing.id}
-                            onClick={() => setSelectedListing(listing)}
-                            className={`absolute transform -translate-x-1/2 -translate-y-full transition-all duration-300 cursor-pointer ${isActive ? 'z-30 scale-110' : 'hover:z-20 hover:scale-105'}`}
-                            style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}
+                            position={pos}
+                            icon={isActive ? activeIcon : customIcon}
+                            eventHandlers={{
+                                click: () => setSelectedListing(listing),
+                            }}
                         >
-                            <div className="relative group/pin">
-                                <div className={`px-2.5 py-1.5 rounded-lg font-black text-[10px] shadow-[0_8px_16px_rgba(0,0,0,0.15)] transition-all duration-300 whitespace-nowrap border-2 ${isActive
-                                    ? 'bg-[#d0021b] text-white border-white'
-                                    : 'bg-white text-slate-800 border-slate-100 group-hover/pin:bg-[#d0021b] group-hover/pin:text-white group-hover/pin:border-white'
-                                    }`}>
-                                    {formatPrice(listing.price)}
+                            <Popup className="custom-map-popup" minWidth={280}>
+                                <div className="p-0 overflow-hidden rounded-xl">
+                                    <div className="relative h-32 w-full">
+                                        <SafeImage
+                                            src={(listing.images && listing.images[0]) || (listing as any).primaryPhotoUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
+                                            fill
+                                            className="object-cover"
+                                            alt={listing.title}
+                                        />
+                                        <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg">
+                                            {listing.status || 'Active'}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-white">
+                                        <h4 className="text-sm font-black text-slate-900 leading-tight mb-0.5 truncate">{listing.title}</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 truncate">{listing.address}</p>
+                                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                                            <span className="text-sm font-black text-red-600">{priceText}</span>
+                                            <Link
+                                                href={`/listing/${listing.mlsNumber || (listing as any).listingKey}`}
+                                                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors"
+                                            >
+                                                Details
+                                            </Link>
+                                        </div>
+                                    </div>
                                 </div>
-                                {/* Pin Point */}
-                                <div className={`absolute left-1/2 -translate-x-1/2 -bottom-1 w-2 h-2 rotate-45 border-r border-b transition-colors ${isActive ? 'bg-[#d0021b] border-white' : 'bg-white border-slate-100 group-hover/pin:bg-[#d0021b] group-hover/pin:border-white'
-                                    }`} />
-
-                                {isActive && (
-                                    <div className="absolute -inset-3 rounded-2xl border-2 border-brand-red animate-ping opacity-20" />
-                                )}
-                            </div>
-                        </button>
+                            </Popup>
+                        </Marker>
                     );
                 })}
-            </div>
+            </MapContainer>
 
-            {/* Selection Preview Card — Realtor Styled */}
-            {selectedListing && (
-                <div className="absolute bottom-6 left-6 right-6 lg:left-auto lg:right-6 lg:w-72 z-40">
-                    <div className="bg-white rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-400">
-                        <div className="relative aspect-video">
-                            <button
-                                onClick={() => setSelectedListing(null)}
-                                className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-brand-red transition-colors"
-                            >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                            <Image
-                                src={selectedListing.mainImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
-                                fill
-                                className="object-cover"
-                                alt={selectedListing.title}
-                            />
-                            <div className="absolute top-2 left-2 bg-[#d0021b] text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">
-                                {selectedListing.status.replace('_', ' ')}
-                            </div>
-                        </div>
-                        <div className="p-4">
-                            <div className="mb-3">
-                                <h4 className="text-sm font-black text-slate-900 leading-tight mb-0.5">{selectedListing.title}</h4>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none truncate">{selectedListing.address}</p>
-                            </div>
-                            <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                                <span className="text-base font-black text-brand-red italic">{formatPrice(selectedListing.price)}</span>
-                                <Link
-                                    href={`/listing/${selectedListing.mlsNumber}`}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-brand-red transition-all shadow-md active:scale-95"
-                                >
-                                    Details
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Map Interaction Legend */}
-            <div className="absolute top-6 left-6 flex flex-col gap-2">
+            {/* Selection Overview Legend */}
+            <div className="absolute top-6 left-6 z-[1000]">
                 <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-xl border border-slate-200 shadow-xl px-4 py-2.5 select-none">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600">Verified MLS® Map View</span>
                 </div>
             </div>
 
-            <style jsx>{`
-                .glass-header {
-                    background: rgba(255, 255, 255, 0.9);
-                    backdrop-filter: blur(16px);
+            <style jsx global>{`
+                .custom-map-popup .leaflet-popup-content-wrapper {
+                    padding: 0 !important;
+                    overflow: hidden;
+                    border-radius: 16px;
+                }
+                .custom-map-popup .leaflet-popup-content {
+                    margin: 0 !important;
+                    width: 280px !important;
+                }
+                .custom-map-popup .leaflet-popup-tip-container {
+                    display: none;
                 }
             `}</style>
         </div>

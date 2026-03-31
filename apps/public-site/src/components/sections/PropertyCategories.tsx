@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 const CATEGORIES = [
     { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial' },
@@ -32,7 +32,7 @@ export const PropertyCategories = () => {
                             href={cat.href}
                             className="group relative h-72 rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
                         >
-                            <Image
+                            <SafeImage
                                 src={cat.image}
                                 alt={cat.title}
                                 fill

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { blogService } from '@repo/services';
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 interface BlogPostPageProps {
     params: { slug: string };
@@ -85,7 +85,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {featuredImage && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
                     <div className="aspect-[21/9] rounded-[48px] overflow-hidden shadow-2xl shadow-slate-300 relative">
-                        <Image
+                        <SafeImage
                             src={featuredImage}
                             alt={title}
                             fill

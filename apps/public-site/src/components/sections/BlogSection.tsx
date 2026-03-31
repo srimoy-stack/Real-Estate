@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { blogService } from '@repo/services';
 import { BlogPost } from '@repo/types';
 
@@ -52,7 +52,7 @@ export const BlogSection = () => {
                     {posts.map((post) => (
                         <article key={post.id} className="group flex flex-col space-y-6">
                             <Link href={`/blog/${post.slug}`} className="relative aspect-[16/10] rounded-[32px] overflow-hidden block">
-                                <Image
+                                <SafeImage
                                     src={post.featuredImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                                     alt={post.title}
                                     fill

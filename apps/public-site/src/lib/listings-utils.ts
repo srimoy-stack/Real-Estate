@@ -136,9 +136,20 @@ export async function fetchRankedListings(
             const baths = q.baths || 0;
             const propType = q.propertyType && q.propertyType !== 'Any' ? `%${q.propertyType}%` : null;
 
-            // Using specific fields in SQL to minimize JSON overhead
+            // Map Prisma camelCase field names → actual PostgreSQL column names
+            // Fields with @map() in schema have different DB column names
+            const PRISMA_TO_DB_COLUMN: Record<string, string> = {
+                primaryPhotoUrl: 'primary_photo_url',
+                photosChangeTimestamp: 'photos_change_timestamp',
+                mediaJson: 'media_json',
+            };
+
             const fields = Object.keys(LISTING_SELECT_FIELDS)
-                .map(f => `"${f}"`)
+                .map(f => {
+                    const dbCol = PRISMA_TO_DB_COLUMN[f];
+                    // If mapped, SELECT "db_col" AS "prismaName" to keep result keys consistent
+                    return dbCol ? `"${dbCol}" AS "${f}"` : `"${f}"`;
+                })
                 .join(', ');
 
             return await prisma.$queryRawUnsafe(`
@@ -151,9 +162,9 @@ export async function fetchRankedListings(
                 FROM "Listing"
                 WHERE "isActive" = true
                   AND ($2::text IS NULL OR "city" ILIKE $2)
-                  AND ("listPrice" >= $3 AND "listPrice" <= $4)
-                  AND ("bedroomsTotal" >= $5)
-                  AND ("bathroomsTotal" >= $6)
+                  AND (COALESCE("listPrice", 0) >= $3 AND COALESCE("listPrice", 999999999) <= $4)
+                  AND (COALESCE("bedroomsTotal", 0) >= $5)
+                  AND (COALESCE("bathroomsTotal", 0) >= $6)
                   AND ($7::text IS NULL OR "propertyType" ILIKE $7 OR "propertySubType" ILIKE $7)
                   AND (
                       "address" ILIKE $1 OR 
@@ -451,12 +462,13 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
         if (!s) return null;
         const d = new Date(s);
         if (isNaN(d.getTime())) return null;
-        return { modificationTimestamp: { gte: d } };
+        // Use listingDate (OriginalEntryTimestamp) — not modificationTimestamp which resets on sync
+        return { listingDate: { gte: d } };
     },
     minLandSize: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['LotSizeArea'], gte: n } } : null; },
     maxLandSize: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['LotSizeArea'], lte: n } } : null; },
-    minStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], gte: String(n) } } : null; },
-    maxStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], lte: String(n) } } : null; },
+    minStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], gte: n } } : null; },
+    maxStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], lte: n } } : null; },
     minMaintFee: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['AssociationFee'], gte: n } } : null; },
     maxMaintFee: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['AssociationFee'], lte: n } } : null; },
     minTax: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['TaxAnnualAmount'], gte: n } } : null; },

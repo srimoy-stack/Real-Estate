@@ -1,7 +1,7 @@
 import React from 'react';
 import { BlogPost } from '@repo/types';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 interface BlogCardProps {
     post: BlogPost;
@@ -17,7 +17,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
             <div className="flex flex-col h-full bg-white rounded-[2rem] overflow-hidden border border-slate-100 hover:border-indigo-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
                 <div className="relative aspect-video overflow-hidden bg-slate-100">
                     {post.featuredImage ? (
-                        <Image
+                        <SafeImage
                             src={post.featuredImage}
                             alt={post.title}
                             fill

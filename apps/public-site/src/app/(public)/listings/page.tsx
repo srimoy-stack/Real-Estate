@@ -29,20 +29,22 @@ export default async function ListingsPage({
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
   // 1. Prepare Query Parameters
-  const page = Number(searchParams.page) || 1;
+  const pageParam = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page;
+  const page = Number(pageParam) || 1;
   const limit = 12;
-  const view = searchParams.view === 'map' ? 'map' : 'grid';
+  const viewParam = Array.isArray(searchParams.view) ? searchParams.view[0] : searchParams.view;
+  const view = viewParam === 'map' ? 'map' : 'grid';
 
   const queryParams = {
-    city: searchParams.city as string,
-    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-    bedrooms: searchParams.bedrooms ? (searchParams.bedrooms === '5+' ? 5 : Number(searchParams.bedrooms)) : undefined,
-    bathrooms: searchParams.bathrooms ? (searchParams.bathrooms === '4+' ? 4 : Number(searchParams.bathrooms)) : undefined,
-    propertyType: searchParams.propertyType ? [searchParams.propertyType as any] : undefined,
-    status: searchParams.status as InternalListingStatus,
-    keyword: searchParams.keyword as string,
-    sort: (searchParams.sort as any) || 'latest',
+    city: (Array.isArray(searchParams.city) ? searchParams.city[0] : searchParams.city) as string,
+    minPrice: searchParams.minPrice ? Number(Array.isArray(searchParams.minPrice) ? (searchParams.minPrice as string[])[0] : searchParams.minPrice) : undefined,
+    maxPrice: searchParams.maxPrice ? Number(Array.isArray(searchParams.maxPrice) ? (searchParams.maxPrice as string[])[0] : searchParams.maxPrice) : undefined,
+    bedrooms: searchParams.bedrooms ? ((Array.isArray(searchParams.bedrooms) ? searchParams.bedrooms[0] : searchParams.bedrooms) === '5+' ? 5 : Number(Array.isArray(searchParams.bedrooms) ? searchParams.bedrooms[0] : searchParams.bedrooms)) : undefined,
+    bathrooms: searchParams.bathrooms ? ((Array.isArray(searchParams.bathrooms) ? searchParams.bathrooms[0] : searchParams.bathrooms) === '4+' ? 4 : Number(Array.isArray(searchParams.bathrooms) ? searchParams.bathrooms[0] : searchParams.bathrooms)) : undefined,
+    propertyType: searchParams.propertyType ? (Array.isArray(searchParams.propertyType) ? searchParams.propertyType : [searchParams.propertyType as any]) : undefined,
+    status: (Array.isArray(searchParams.status) ? (searchParams.status as string[])[0] : (searchParams.status as string)) as InternalListingStatus,
+    keyword: (Array.isArray(searchParams.keyword) ? (searchParams.keyword as string[])[0] : (searchParams.keyword as string)) as string,
+    sort: ((Array.isArray(searchParams.sort) ? (searchParams.sort as string[])[0] : (searchParams.sort as string)) as any) || 'latest',
     page,
     limit,
   };
@@ -59,8 +61,8 @@ export default async function ListingsPage({
         <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">
-                <span className="w-8 h-px bg-amber-600"></span>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">
+                <span className="w-8 h-px bg-red-600"></span>
                 Property Search
               </div>
               <div className="h-5 px-2 bg-emerald-50 text-emerald-600 rounded-full flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest border border-emerald-100 italic">
@@ -68,11 +70,11 @@ export default async function ListingsPage({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                 </span>
-                Live MLS Sync
+                Live MLS® Sync
               </div>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">
-              Discover Your <span className="text-amber-600">Domain</span>.
+              Discover Your <span className="text-red-600">Domain</span>.
             </h1>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
               {totalCount} Properties found in {searchParams.city || 'Canada'}
@@ -90,13 +92,13 @@ export default async function ListingsPage({
             <div className="bg-slate-200/50 p-1 rounded-xl flex">
               <Link
                 href={`/listings?${new URLSearchParams({ ...searchParams as any, view: 'grid' }).toString()}`}
-                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'grid' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Grid
               </Link>
               <Link
                 href={`/listings?${new URLSearchParams({ ...searchParams as any, view: 'map' }).toString()}`}
-                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'map' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${view === 'map' ? 'bg-white text-slate-900 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Map
               </Link>
@@ -177,7 +179,10 @@ export default async function ListingsPage({
                 <div className="mt-16 flex items-center justify-center gap-3">
                   {page > 1 ? (
                     <Link
-                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (page - 1).toString() }).toString()}`}
+                      href={{
+                        pathname: '/listings',
+                        query: { ...searchParams, page: (page - 1).toString() }
+                      }}
                       className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all flex items-center"
                     >
                       Prev
@@ -188,19 +193,39 @@ export default async function ListingsPage({
                     </span>
                   )}
 
-                  {[...Array(totalPages)].map((_, i) => (
-                    <Link
-                      key={i}
-                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (i + 1).toString() }).toString()}`}
-                      className={`h-12 w-12 rounded-2xl flex items-center justify-center text-[10px] font-black transition-all ${page === i + 1 ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'bg-white text-slate-400 hover:text-slate-900 border border-slate-100'}`}
-                    >
-                      {i + 1}
-                    </Link>
-                  ))}
+                  {(() => {
+                    const pages = [];
+                    const maxVisible = 5;
+                    let start = Math.max(1, page - 2);
+                    let end = Math.min(totalPages, start + maxVisible - 1);
+                    
+                    if (end - start + 1 < maxVisible) {
+                      start = Math.max(1, end - maxVisible + 1);
+                    }
+
+                    for (let i = start; i <= end; i++) {
+                      pages.push(
+                        <Link
+                          key={i}
+                          href={{
+                            pathname: '/listings',
+                            query: { ...searchParams, page: i.toString() }
+                          }}
+                          className={`h-12 w-12 rounded-2xl flex items-center justify-center text-[10px] font-black transition-all ${page === i ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/20' : 'bg-white text-slate-400 hover:text-slate-900 border border-slate-100'}`}
+                        >
+                          {i}
+                        </Link>
+                      );
+                    }
+                    return pages;
+                  })()}
 
                   {page < totalPages ? (
                     <Link
-                      href={`/listings?${new URLSearchParams({ ...searchParams as any, page: (page + 1).toString() }).toString()}`}
+                      href={{
+                        pathname: '/listings',
+                        query: { ...searchParams, page: (page + 1).toString() }
+                      }}
                       className="h-12 px-6 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-900 hover:bg-slate-50 transition-all flex items-center"
                     >
                       Next

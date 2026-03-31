@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 const TESTIMONIALS = [
     {
@@ -54,7 +56,7 @@ export const TestimonialsSection = () => {
 
                             <div className="mt-auto flex items-center gap-4">
                                 <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-500">
-                                    <Image src={t.photo} alt={t.name} fill className="object-cover" />
+                                    <SafeImage src={t.photo} alt={t.name} fill className="object-cover" />
                                 </div>
                                 <div>
                                     <h4 className="font-extrabold text-slate-900 leading-none">{t.name}</h4>

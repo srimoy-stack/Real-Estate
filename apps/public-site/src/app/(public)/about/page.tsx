@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 export const metadata: Metadata = {
     title: 'About Us | Premier Real Estate Services',
@@ -30,7 +30,7 @@ export default function AboutPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                         <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl">
                             <div className="absolute inset-0 bg-emerald-600/10 z-10" />
-                            <Image
+                            <SafeImage
                                 src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1073&q=80"
                                 alt="Modern architectural office"
                                 fill

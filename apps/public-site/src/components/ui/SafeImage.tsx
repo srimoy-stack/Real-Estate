@@ -1,39 +1,95 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useMemo } from 'react';
-import Image, { ImageProps } from 'next/image';
-import { getFallbackImage } from './design-tokens';
+import React, { useState, useMemo, useCallback } from 'react';
 
-interface SafeImageProps extends Omit<ImageProps, 'onError'> {
-  seed?: string | number;
-  fallbackUrl?: string;
-}
-
+// ─── Constants ───────────────────────────────────────────────────
+const LOCAL_PLACEHOLDER = '/images/property-placeholder.svg';
 const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
 
-export const SafeImage = ({ src, alt, seed, fallbackUrl, ...props }: SafeImageProps) => {
-  const isInvalid = useMemo(() => {
-    if (!src) return true;
-    if (typeof src === 'string' && NON_IMAGE.test(src)) return true;
-    return false;
-  }, [src]);
+/**
+ * Validates whether a URL is likely to resolve to an image.
+ * Returns false instantly for null, empty, non-image extensions, or malformed URLs.
+ */
+function isValidImageSrc(src: any): boolean {
+  if (!src || typeof src !== 'string') return false;
+  if (src.length < 10) return false;
+  if (NON_IMAGE.test(src)) return false;
+  try {
+    const u = new URL(src);
+    if (u.pathname === '/' || u.pathname === '') return false;
+  } catch {
+    // Relative URLs are fine (e.g. /images/...)
+    if (!src.startsWith('/')) return false;
+  }
+  return true;
+}
 
-  const [error, setError] = useState(isInvalid);
+// ─── Props ───────────────────────────────────────────────────────
+interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
+  /** Image source — can be null/undefined safely */
+  src?: string | null;
+  alt: string;
+  /** Seed for deterministic placeholder selection */
+  seed?: string | number;
+  /** Custom fallback URL */
+  fallbackUrl?: string;
+  /** next/image compatibility: use fill layout */
+  fill?: boolean;
+  /** next/image compatibility: priority loading */
+  priority?: boolean;
+  /** Callback when image loads successfully */
+  onLoad?: () => void;
+}
 
-  const handleError = () => {
-    setError(true);
-  };
+/**
+ * SafeImage — Production-grade image component with global fallback.
+ *
+ * - Uses native <img> to bypass Next.js image optimization proxy
+ * - Validates URL before attempting load
+ * - Falls back to local SVG placeholder on any error
+ * - Never blocks rendering
+ * - Supports lazy loading by default
+ */
+export const SafeImage = ({
+  src,
+  alt,
+  seed,
+  fallbackUrl,
+  fill,
+  priority,
+  onLoad,
+  className = '',
+  style,
+  ...props
+}: SafeImageProps) => {
+  const srcInvalid = useMemo(() => !isValidImageSrc(src), [src]);
+  const [hasError, setHasError] = useState(srcInvalid);
 
-  const finalSrc = error 
-    ? (fallbackUrl || getFallbackImage(seed || String(src))) 
-    : src;
+  const handleError = useCallback(() => {
+    setHasError(true);
+  }, []);
+
+  const finalSrc = hasError
+    ? (fallbackUrl || LOCAL_PLACEHOLDER)
+    : (src as string);
+
+  // Fill mode: absolute positioning to match next/image fill behavior
+  const fillStyles: React.CSSProperties = fill
+    ? { position: 'absolute', inset: 0, width: '100%', height: '100%', ...style }
+    : { ...style };
 
   return (
-    <Image
+    <img
       {...props}
-      src={finalSrc as string} // Final source is either original or fallback string
+      src={finalSrc}
       alt={alt}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      className={className}
+      style={fillStyles}
       onError={handleError}
+      onLoad={hasError ? undefined : onLoad}
     />
   );
 };

@@ -1,17 +1,25 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   resolveStatus,
   resolvePrice,
   formatNumber,
   getFreshnessBadge,
-  getFallbackImage,
   typography,
+  PLACEHOLDER_IMAGE,
 } from './design-tokens';
 import { NormalizedProperty, autoNormalize } from './normalize-property';
 import { SafeImage } from './SafeImage';
+
+// ─── Realtor.ca wordmark SVG (official red #cc0000) ───────────────
+const RealtorLogo = () => (
+  <svg viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="REALTOR.ca" className="h-[13px] w-auto">
+    <text x="0" y="17" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="15" fill="#cc0000" letterSpacing="0.5">REALTOR</text>
+    <text x="79" y="17" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="15" fill="#cc0000">.ca</text>
+  </svg>
+);
 
 // ─── Props ───────────────────────────────────────────────────────
 interface UnifiedPropertyCardProps {
@@ -36,7 +44,8 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
 
   // ─── Derived values ──
   const seed = prop.mlsNumber || prop.id || index;
-  const imageUrl = prop.imageUrl || getFallbackImage(seed);
+  const isPlaceholder = !prop.imageUrl || prop.imageUrl === PLACEHOLDER_IMAGE || (typeof prop.imageUrl === 'string' && prop.imageUrl.includes('placeholder'));
+  const imageUrl = isPlaceholder ? PLACEHOLDER_IMAGE : prop.imageUrl;
   const priceDisplay = resolvePrice(prop.price, prop.leaseAmount, prop.leaseRatePerSqft, prop.category);
   const status = resolveStatus(prop.status);
   const freshnessBadge = getFreshnessBadge(prop.modifiedAt, prop.createdAt);
@@ -45,7 +54,11 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
     ? prop.title
     : `${prop.city || 'Property'} Listing`;
 
-  // ─── Metadata Logic ──
+  // ─── Location display — never empty ──
+  const locationParts = [prop.city, prop.province].filter(Boolean);
+  const locationDisplay = locationParts.length > 0 ? locationParts.join(', ') : 'Location not available';
+
+  // ─── Metadata Logic — hide missing, never show N/A ──
   const renderMetadata = () => {
     if (prop.category === 'commercial') {
       const parts = [
@@ -57,6 +70,8 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
             : null,
         prop.zoningDescription
       ].filter(Boolean);
+
+      if (parts.length === 0) return null;
 
       return (
         <div className="flex items-center gap-2 truncate text-[14px] font-medium text-[#4B5563]">
@@ -76,6 +91,8 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
         prop.sqft > 0 ? `${formatNumber(prop.sqft)} sqft` : null
       ].filter(Boolean);
 
+      if (parts.length === 0) return null;
+
        return (
         <div className="flex items-center gap-2 text-[14px] font-medium text-[#4B5563]">
           {parts.map((part, i) => (
@@ -88,12 +105,14 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
       );
     }
 
-    // Default: Residential
+    // Default: Residential — only show stats that have values
     const parts = [
       prop.bedrooms > 0 ? `${prop.bedrooms} Beds` : null,
       prop.bathrooms > 0 ? `${prop.bathrooms} Baths` : null,
       prop.sqft > 0 ? `${formatNumber(prop.sqft)} sqft` : null
     ].filter(Boolean);
+
+    if (parts.length === 0) return null;
 
     return (
       <div className="flex items-center gap-2 text-[14px] font-medium text-[#4B5563]">
@@ -107,10 +126,21 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
     );
   };
 
+  const metadata = renderMetadata();
+
+  const router = useRouter();
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if user clicked the external link
+    if ((e.target as HTMLElement).closest('[data-external-link]')) return;
+    router.push(prop.href);
+  };
+
   return (
-    <Link
-      href={prop.href}
-      className="group relative flex h-full flex-col overflow-hidden rounded-[16px] border border-[#E5E7EB] bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+    <div
+      role="article"
+      onClick={handleCardClick}
+      className="group relative flex h-full flex-col overflow-hidden rounded-[16px] border border-[#E5E7EB] bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] cursor-pointer"
       style={{
         animationDelay: `${index * 50}ms`,
         animation: 'pcFadeUp 0.4s ease-out forwards',
@@ -127,8 +157,23 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
           alt={displayTitle} 
           seed={seed}
           fill
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] ${isPlaceholder ? 'opacity-40 grayscale' : ''}`}
         />
+
+        {isPlaceholder && (
+          <div className="absolute inset-0 z-[2] flex items-center justify-center">
+             <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/80 px-3 py-1 bg-black/20 backdrop-blur-sm rounded-full border border-white/10">
+                  Image not available
+                </span>
+             </div>
+          </div>
+        )}
 
         {/* ── Badges ── */}
         <div className="absolute inset-x-3 top-3 z-[3] flex items-start justify-between">
@@ -150,10 +195,10 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
             )}
           </div>
 
-          {/* MLS Badge (Top-Right) */}
+          {/* MLS Badge (Top-Right) — always visible */}
           <div className="flex flex-col items-end gap-1.5">
              <div className="rounded-md bg-[#111827] px-2 py-1 shadow-md">
-                <span className="text-[10px] font-bold tracking-widest text-white uppercase">REALTOR® / MLS®</span>
+                <span className="text-[10px] font-bold tracking-widest text-white uppercase">MLS® Verified</span>
              </div>
              {/* Status Badge */}
              <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm ${status.bg}`}>
@@ -183,21 +228,60 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
           {displayTitle}
         </h3>
 
-        {/* Metadata Row */}
-        <div className="mb-3">
-          {renderMetadata()}
-        </div>
+        {/* Metadata Row — only show if we have data */}
+        {metadata && (
+          <div className="mb-3">
+            {metadata}
+          </div>
+        )}
 
-        {/* Location Section */}
+        {/* Location Section — always has content */}
         <div className="mt-auto flex items-center gap-1.5 border-t border-[#F3F4F6] pt-3 text-[13px] font-medium text-[#4B5563]">
           <span className="text-[#9CA3AF]">
             <PinIcon />
           </span>
           <span className="truncate">
-            {prop.city}{prop.province ? `, ${prop.province}` : ''}
+            {locationDisplay}
           </span>
         </div>
       </div>
+
+      {/* ══════════════ REALTOR.ca More Info Strip ══════════════ */}
+      {prop.moreInformationLink && (
+        <div
+          data-external-link
+          className="border-t border-[#E5E7EB] bg-[#FFF8F8] px-4 py-2.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <a
+            href={prop.moreInformationLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-external-link
+            className="flex items-center justify-between group/ext"
+            aria-label="View full listing on REALTOR.ca"
+          >
+            {/* Left: logo + DDF badge */}
+            <div className="flex items-center gap-2">
+              <RealtorLogo />
+              <span className="flex items-center gap-1 rounded-full bg-[#cc0000]/10 px-2 py-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#cc0000] animate-pulse" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[#cc0000]">
+                  DDF®
+                </span>
+              </span>
+            </div>
+
+            {/* Right: CTA */}
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#cc0000] group-hover/ext:underline underline-offset-2 transition-all">
+              More Info
+              <svg className="h-3 w-3 transition-transform group-hover/ext:translate-x-0.5 group-hover/ext:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </span>
+          </a>
+        </div>
+      )}
 
       {/* Footer / Brokerage (Subtle) */}
       {prop.brokerageName && (
@@ -215,7 +299,7 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-    </Link>
+    </div>
   );
 }
 

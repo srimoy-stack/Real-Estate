@@ -97,16 +97,41 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
 export async function getRelatedListingsDirect(listing: any, limit: number = 4) {
   try {
     const city = listing.city;
-    if (!city) return [];
+    const province = listing.province;
+    const currentMls = listing.mlsNumber || listing.listingKey;
 
-    const related = await prisma.listing.findMany({
+    // Level 1: Same City
+    let related = await prisma.listing.findMany({
       where: withActive({
         city: { equals: city, mode: 'insensitive' },
-        listingKey: { not: listing.mlsNumber || listing.listingKey }
+        listingKey: { not: currentMls }
       }),
       take: limit,
       orderBy: { modificationTimestamp: 'desc' }
     });
+
+    // Level 2 Fallback: Same Province
+    if (related.length === 0 && province) {
+      related = await prisma.listing.findMany({
+        where: withActive({
+          province: { equals: province, mode: 'insensitive' },
+          listingKey: { not: currentMls }
+        }),
+        take: limit,
+        orderBy: { modificationTimestamp: 'desc' }
+      });
+    }
+
+    // Level 3 Fallback: Simply latest listings
+    if (related.length === 0) {
+      related = await prisma.listing.findMany({
+        where: withActive({
+          listingKey: { not: currentMls }
+        }),
+        take: limit,
+        orderBy: { modificationTimestamp: 'desc' }
+      });
+    }
 
     return related.map((l: any) => ({
       id: l.listingKey,
@@ -119,8 +144,9 @@ export async function getRelatedListingsDirect(listing: any, limit: number = 4) 
       bathrooms: l.bathroomsTotal,
       squareFootage: l.livingArea,
       images: l.primaryPhotoUrl && isValidImageUrl(l.primaryPhotoUrl) ? [l.primaryPhotoUrl] : [],
-      propertyType: l.propertySubType || l.propertyType,
-      status: l.standardStatus || 'Active'
+      propertyType: l.propertySubType || l.propertyType || 'Residential',
+      status: l.standardStatus || 'Active',
+      moreInformationLink: l.moreInformationLink || null
     }));
   } catch (error) {
     console.error('[Server Listing Service] Error fetching related listings:', error);
@@ -170,22 +196,51 @@ export async function searchListingsDirect(params: ListingQueryParams) {
       prisma.listing.count({ where })
     ]);
 
-    const compatibleListings = listings.map((l: any) => ({
-      id: l.listingKey,
-      mlsNumber: l.listingKey,
-      price: l.listPrice,
-      address: l.address,
-      city: l.city,
-      province: l.province,
-      bedrooms: l.bedroomsTotal,
-      bathrooms: l.bathroomsTotal,
-      squareFootage: l.livingArea,
-      images: l.primaryPhotoUrl && isValidImageUrl(l.primaryPhotoUrl) ? [l.primaryPhotoUrl] : [],
-      propertyType: l.propertySubType || l.propertyType,
-      status: l.standardStatus || 'Active',
-      isFeatured: !!l.isFeatured,
-      location: { lat: l.latitude || 0, lng: l.longitude || 0 }
-    }));
+    const compatibleListings = listings.map((l: any) => {
+      // Robust image resolution for search grid/cards
+      const images = (() => {
+        if (l.primaryPhotoUrl && isValidImageUrl(l.primaryPhotoUrl)) return [l.primaryPhotoUrl];
+        
+        // Try to parse mediaJson if it exists
+        if (l.mediaJson) {
+           try {
+             //prisma returns json already if it was json column
+             const media = l.mediaJson;
+             if (Array.isArray(media)) {
+               const valid = media
+                 .filter((m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL))
+                 .map((m: any) => m.MediaURL);
+               if (valid.length > 0) return valid;
+             }
+           } catch (e) {
+             // Ignore errors
+           }
+        }
+        
+        // Final fallback to primaryPhoto field
+        if (l.primaryPhoto && isValidImageUrl(l.primaryPhoto)) return [l.primaryPhoto];
+        
+        return [];
+      })();
+
+      return {
+        id: l.listingKey,
+        mlsNumber: l.listingKey,
+        price: l.listPrice,
+        address: l.address,
+        city: l.city,
+        province: l.province,
+        bedrooms: l.bedroomsTotal,
+        bathrooms: l.bathroomsTotal,
+        squareFootage: l.livingArea,
+        images: images,
+        propertyType: l.propertySubType || l.propertyType,
+        status: l.standardStatus || 'Active',
+        isFeatured: !!l.isFeatured,
+        moreInformationLink: l.moreInformationLink || null,
+        location: { lat: l.latitude || 0, lng: l.longitude || 0 }
+      };
+    });
 
     return {
       listings: compatibleListings,

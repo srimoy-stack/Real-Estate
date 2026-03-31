@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { leadService } from '@repo/services';
 import { LeadCaptureForm } from './LeadCaptureForm';
 import { Listing } from '@repo/types';
@@ -40,17 +40,17 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                 <div className="bg-white rounded-b-[40px] rounded-tr-[40px] p-8 border border-slate-100 shadow-2xl shadow-slate-200/50 space-y-8">
                     {/* Agent Short Info */}
                     <div className="flex items-center gap-5">
-                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-xl group">
-                            <Image
-                                src={listing.agentPhoto || `https://i.pravatar.cc/200?u=${listing.id}`}
-                                alt={listing.agentName}
+                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-xl group bg-slate-100">
+                            <SafeImage
+                                src={listing.agentPhoto || (listing as any).AgentPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(listing.agentName || (listing as any).AgentName || 'Contact our team')}&background=111827&color=fff&bold=true`}
+                                alt={listing.agentName || (listing as any).AgentName || 'Contact our team'}
                                 fill
                                 className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                             />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{listing.agentName}</h3>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(listing as any).agentTitle || 'Sales Coordinator'}</p>
+                            <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{listing.agentName || (listing as any).AgentName || 'Contact our team'}</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(listing as any).agentTitle || (listing as any).AgentTitle || 'Listing Expert'}</p>
                             {listing.brokerageName && (
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-600/60 mt-1">{listing.brokerageName}</p>
                             )}

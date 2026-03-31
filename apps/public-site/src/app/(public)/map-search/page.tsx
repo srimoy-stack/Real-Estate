@@ -4,7 +4,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, PropertyType } from '@repo/types';
 import { UnifiedPropertyCard } from '@/components/ui';
-import { MapView } from '@/components/listings/MapView';
+import dynamic from 'next/dynamic';
+
+const MapView = dynamic(
+  () => import('@/components/listings/MapView').then((mod) => mod.MapView),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-slate-100 animate-pulse rounded-[32px] flex items-center justify-center">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Interactive Map...</span>
+      </div>
+    )
+  }
+);
 
 export default function MapBasedSearchPage() {
     const [listings, setListings] = useState<Listing[]>([]);

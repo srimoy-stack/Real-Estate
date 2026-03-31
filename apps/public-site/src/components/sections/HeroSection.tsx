@@ -1,20 +1,21 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { SearchBar } from './SearchBar';
 
 export const HeroSection = () => {
     return (
         <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
-            {/* Background Image with optimized overlay */}
+            {/* Background Image — native img, no Next.js proxy */}
             <div className="absolute inset-0 z-0">
-                <Image
+                <SafeImage
                     src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
                     alt="Luxury Home"
                     fill
-                    className="object-cover scale-105 animate-slow-zoom"
                     priority
+                    className="object-cover scale-105"
+                    style={{ animation: 'slowZoom 20s ease-in-out infinite alternate' }}
                 />
                 {/* Clean, readable gradient overlay — no fog/blur */}
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-900/75 via-slate-900/50 to-slate-900/80" />
@@ -48,7 +49,12 @@ export const HeroSection = () => {
                         <div className="flex -space-x-3">
                             {[1, 2, 3, 4].map(i => (
                                 <div key={i} className="relative h-10 w-10 border-2 border-slate-900 rounded-full overflow-hidden">
-                                    <Image src={`https://i.pravatar.cc/100?u=${i}`} alt="" fill className="object-cover" />
+                                    <SafeImage
+                                        src={`https://i.pravatar.cc/100?u=${i}`}
+                                        alt=""
+                                        fill
+                                        className="object-cover"
+                                    />
                                 </div>
                             ))}
                             <div className="flex items-center justify-center h-10 w-10 rounded-full bg-brand-red border-2 border-slate-900 text-white text-[10px] font-black tracking-tighter">
@@ -61,6 +67,13 @@ export const HeroSection = () => {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                @keyframes slowZoom {
+                    from { transform: scale(1.05); }
+                    to { transform: scale(1.15); }
+                }
+            `}</style>
         </section>
     );
 };

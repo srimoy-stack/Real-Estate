@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { useRouter } from 'next/navigation';
 import type { NavLink } from '@/types/website';
 
@@ -31,7 +31,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
           <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
             {logoUrl ? (
               <div className="relative h-10 w-36">
-                <Image src={logoUrl} alt={brandName} fill className="object-contain" />
+                <SafeImage src={logoUrl} alt={brandName} fill className="object-contain" />
               </div>
             ) : (
               <div className="flex items-center gap-2.5">

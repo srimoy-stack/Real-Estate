@@ -36,6 +36,7 @@ export interface MLSListing {
     createdAt: string;
     updatedAt: string;
     // DDF Compliance & Integration
+    moreInformationLink?: string | null;
     ddfListingKey?: string;
     ddfMemberKey?: string;
 }
@@ -64,6 +65,7 @@ export type MLSListingCard = Pick<
     | 'agentEmail'
     | 'agentPhoto'
     | 'brokerageName'
+    | 'moreInformationLink'
     | 'ddfListingKey'
     | 'ddfMemberKey'
 >;

@@ -9,6 +9,10 @@ import { ListingGallery } from '@/components/listings/ListingGallery';
 import {
   UnifiedPropertyCard,
   SafeImage,
+  autoNormalize,
+  resolvePrice,
+  resolveStatus,
+  formatNumber,
 } from '@/components/ui';
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
 import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
@@ -27,32 +31,7 @@ interface ListingDetailProps {
   params: { mlsNumber: string };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────
-function safeStr(val: any, fallback = ''): string {
-  if (val == null || val === 'null' || val === 'undefined') return fallback;
-  return String(val);
-}
-
-function safeNum(val: any): number {
-  const n = Number(val);
-  return isNaN(n) ? 0 : n;
-}
-
-function formatListingPrice(price: number | null | undefined, currency = 'CAD'): string {
-  const num = safeNum(price);
-  if (num <= 0) return 'Price on Request';
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(num);
-}
-
-function displayStat(val: any, suffix = ''): string {
-  if (val == null || val === 0 || val === '0') return 'N/A';
-  if (typeof val === 'number' && val > 0) return val.toLocaleString() + suffix;
-  return String(val) + suffix;
-}
+// Helpers removed in favor of @/components/ui/design-tokens and normalize-property
 
 // ─── SEO Metadata ─────────────────────────────────────────────────
 export async function generateMetadata({ params }: ListingDetailProps): Promise<Metadata> {
@@ -61,14 +40,14 @@ export async function generateMetadata({ params }: ListingDetailProps): Promise<
 
   if (!listing) return { title: 'Listing Not Found' };
 
-  const shortAddr = safeStr(listing.address, 'Property').split(',')[0];
-  const city = safeStr(listing.city, 'Canada');
-  const title = `${shortAddr} ${safeStr(listing.propertyType, 'Property')} in ${city} | ID: ${listing.mlsNumber}`;
+  const prop = autoNormalize(listing);
+  const title = `${prop.title} | ID: ${prop.mlsNumber}`;
   const description =
-    safeStr(listing.description).substring(0, 160).replace(/\n/g, ' ') ||
-    `View details for ${shortAddr} in ${city}`;
+    (listing.description || '').substring(0, 160).replace(/\n/g, ' ') ||
+    `View details for ${prop.title} in ${prop.city || 'Canada'}`;
+  
   const domain = website?.domain || 'platform.com';
-  const canonical = `https://${domain}/listing/${listing.mlsNumber}`;
+  const canonical = `https://${domain}/listing/${prop.mlsNumber}`;
 
   return {
     title,
@@ -80,13 +59,13 @@ export async function generateMetadata({ params }: ListingDetailProps): Promise<
       url: canonical,
       siteName: website?.brandName || 'Real Estate Platform',
       images:
-        listing.images && listing.images.length > 0
+        prop.images && prop.images.length > 0
           ? [
             {
-              url: listing.images[0],
+              url: prop.images[0],
               width: 1200,
               height: 630,
-              alt: `${shortAddr} — ${city}`,
+              alt: prop.title,
             },
           ]
           : [],
@@ -96,43 +75,47 @@ export async function generateMetadata({ params }: ListingDetailProps): Promise<
       card: 'summary_large_image',
       title,
       description,
-      images: listing.images?.[0] ? [listing.images[0]] : [],
+      images: prop.images?.[0] ? [prop.images[0]] : [],
     },
   };
 }
 
 // ─── Structured Data ──────────────────────────────────────────────
 function ListingStructuredData({ listing, domain }: { listing: any; domain: string }) {
+  const price = Number(listing.price) || 0;
+  const bedrooms = Number(listing.bedrooms) || 0;
+  const sqft = Number(listing.squareFootage) || 0;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'RealEstateListing',
-    name: `${safeStr(listing.address, 'Property')} — ID: ${listing.mlsNumber}`,
-    description: safeStr(listing.description),
+    name: `${listing.address || 'Property'} — ID: ${listing.mlsNumber}`,
+    description: listing.description || '',
     url: `https://${domain}/listing/${listing.mlsNumber}`,
     image: listing.images || [],
     datePosted: listing.createdAt,
     dateModified: listing.updatedAt,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: safeStr(listing.address),
-      addressLocality: safeStr(listing.city),
-      addressRegion: safeStr(listing.province),
-      postalCode: safeStr(listing.postalCode),
+      streetAddress: listing.address || '',
+      addressLocality: listing.city || '',
+      addressRegion: listing.province || '',
+      postalCode: listing.postalCode || '',
       addressCountry: 'CA',
     },
     geo:
       listing.latitude && listing.longitude
         ? {
           '@type': 'GeoCoordinates',
-          latitude: listing.latitude,
-          longitude: listing.longitude,
+          latitude: Number(listing.latitude) || 0,
+          longitude: Number(listing.longitude) || 0,
         }
         : undefined,
     offers:
-      safeNum(listing.price) > 0
+      price > 0
         ? {
           '@type': 'Offer',
-          price: listing.price,
+          price: price,
           priceCurrency: listing.currency || 'CAD',
           availability:
             listing.status === 'ACTIVE'
@@ -140,12 +123,12 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
               : 'https://schema.org/SoldOut',
         }
         : undefined,
-    numberOfRooms: safeNum(listing.bedrooms) > 0 ? listing.bedrooms : undefined,
+    numberOfRooms: bedrooms > 0 ? bedrooms : undefined,
     floorSize:
-      safeNum(listing.squareFootage) > 0
+      sqft > 0
         ? {
           '@type': 'QuantitativeValue',
-          value: listing.squareFootage,
+          value: sqft,
           unitCode: 'FTK',
         }
         : undefined,
@@ -179,33 +162,35 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
     rawData: (listing as any).rawData,
   });
 
-  // ── Derived values (null-safe) ─────────────────────────────────────
+  // ── Normalize data ────────────────────────────────────────────────
+  const prop = autoNormalize(listing);
   const relatedListings = await getRelatedListingsDirect(listing, 4);
-  const formattedPrice = formatListingPrice(listing.price, (listing as any).currency || 'CAD');
-  const address = safeStr(listing.address, 'Address unavailable');
-  const city = safeStr(listing.city, 'Unknown City');
-  const province = safeStr(listing.province);
-  const postalCode = safeStr(listing.postalCode);
-  const description = safeStr(listing.description);
-  const propertyType = safeStr(listing.propertyType, 'Property');
-  const title = safeStr((listing as any).title) || `${propertyType} in ${city}`;
-  const agentName = safeStr(listing.agentName, 'Listing Agent');
-  const agentPhone = safeStr(listing.agentPhone);
-  const agentEmail = safeStr(listing.agentEmail);
-  const agentPhoto = safeStr(listing.agentPhoto);
-  const brokerageName = safeStr(listing.brokerageName);
-  const images = Array.isArray(listing.images) ? listing.images.filter(Boolean) : [];
-  const sqft = safeNum(listing.squareFootage);
-  const bedrooms = safeNum(listing.bedrooms);
-  const bathrooms = safeNum(listing.bathrooms);
+  const priceDisplay = resolvePrice(prop.price, prop.leaseAmount, prop.leaseRatePerSqft, prop.category);
+  const status = resolveStatus(prop.status);
 
-  const statusStyles: Record<string, string> = {
-    ACTIVE: 'bg-emerald-500 shadow-emerald-500/30',
-    SOLD: 'bg-rose-500 shadow-rose-500/30',
-    PENDING: 'bg-amber-500 shadow-amber-500/30',
-    OFF_MARKET: 'bg-slate-500 shadow-slate-500/30',
-  };
-  const statusStyle = statusStyles[listing.status] || 'bg-slate-500';
+  const images = Array.isArray(listing.images) ? listing.images.filter(Boolean) : [];
+  
+  const statusStyle = status.bg;
+  const city = prop.city || 'Canada';
+  const province = prop.province || '';
+  const postalCode = prop.postalCode || '';
+
+  const propertyType = prop.propertySubType || 'Property';
+
+  // ── Smart Title fallback if normalization didn't catch it ──
+  const displayTitle = (prop.title && !prop.title.toLowerCase().includes('null'))
+    ? prop.title
+    : `${prop.bedrooms > 0 ? prop.bedrooms + ' Bedroom ' : ''}${prop.propertySubType || 'Property'} in ${city}`;
+
+  // ── Agent Data with Fallbacks ──
+  const agentName = listing.agentName || 'Our Listing Team';
+  const agentPhoto = listing.agentPhoto || null;
+  const agentPhone = listing.agentPhone || null;
+  const brokerageName = prop.brokerageName;
+
+  const sqft = prop.sqft;
+  const bedrooms = prop.bedrooms;
+  const bathrooms = prop.bathrooms;
 
   const navItems = [
     { label: 'Description', id: 'property-description' },
@@ -319,19 +304,18 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     </span>
                   </div>
                   <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-5xl">
-                    {title}
+                    {displayTitle}
                   </h1>
                   <p className="text-xl font-bold italic text-slate-400">
-                    {address}
-                    {city && city !== address ? `, ${city}` : ''}
+                    {prop.title !== displayTitle ? prop.title : (city + (province ? `, ${province}` : ''))}
                   </p>
                 </div>
                 <div className="flex flex-col items-center gap-4 text-left md:items-end md:text-right">
                   <div>
                     <p
-                      className={`text-4xl font-black tracking-tighter sm:text-5xl ${safeNum(listing.price) > 0 ? 'text-indigo-600' : 'text-slate-400'}`}
+                      className={`text-4xl font-black tracking-tighter sm:text-5xl ${(prop.price ?? 0) > 0 ? 'text-indigo-600' : 'text-slate-400'}`}
                     >
-                      {formattedPrice}
+                      {priceDisplay.text}
                     </p>
                     <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
                       Property ID: {listing.mlsNumber}
@@ -342,134 +326,118 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               </div>
 
               {images.length > 0 ? (
-                <ListingGallery images={images} title={address} />
+                <ListingGallery images={images} title={displayTitle} />
               ) : (
-                <div className="flex aspect-video w-full items-center justify-center rounded-[32px] border border-slate-200 bg-slate-100">
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto mb-4 h-16 w-16 text-slate-300"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p className="text-sm font-bold text-slate-400">
-                      No images available for this listing
+                <div className="relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-slate-900 shadow-2xl">
+                  {/* Background stock image or abstract gradient */}
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center opacity-40 grayscale" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                  
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-md text-white border border-white/20">
+                      <svg
+                        className="h-10 w-10"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className="mb-2 text-3xl font-black text-white">No photos available yet</h2>
+                    <p className="max-w-md font-bold text-slate-400">
+                      We&apos;re currently preparing the media for this listing. Contact us for a private showing.
                     </p>
+                    
+                    <div className="mt-8 flex items-center gap-3">
+                      <div className="rounded-full bg-indigo-600 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                        Live MLS® Listing
+                      </div>
+                      <div className="rounded-full bg-white/10 backdrop-blur-md px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
+                        {listing.mlsNumber}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Property Overview */}
-            <section
-              id="property-overview"
-              className="rounded-[48px] border border-slate-100 bg-slate-50/50 p-10"
-            >
-              <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
-                {[
-                  {
-                    label: 'Bedrooms',
-                    value: displayStat(bedrooms > 0 ? bedrooms : null),
-                    icon: (
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: 'Bathrooms',
-                    value: displayStat(bathrooms > 0 ? bathrooms : null),
-                    icon: (
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M4 12h16v4a4 4 0 01-4 4H8a4 4 0 01-4-4v-4zM6 12V6a3 3 0 013-3h1"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: 'Square Ft',
-                    value: displayStat(sqft > 0 ? sqft : null),
-                    icon: (
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: 'Year Built',
-                    value: displayStat((listing as any).yearBuilt),
-                    icon: (
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    ),
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      <span className="text-indigo-500">{item.icon}</span>
-                      {item.label}
-                    </div>
-                    <p className="text-xl font-black text-slate-900">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
+            {(bedrooms > 0 || bathrooms > 0 || sqft > 0 || (listing as any).yearBuilt) && (
+              <section
+                id="property-overview"
+                className="rounded-[48px] border border-slate-100 bg-slate-50/50 p-10"
+              >
+                <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+                    {bedrooms > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span className="text-indigo-500">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                          </span>
+                          Bedrooms
+                        </div>
+                        <p className="text-xl font-black text-slate-900">{bedrooms}</p>
+                      </div>
+                    )}
+                    {bathrooms > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span className="text-indigo-500">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 12h16v4a4 4 0 01-4 4H8a4 4 0 01-4-4v-4zM6 12V6a3 3 0 013-3h1" />
+                            </svg>
+                          </span>
+                          Bathrooms
+                        </div>
+                        <p className="text-xl font-black text-slate-900">{bathrooms}</p>
+                      </div>
+                    )}
+                    {sqft > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span className="text-indigo-500">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                          </span>
+                          Square Ft
+                        </div>
+                        <p className="text-xl font-black text-slate-900">{formatNumber(sqft)}</p>
+                      </div>
+                    )}
+                    {(listing as any).yearBuilt && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span className="text-indigo-500">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </span>
+                          Year Built
+                        </div>
+                        <p className="text-xl font-black text-slate-900">{(listing as any).yearBuilt}</p>
+                      </div>
+                    )}
+                </div>
+              </section>
+            )}
 
             {/* Description */}
-            {description && (
+            {(listing as any).description && (
               <section id="property-description" className="space-y-8">
                 <h2 className="text-3xl font-black italic tracking-tight text-slate-900">
                   Description
                 </h2>
                 <div className="prose prose-slate prose-lg max-w-none font-medium leading-relaxed text-slate-500">
-                  {description
+                  {(listing as any).description
                     .split('\n')
                     .filter(Boolean)
                     .map((p: string, i: number) => (
@@ -480,50 +448,42 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
             )}
 
             {/* Mortgage Calculator — only show when price is known */}
-            <MortgageCalculator price={safeNum(listing.price)} />
+            {prop.price && prop.price > 0 && <MortgageCalculator price={prop.price} />}
             <PropertyStats />
 
             {/* Location */}
             <section id="property-map" className="space-y-8">
-              <h2 className="text-3xl font-black italic tracking-tight text-slate-900">Location</h2>
-              <div className="group relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-slate-100">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778545894-da20a8555616?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center opacity-20 grayscale transition-opacity duration-1000 group-hover:opacity-30" />
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-12 text-center">
-                  <div className="mb-6 flex h-16 w-16 animate-bounce items-center justify-center rounded-2xl bg-white text-2xl shadow-2xl">
-                    <svg
-                      className="h-8 w-8 text-indigo-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="mb-2 text-2xl font-black text-slate-900">{address}</h3>
-                  <p className="max-w-md font-bold text-slate-500">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-black italic tracking-tight text-slate-900">Location</h2>
+                  <p className="max-w-md text-sm font-bold text-slate-400">
                     {city}
                     {province ? `, ${province}` : ''}
                     {postalCode ? ` ${postalCode}` : ''}
                   </p>
-                  <Link
-                    href={`https://maps.google.com/?q=${encodeURIComponent(`${address}, ${city}, ${province} ${postalCode}`)}`}
-                    target="_blank"
-                    className="mt-8 rounded-2xl bg-slate-900 px-10 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-slate-800"
-                  >
-                    Open in Maps
-                  </Link>
                 </div>
+                <Link
+                  href={`https://maps.google.com/?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}`}
+                  target="_blank"
+                  className="rounded-2xl bg-slate-900 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:bg-slate-800"
+                >
+                  Open in Google Maps
+                </Link>
+              </div>
+              
+              <div className="group relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-slate-50 shadow-inner">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  className="grayscale-0 transition-all duration-1000 group-hover:grayscale-0 contrast-125"
+                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                />
+                
+                {/* Custom Overlay (Optional if you want a more styled map) */}
+                <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-slate-900/10 rounded-[48px]" />
               </div>
             </section>
 
@@ -532,11 +492,11 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               id="agent-profile"
               className="flex flex-col gap-12 rounded-[48px] border border-slate-100 bg-slate-50/50 p-12 md:flex-row"
             >
-              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl bg-slate-100">
+              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl bg-white border-4 border-white">
                 <SafeImage
                   src={
                     agentPhoto ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=random&color=fff&bold=true`
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&bold=true`
                   }
                   alt={agentName}
                   seed={agentName}
@@ -544,11 +504,11 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                   className="object-cover"
                 />
               </div>
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-8">
                 <div>
                   <h3 className="text-3xl font-black text-slate-900">{agentName}</h3>
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
-                    Licensed Real Estate Salesperson
+                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">
+                    Professional Real Estate Advisor
                   </p>
                   {brokerageName && (
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
@@ -556,58 +516,45 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  {agentPhone ? (
-                    <a href={`tel:${agentPhone}`} className="flex flex-col space-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Direct Phone
-                      </span>
-                      <span className="font-bold uppercase text-slate-900 transition-colors hover:text-indigo-600">
-                        {agentPhone}
-                      </span>
-                    </a>
-                  ) : (
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Direct Phone
-                      </span>
-                      <span className="font-bold uppercase text-slate-300">Not available</span>
-                    </div>
-                  )}
-                  {agentEmail ? (
-                    <a href={`mailto:${agentEmail}`} className="flex flex-col space-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Email Address
-                      </span>
-                      <span className="font-bold uppercase text-slate-900 transition-colors hover:text-indigo-600">
-                        {agentEmail}
-                      </span>
-                    </a>
-                  ) : (
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Email Address
-                      </span>
-                      <span className="font-bold uppercase text-slate-300">Not available</span>
-                    </div>
-                  )}
+                
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Direct Inquiries
+                    </span>
+                    {agentPhone ? (
+                       <a href={`tel:${agentPhone}`} className="text-lg font-black text-slate-900 transition-colors hover:text-red-600">
+                         {agentPhone}
+                       </a>
+                    ) : (
+                      <span className="text-lg font-black text-slate-300">Speak to an expert</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Availability
+                    </span>
+                    <span className="flex items-center gap-2 text-lg font-black text-emerald-600">
+                      <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                      Ready to Help
+                    </span>
+                  </div>
                 </div>
-                <div className="flex gap-4 border-t border-slate-200/50 pt-6">
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 shadow-sm transition-all hover:text-indigo-600">
-                    F
-                  </button>
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 shadow-sm transition-all hover:text-indigo-600">
-                    X
-                  </button>
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-white text-slate-400 shadow-sm transition-all hover:text-indigo-600">
-                    IN
-                  </button>
+
+                <div className="pt-4">
+                  <a 
+                    href="#listing-inquiry"
+                    className="inline-block rounded-2xl bg-slate-900 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                  >
+                    Contact Listing Expert
+                  </a>
                 </div>
               </div>
             </section>
           </div>
 
-          <div className="space-y-8 lg:col-span-4">
+          <div className="space-y-8 lg:col-span-4" id="listing-inquiry">
             <StickyInquirySidebar listing={listing as any} />
 
             {/* DDF Compliance Badge */}
@@ -618,40 +565,52 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
         </div>
 
         {/* Related Listings */}
-        {relatedListings.length > 0 && (
-          <section id="related-listings" className="space-y-12 pt-24">
-            <div className="flex items-end justify-between">
-              <div className="space-y-3">
-                <h2 className="text-4xl font-black italic tracking-tight text-slate-900">
-                  Similar Listings
-                </h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Hand-picked for you in {city}
-                </p>
-              </div>
-              <Link
-                href="/listings"
-                className="hidden items-center gap-3 text-xs font-black uppercase tracking-widest text-indigo-600 transition-all hover:gap-5 sm:flex"
+        <section id="related-listings" className="space-y-12 pt-24">
+          <div className="flex items-end justify-between">
+            <div className="space-y-3">
+              <h2 className="text-4xl font-black italic tracking-tight text-slate-900">
+                Similar Listings
+              </h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Hand-picked for you in {city}
+              </p>
+            </div>
+            <Link
+              href="/listings"
+              className="hidden items-center gap-3 text-xs font-black uppercase tracking-widest text-indigo-600 transition-all hover:gap-5 sm:flex"
+            >
+              View all
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
               >
-                View all
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {relatedListings.map((l) => (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {relatedListings.length > 0 ? (
+              relatedListings.map((l) => (
                 <UnifiedPropertyCard key={l.id} listing={l} />
-              ))}
-            </div>
-          </section>
-        )}
+              ))
+            ) : (
+                // Fallback for demo parity — ensure it never looks empty
+                [1,2,3,4].map((i) => (
+                  <div key={i} className="animate-pulse space-y-4">
+                    <div className="aspect-[4/3] rounded-3xl bg-slate-100" />
+                    <div className="space-y-2">
+                       <div className="h-4 w-2/3 rounded-lg bg-slate-100" />
+                       <div className="h-3 w-1/3 rounded-lg bg-slate-50" />
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

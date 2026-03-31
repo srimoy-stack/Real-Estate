@@ -1,13 +1,13 @@
                                                                                          'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 
 // Fix for default marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -59,18 +59,25 @@ interface ListingsMapProps {
 
 export function ListingsMap({ initialListings }: ListingsMapProps) {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [listings, setListings] = useState<any[]>(initialListings);
 
     // Calculate initial center based on available listings
     const center = useMemo(() => {
         // Default center (Toronto approximate)
         const defaultCenter: [number, number] = [43.6532, -79.3832];
-        const withCoords = initialListings.filter(l => (l.latitude || l.Latitude) && (l.longitude || l.Longitude));
+        const withCoords = initialListings.filter(l => 
+            (l.location?.lat || l.latitude || l.Latitude) && 
+            (l.location?.lng || l.longitude || l.Longitude)
+        );
+        
         if (withCoords.length > 0) {
-            const avgLat = withCoords.reduce((sum, l) => sum + (l.latitude || l.Latitude || 0), 0) / withCoords.length;
-            const avgLng = withCoords.reduce((sum, l) => sum + (l.longitude || l.Longitude || 0), 0) / withCoords.length;
-            return [avgLat, avgLng] as [number, number];
+            const avgLat = withCoords.reduce((sum, l) => sum + (l.location?.lat || l.latitude || l.Latitude || 0), 0) / withCoords.length;
+            const avgLng = withCoords.reduce((sum, l) => sum + (l.location?.lng || l.longitude || l.Longitude || 0), 0) / withCoords.length;
+            
+            // Validate result to avoid NaN
+            if (!isNaN(avgLat) && !isNaN(avgLng)) {
+                return [avgLat, avgLng] as [number, number];
+            }
         }
         return defaultCenter;
     }, [initialListings]);
@@ -81,18 +88,31 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
     }, [initialListings]);
 
     const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
-        const current = new URLSearchParams(Array.from(searchParams.entries()));
-        current.set('minLat', bounds.minLat.toString());
-        current.set('maxLat', bounds.maxLat.toString());
-        current.set('minLng', bounds.minLng.toString());
-        current.set('maxLng', bounds.maxLng.toString());
-        current.delete('page');
-        router.push(`/listings?${current.toString()}`, { scroll: false });
+        // Get current params from window to be absolutely certain we have the latest state
+        const currentParams = new URLSearchParams(window.location.search);
+        
+        // Update coordinates
+        currentParams.set('minLat', bounds.minLat.toString());
+        currentParams.set('maxLat', bounds.maxLat.toString());
+        currentParams.set('minLng', bounds.minLng.toString());
+        currentParams.set('maxLng', bounds.maxLng.toString());
+        
+        // CRITICAL: Always force view=map during map interactions to prevent grid-view regression
+        currentParams.set('view', 'map');
+        currentParams.delete('page');
+        
+        const newUrl = `/listings?${currentParams.toString()}`;
+        
+        // Only push if the URL actually changed to prevent loops
+        if (window.location.search !== `?${currentParams.toString()}`) {
+            router.push(newUrl, { scroll: false });
+        }
     };
 
     return (
         <div className="h-[750px] w-full rounded-[40px] overflow-hidden relative shadow-2xl border border-white z-0">
             <MapContainer
+                key={`${center[0]}-${center[1]}`} // Force re-render when center changes radically
                 center={center}
                 zoom={12}
                 scrollWheelZoom={true}
@@ -111,8 +131,8 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                     spiderfyOnMaxZoom={true}
                 >
                     {listings.map((listing) => {
-                        const lat = listing.latitude || listing.Latitude;
-                        const lng = listing.longitude || listing.Longitude;
+                        const lat = listing.location?.lat || listing.latitude || listing.Latitude;
+                        const lng = listing.location?.lng || listing.longitude || listing.Longitude;
                         if (!lat || !lng) return null;
 
                         const id = listing.id || listing.mlsNumber || listing.ListingKey || listing.listingKey;
@@ -126,7 +146,7 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                                 <Popup className="custom-popup" closeButton={false} minWidth={240}>
                                     <div className="p-0 space-y-3">
                                         <div className="relative h-32 w-full rounded-t-xl overflow-hidden">
-                                            <Image
+                                            <SafeImage
                                                 src={(listing.images && listing.images[0]) || listing.primaryPhotoUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                                                 alt={listing.address || listing.UnparsedAddress || 'Property'}
                                                 fill

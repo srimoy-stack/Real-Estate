@@ -25,11 +25,15 @@ export const LeadCaptureForm = ({
     const [lastSubmitTime, setLastSubmitTime] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const displayTitle = (listingTitle && listingTitle !== 'undefined' && !listingTitle.toLowerCase().includes('null')) 
+      ? listingTitle 
+      : 'this property';
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
-        message: `I would like more information regarding ${listingTitle}.`,
+        message: `I would like more information about ${displayTitle}.`,
     });
 
     // Auto-detect source on mount (supports UTM tagging)

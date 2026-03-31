@@ -22,6 +22,7 @@ export {
     shapes,
     STATUS_CONFIG,
     resolveStatus,
+    resolvePrice,
     formatPrice,
     formatNumber,
     timeAgo,

@@ -54,6 +54,7 @@ export interface Listing extends BaseEntity {
     agentEmail?: string;
     agentPhoto?: string;
     brokerageName?: string;
+    moreInformationLink?: string | null;
 
     // Media
     mainImage: string;

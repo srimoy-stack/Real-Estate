@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import type { FooterColumn, SocialLinksConfig } from '@repo/types';
 import { RealtorBadge } from '@/components/listings/RealtorBadge';
 
@@ -93,9 +93,9 @@ export function Footer({ brandName, columns, socialLinks, copyrightText }: Foote
         <div className="mt-20 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-6 opacity-60">
-                <Image src="https://www.realtor.ca/images/en-ca/realtor_ca_logo.svg" alt="REALTOR.ca" width={100} height={24} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
+                <SafeImage src="https://www.realtor.ca/images/en-ca/realtor_ca_logo.svg" alt="REALTOR.ca" width={100} height={24} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
                 <div className="h-6 w-px bg-slate-200" />
-                <Image src="https://www.crea.ca/wp-content/uploads/2019/07/CREA-Logo_EN.svg" alt="CREA" width={80} height={20} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
+                <SafeImage src="https://www.crea.ca/wp-content/uploads/2019/07/CREA-Logo_EN.svg" alt="CREA" width={80} height={20} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
             </div>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
                 The trademarks REALTOR®, REALTORS® and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA) 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@repo/auth';
-import Image from 'next/image';
+import { SafeImage } from '@/components/ui';
 import { userSavedItemService, listingQueryApi } from '@repo/services';
 import { Listing } from '@repo/types';
 
@@ -67,7 +67,7 @@ export default function SavedListingsPage() {
             {savedListings.map(listing => (
                 <div key={listing.id} className="group relative bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100">
                     <div className="aspect-[4/3] bg-slate-200 overflow-hidden relative">
-                        <Image
+                        <SafeImage
                             src={listing.mainImage || listing.images?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                             alt={listing.address}
                             fill

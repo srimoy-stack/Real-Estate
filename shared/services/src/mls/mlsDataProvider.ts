@@ -112,6 +112,7 @@ export class ApiMlsProvider implements IMlsDataProvider {
         agentEmail: l.agentEmail || l.ListAgentEmail,
         agentPhoto: l.agentPhoto || l.ListAgentPhoto,
         brokerageName: l.officeName || l.ListOfficeName,
+        moreInformationLink: l.moreInformationLink || l.ListingURL || null,
         ddfListingKey: l.ListingKey,
         ddfMemberKey: l.ListAgentKey,
       }));
@@ -170,6 +171,7 @@ export class ApiMlsProvider implements IMlsDataProvider {
         agentEmail: l.ListAgentEmail || l.agentEmail || undefined,
         agentPhoto: l.ListAgentPhoto || l.agentPhoto || undefined,
         brokerageName: l.ListOfficeName || l.officeName || undefined,
+        moreInformationLink: l.moreInformationLink || l.ListingURL || null,
         features: l.Features || [],
         amenities: l.Amenities || [],
         organizationId: 'org-1',

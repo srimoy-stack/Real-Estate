@@ -10,6 +10,9 @@
  * Example: color.brand.primary, spacing.card.padding
  */
 
+// ─── Placeholder — LOCAL, instant, zero-latency ──────────────────
+export const PLACEHOLDER_IMAGE = '/images/property-placeholder.svg';
+
 // ─── Color Tokens ────────────────────────────────────────────────
 export const colors = {
   brand: {
@@ -19,9 +22,9 @@ export const colors = {
     primaryShadow: 'rgba(208, 2, 27, 0.20)',
   },
   text: {
-    primary: '#111827', // High-contrast primary
+    primary: '#111827', // High-contrast primary (WCAG AAA on white)
     secondary: '#4B5563', // Secondary — never faded
-    muted: '#6B7280', // Muted labels
+    muted: '#6B7280', // Muted labels (WCAG AA on white)
     placeholder: '#9CA3AF',
   },
   status: {
@@ -70,7 +73,7 @@ export const typography = {
   card: {
     price: 'text-[22px] font-extrabold leading-tight tracking-tight text-[#111827]', // 22px bold
     title: 'text-[16px] font-semibold leading-snug text-[#111827]', // 16px semi-bold
-    metadata: 'text-[14px] font-medium text-[#4B5563]', // 14px
+    metadata: 'text-[14px] font-medium text-[#4B5563]', // 14px — minimum body
     metadataLabel: 'text-[11px] font-semibold uppercase tracking-wider text-[#6B7280]',
     location: 'text-[13px] font-medium text-[#4B5563]', // 13px
     badge: 'text-[11px] font-bold uppercase tracking-wider',
@@ -213,15 +216,13 @@ export function formatPrice(price: number | null | undefined, leaseAmount?: numb
 }
 
 export function formatNumber(num: number | null | undefined): string {
-  if (num == null || num === 0) return 'N/A';
+  if (num == null || num === 0) return '';
   return NUMBER_FORMATTER.format(num);
 }
 
 // ─── Freshness badge ─────────────────────────────────────────────
 export type FreshnessBadge =
-  | { label: 'New'; color: 'green' }
-  | { label: 'Today'; color: 'green' }
-  | { label: 'Updated'; color: 'blue' }
+  | { label: string; color: 'green' | 'blue' }
   | null;
 
 /**
@@ -239,16 +240,18 @@ export function getFreshnessBadge(
   if (isNaN(then)) return null;
 
   const diffMs = now - then;
-  const diffH = diffMs / 3_600_000;
-  const diffD = diffMs / 86_400_000;
+  const diffH = Math.floor(diffMs / 3_600_000);
+  const diffD = Math.floor(diffMs / 86_400_000);
 
-  const isToday = diffH < 24;
-  const isNew = diffH < 48;
-  const isUpdated = diffD < 7;
+  // Today path
+  if (diffH < 24) return { label: 'Today', color: 'green' };
+  
+  // Yesterday path
+  if (diffD === 1) return { label: '1 day ago', color: 'blue' };
+  
+  // Recent path (up to 7 days)
+  if (diffD < 7) return { label: `${diffD} days ago`, color: 'blue' };
 
-  if (isToday) return { label: 'Today', color: 'green' };
-  if (isNew) return { label: 'New', color: 'green' };
-  if (isUpdated) return { label: 'Updated', color: 'blue' };
   return null;
 }
 
@@ -284,27 +287,12 @@ export function isRecentListing(
 }
 
 
-// ─── Unique Dynamic Fallbacks ────────────────────────────────────
+// ─── Fallback Image — LOCAL placeholder ──────────────────────────
 
 /**
- * Returns a unique, high-quality real estate image URL for a given seed.
- * Uses LoremFlickr with a "lock" to ensure stability per listing while
- * maintaining uniqueness across the platform.
+ * Returns the local placeholder image path.
+ * No external dependencies, loads instantly.
  */
-export function getFallbackImage(seed: string | number = '0'): string {
-  // Simple string hash to turn MLS number into a stable numeric lock
-  const str = String(seed);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  const lock = Math.abs(hash);
-  
-  // Use professional real estate keywords to ensure relevant imagery
-  return `https://loremflickr.com/800/600/house,realestate,exterior?lock=${lock}`;
+export function getFallbackImage(_seed?: string | number): string {
+  return PLACEHOLDER_IMAGE;
 }
-
-// Default export if needed
-export const PLACEHOLDER_IMAGE = `https://loremflickr.com/800/600/house,realestate,exterior?lock=1`;
