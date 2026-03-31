@@ -187,6 +187,13 @@ export async function GET(request: NextRequest) {
         primaryPhoto: listing.primaryPhoto || listing.primaryPhotoUrl || null,
         primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
         Media: (() => {
+          const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
+          const isValidImageUrl = (url: string) => {
+            if (!url || url.length < 10) return false;
+            if (NON_IMAGE.test(url)) return false;
+            try { const u = new URL(url); if (u.pathname === '/' || u.pathname === '') return false; } catch { return false; }
+            return true;
+          };
           const rawMedia =
             (Array.isArray(listing.mediaJson) &&
               listing.mediaJson.length > 0 &&
@@ -195,20 +202,20 @@ export async function GET(request: NextRequest) {
             null;
           if (rawMedia) {
             const validMedia = rawMedia.filter(
-              (m: any) => m && m.MediaURL && m.MediaURL.length > 0
+              (m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL)
             );
             if (validMedia.length > 0) return validMedia;
           }
           // Fallback: use primaryPhotoUrl or rawData photo fields
           const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || null;
-          if (photoUrl && photoUrl.length > 0)
+          if (photoUrl && isValidImageUrl(photoUrl))
             return [{ MediaURL: photoUrl, PreferredPhotoYN: true, Order: 0 }];
           const rawPhoto =
             raw.Photo?.[0]?.HighResPath ||
             raw.Photo?.[0]?.LargePhotoPath ||
             raw.Photo?.[0]?.MedResPath ||
             null;
-          if (rawPhoto && rawPhoto.length > 0)
+          if (rawPhoto && isValidImageUrl(rawPhoto))
             return [{ MediaURL: rawPhoto, PreferredPhotoYN: true, Order: 0 }];
           return [];
         })(),

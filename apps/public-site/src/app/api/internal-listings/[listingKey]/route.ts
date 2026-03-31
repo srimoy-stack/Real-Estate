@@ -18,6 +18,8 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
 
   try {
     // ── 1. Fetch from Local DB ──────────────────────────────────────────
+    console.log(`[Internal Listings API] Searching for property with key/id: "${listingKey}"`);
+
     const listing = await prisma.listing.findFirst({
       where: withActive({
         OR: [
@@ -28,6 +30,8 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
     });
 
     if (listing) {
+      console.log(`[Internal Listings API] Found property with key: ${listing.listingKey}`);
+      
       // Map to Legacy Format for Frontend Compatibility
       const raw = (listing.rawData || {}) as any;
       const mapped = {
@@ -68,18 +72,25 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
         primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
         isFeatured: listing.isFeatured,
         Media: (() => {
-          if (Array.isArray(listing.mediaJson) && listing.mediaJson.length > 0) {
-            const valid = listing.mediaJson.filter(
-              (m: any) => m && m.MediaURL && m.MediaURL.length > 0
+          const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
+          const isValidImageUrl = (url: string) => {
+            if (!url || url.length < 10) return false;
+            if (NON_IMAGE.test(url)) return false;
+            try { const u = new URL(url); if (u.pathname === '/' || u.pathname === '') return false; } catch { return false; }
+            return true;
+          };
+          if (Array.isArray(listing.mediaJson) && (listing.mediaJson as any[]).length > 0) {
+            const valid = (listing.mediaJson as any[]).filter(
+              (m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL)
             );
             if (valid.length > 0) return valid;
           }
           if (Array.isArray(raw.Media) && raw.Media.length > 0) {
-            const valid = raw.Media.filter((m: any) => m && m.MediaURL && m.MediaURL.length > 0);
+            const valid = raw.Media.filter((m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL));
             if (valid.length > 0) return valid;
           }
           const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || null;
-          if (photoUrl && photoUrl.length > 0)
+          if (photoUrl && isValidImageUrl(photoUrl))
             return [
               {
                 MediaURL: photoUrl,
@@ -105,8 +116,14 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
       return NextResponse.json(compliantListing);
     }
 
-    // ── 2. If not found in DB, return 404 (don't fall back to Live Proxy here) ──
-    return NextResponse.json({ error: 'Property not found in Local Database' }, { status: 404 });
+    // ── 2. If not found in DB, return 404 ──
+    console.warn(`[Internal Listings API] Property NOT FOUND in DB for: "${listingKey}"`);
+    return NextResponse.json({ 
+      error: 'Property not found in Local Database',
+      searchedFor: listingKey,
+      suggestion: 'Ensure the property is synced and isActive is true.'
+    }, { status: 404 });
+
   } catch (err: any) {
     console.error('[Internal Detail Proxy] Error:', err.message);
     return NextResponse.json(

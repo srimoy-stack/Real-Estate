@@ -79,13 +79,13 @@ export async function generateMetadata({ params }: ListingDetailProps): Promise<
       images:
         listing.images && listing.images.length > 0
           ? [
-              {
-                url: listing.images[0],
-                width: 1200,
-                height: 630,
-                alt: `${shortAddr} — ${city}`,
-              },
-            ]
+            {
+              url: listing.images[0],
+              width: 1200,
+              height: 630,
+              alt: `${shortAddr} — ${city}`,
+            },
+          ]
           : [],
       type: 'website',
     },
@@ -120,31 +120,31 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
     geo:
       listing.latitude && listing.longitude
         ? {
-            '@type': 'GeoCoordinates',
-            latitude: listing.latitude,
-            longitude: listing.longitude,
-          }
+          '@type': 'GeoCoordinates',
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+        }
         : undefined,
     offers:
       safeNum(listing.price) > 0
         ? {
-            '@type': 'Offer',
-            price: listing.price,
-            priceCurrency: listing.currency || 'CAD',
-            availability:
-              listing.status === 'ACTIVE'
-                ? 'https://schema.org/InStock'
-                : 'https://schema.org/SoldOut',
-          }
+          '@type': 'Offer',
+          price: listing.price,
+          priceCurrency: listing.currency || 'CAD',
+          availability:
+            listing.status === 'ACTIVE'
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/SoldOut',
+        }
         : undefined,
     numberOfRooms: safeNum(listing.bedrooms) > 0 ? listing.bedrooms : undefined,
     floorSize:
       safeNum(listing.squareFootage) > 0
         ? {
-            '@type': 'QuantitativeValue',
-            value: listing.squareFootage,
-            unitCode: 'FTK',
-          }
+          '@type': 'QuantitativeValue',
+          value: listing.squareFootage,
+          unitCode: 'FTK',
+        }
         : undefined,
   };
 
@@ -286,7 +286,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     </span>
                     {(listing as any).updatedAt &&
                       new Date().getTime() - new Date((listing as any).updatedAt).getTime() <
-                        24 * 60 * 60 * 1000 && (
+                      24 * 60 * 60 * 1000 && (
                         <span className="flex animate-pulse items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-600">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
                           Price Improved

@@ -26,6 +26,7 @@ export async function syncListings() {
                 '$top': PREFERRED_PAGE_SIZE.toString(),
                 '$skip': skip.toString(),
                 '$count': 'true',
+                '$expand': 'Media',
                 '$orderby': 'ModificationTimestamp desc'
             });
 
@@ -145,11 +146,30 @@ export async function syncListings() {
 
 function processMedia(media: any[]): { primary: string | null; array: any[] } {
     if (!media || media.length === 0) return { primary: null, array: [] };
-    const processed = media.map(m => ({
-        MediaURL: m.MediaURL,
-        Order: m.Order || 0,
-        MediaModificationTimestamp: m.MediaModificationTimestamp || null
-    })).sort((a, b) => a.Order - b.Order);
+
+    const NON_IMAGE_EXTENSIONS = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
+
+    const processed = media
+        .filter(m => {
+            if (!m || !m.MediaURL || typeof m.MediaURL !== 'string') return false;
+            const url = m.MediaURL.trim();
+            if (url.length < 10) return false;
+            // Reject PDFs and documents
+            if (NON_IMAGE_EXTENSIONS.test(url)) return false;
+            // Reject bare domain URLs (no path after domain)
+            try {
+                const parsed = new URL(url);
+                if (parsed.pathname === '/' || parsed.pathname === '') return false;
+            } catch { return false; }
+            return true;
+        })
+        .map(m => ({
+            MediaURL: m.MediaURL.trim(),
+            Order: m.Order || 0,
+            MediaModificationTimestamp: m.MediaModificationTimestamp || null
+        }))
+        .sort((a, b) => a.Order - b.Order);
+
     const primaryObj = processed.find(m => m.Order === 0) || processed[0];
     return {
         primary: primaryObj?.MediaURL || null,

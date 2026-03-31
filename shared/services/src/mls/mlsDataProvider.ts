@@ -23,26 +23,18 @@ export interface IMlsDataProvider {
 export class ApiMlsProvider implements IMlsDataProvider {
   private getBaseUrl() {
     if (typeof window !== 'undefined') return ''; // Browser context: naturally relative
-    
-    // Server-side context (SSR / Server Components / Build Time)
-    // 1. Explicit environment variable set by the developer
-    const envBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-    
-    // 2. Automated Vercel Detection (Foolproof for Vercel/Next.js)
-    // process.env.VERCEL_URL is the system-defined deployment URL
+
+    // 1. Prefer process.env.VERCEL_URL for server-side fetches on Vercel
     const vercelUrl = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
-    
     if (vercelUrl) {
-      // Vercel deployment URLs are always https://
       return `https://${vercelUrl}`;
     }
 
-    // 3. Fallback to env variable if it exists and looks like a real domain
-    if (envBaseUrl && !envBaseUrl.includes('localhost')) {
-      return envBaseUrl;
-    }
-                    
-    // 4. Final fallback for local development only
+    // 2. Fallback to manually configured NEXT_PUBLIC_BASE_URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (baseUrl) return baseUrl;
+
+    // 3. Last resort fallback
     return 'http://localhost:3000';
   }
 
