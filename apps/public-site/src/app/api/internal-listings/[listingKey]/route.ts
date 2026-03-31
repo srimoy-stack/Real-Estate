@@ -20,7 +20,10 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
     // ── 1. Fetch from Local DB ──────────────────────────────────────────
     const listing = await prisma.listing.findFirst({
       where: withActive({
-        OR: [{ listingKey: listingKey }, { listingId: listingKey }],
+        OR: [
+          { listingKey: { equals: listingKey, mode: 'insensitive' } },
+          { listingId: { equals: listingKey, mode: 'insensitive' } },
+        ],
       }),
     });
 

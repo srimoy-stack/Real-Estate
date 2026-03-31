@@ -34,11 +34,13 @@ import { MOCK_MLS_FEED } from './mockMLSFeed';
 listingStore.seed(MOCK_MLS_FEED);
 
 // Optional: Run one simulation pass on start to randomize the market immediately
-mlsSyncSimulator.runMockSync().then((stats) => {
-  console.log(
-    `[MLS Service] Platform hydrated: +${stats.inserted} new, ${stats.updated} modified.`
-  );
-});
+if (process.env.NODE_ENV === 'development') {
+  mlsSyncSimulator.runMockSync().then((stats) => {
+    console.log(
+      `[MLS Service] Platform hydrated: +${stats.inserted} new, ${stats.updated} modified.`
+    );
+  });
+}
 
 /**
  * Trigger a manual simulation sync pass for dev/demo purposes.
