@@ -4,7 +4,7 @@
  */
 
 export type MLSStatus = 'For Sale' | 'Sold' | 'Pending' | 'Removed';
-export type MLSPropertyType = 'Condo' | 'Detached' | 'Semi-Detached' | 'Townhouse' | 'Land' | 'Commercial';
+export type MLSPropertyType = 'Residential' | 'Commercial' | 'Lease' | string;
 
 export interface MLSListing {
     mlsNumber: string;          // Unique key – used for deduplication
@@ -71,7 +71,7 @@ export type MLSListingCard = Pick<
 export interface MLSListingFilters {
     ids?: string[];             // Fetch specific listings by MLS numbers
     city?: string;
-    propertyType?: MLSPropertyType | MLSPropertyType[];
+    propertyType?: string | string[];
     listingType?: 'Residential' | 'Commercial';
     status?: MLSStatus | MLSStatus[];
     minPrice?: number;

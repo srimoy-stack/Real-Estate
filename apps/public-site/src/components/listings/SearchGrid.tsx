@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Listing, ListingFilters } from '@repo/types';
 import { listingService } from '@repo/services';
-import { PropertyCard } from '@/components/sections/PropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 
 interface SearchGridProps {
     initialListings: Listing[];
@@ -82,7 +82,7 @@ export const SearchGrid = ({ initialListings, filters }: SearchGridProps) => {
                         className="animate-in fade-in slide-in-from-bottom-10 duration-700"
                         style={{ animationDelay: `${(index % 6) * 100}ms` }}
                     >
-                        <PropertyCard listing={listing as any} />
+                        <UnifiedPropertyCard listing={listing} index={index} />
                     </div>
                 ))}
             </div>

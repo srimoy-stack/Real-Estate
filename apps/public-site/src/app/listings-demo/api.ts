@@ -165,6 +165,19 @@ export async function fetchListings(
             setParam('minYearBuilt', filters.minYearBuilt);
             setParam('maxYearBuilt', filters.maxYearBuilt);
 
+            // Advanced filters — land, building type, ownership, storeys, fees, tax, listed since
+            setParam('minLandSize', filters.minLandSize);
+            setParam('maxLandSize', filters.maxLandSize);
+            if (filters.buildingType && filters.buildingType !== 'Any') setParam('buildingType', filters.buildingType);
+            if (filters.ownershipType && filters.ownershipType !== 'Any') setParam('ownershipType', filters.ownershipType);
+            setParam('minStoreys', filters.minStoreys);
+            setParam('maxStoreys', filters.maxStoreys);
+            setParam('minMaintFee', filters.minMaintFee);
+            setParam('maxMaintFee', filters.maxMaintFee);
+            setParam('minTax', filters.minTax);
+            setParam('maxTax', filters.maxTax);
+            if (filters.listedSince) setParam('listedSince', filters.listedSince);
+
             // Types — skip "Any"
             if (filters.propertyType && filters.propertyType !== 'Any') setParam('propertyType', filters.propertyType);
             setParam('listingType', filters.listingType);

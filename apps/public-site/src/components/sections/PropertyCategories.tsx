@@ -3,12 +3,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CATEGORIES = [
-    { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?listingType=Commercial' },
-    { title: 'Residential', count: 850, image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800', href: '/search?listingType=Residential' },
-    { title: 'Single Family', count: 432, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
-    { title: 'Apartment', count: 215, image: 'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
-    { title: 'Condo', count: 328, image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800', href: '/search?type=CONDO' },
-    { title: 'Multi Family', count: 96, image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800', href: '/search?type=DETACHED' },
+    { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial' },
+    { title: 'Lease', count: 310, image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Lease' },
+    { title: 'Office Space', count: 186, image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=office' },
+    { title: 'Industrial', count: 78, image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=industrial' },
+    { title: 'Retail', count: 142, image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=retail' },
+    { title: 'Mixed Use', count: 56, image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial,Lease' },
 ];
 
 export const PropertyCategories = () => {
@@ -16,12 +16,12 @@ export const PropertyCategories = () => {
         <section className="py-24 bg-slate-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Explore Options</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red">Explore Options</span>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                        Browse By <span className="text-indigo-600 italic">Category</span>
+                        Browse By <span className="text-brand-red italic">Category</span>
                     </h2>
                     <p className="text-slate-500 font-medium">
-                        Whether you&apos;re looking for a cozy studio or a sprawling commercial complex, we have the perfect space for your next move.
+                        Discover premium commercial spaces and high-value lease opportunities across Canada&apos;s most sought-after markets.
                     </p>
                 </div>
 
@@ -45,7 +45,7 @@ export const PropertyCategories = () => {
                                     <h3 className="text-2xl font-black text-white tracking-tight">{cat.title}</h3>
                                     <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">{cat.count} Listings</p>
                                 </div>
-                                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-indigo-600 transition-all">
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white group-hover:bg-brand-red group-hover:text-white transition-all">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                                 </div>
                             </div>

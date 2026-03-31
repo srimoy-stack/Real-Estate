@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { savedListingsService, listingService } from '@repo/services';
 import { Listing } from '@repo/types';
-import { PropertyCard } from '@/components/sections/PropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 
 export default function SavedListingsPage() {
     const router = useRouter();
@@ -84,7 +84,7 @@ export default function SavedListingsPage() {
                                 key={listing.id} 
                                 className="animate-in fade-in slide-in-from-bottom-10 duration-700"
                             >
-                                <PropertyCard listing={listing} />
+                                <UnifiedPropertyCard listing={listing} />
                             </div>
                         ))}
                     </div>

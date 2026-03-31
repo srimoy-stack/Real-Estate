@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { listingQueryApi } from '@repo/services';
 import { InternalListingStatus } from '@repo/types';
-import { ListingCard } from '@/components/listings/ListingCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 import { ListingFilters as FilterSidebar } from '@/components/listings/ListingFilters';
 import { SaveSearchButton } from '@/components/listings/SaveSearchButton';
 import { ListingGridSkeleton } from '@/components/listings/ListingSkeleton';
@@ -153,7 +153,7 @@ export default async function ListingsPage({
                 listings.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {listings.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing as any} />
+                      <UnifiedPropertyCard key={listing.id} listing={listing as any} />
                     ))}
                   </div>
                 ) : (

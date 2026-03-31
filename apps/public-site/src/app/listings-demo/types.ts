@@ -72,6 +72,7 @@ export interface MLSProperty {
     // DDF Compliance fields (injected by compliance layer)
     moreInformationLink?: string | null;
     primaryPhotoUrl?: string | null;
+    primaryPhoto?: string | null;
     mediaJson?: any[] | null;
     _ddfCompliant?: boolean;
 }
@@ -171,14 +172,9 @@ export const TRANSACTION_TYPES = ['For Sale', 'For Rent'];
 // Verified PropertySubType enum values
 export const PROPERTY_TYPES = [
     'Any',
-    'Single Family',
-    'Vacant Land',
-    'Business',
-    'Industrial',
-    'Office',
-    'Retail',
-    'Multi-family',
-    'Other',
+    'Residential',
+    'Commercial',
+    'Lease'
 ];
 
 // Verified StructureType values

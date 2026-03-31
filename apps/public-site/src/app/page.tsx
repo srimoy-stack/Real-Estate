@@ -1,14 +1,7 @@
 import { getWebsiteFromHeaders } from '@/lib/tenant/getWebsiteFromHeaders';
-import { HeroSection } from '@/components/sections/HeroSection';
-import { FeaturedListings } from '@/components/sections/FeaturedListings';
-import { PropertyCategories } from '@/components/sections/PropertyCategories';
-import { CommunitiesSection } from '@/components/sections/CommunitiesSection';
-import { CTASection } from '@/components/sections/CTASection';
-import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
-import { BlogSection } from '@/components/sections/BlogSection';
-import { ContactSection } from '@/components/sections/ContactSection';
 import { orgWebsiteService } from '@repo/services';
 import { Metadata } from 'next';
+import { HomePageClient } from '@/components/sections/HomePageClient';
 
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -70,14 +63,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HeroSection />
-      <FeaturedListings />
-      <PropertyCategories />
-      <CommunitiesSection />
-      <CTASection />
-      <TestimonialsSection />
-      <BlogSection />
-      <ContactSection />
+      <HomePageClient />
     </>
   );
 }

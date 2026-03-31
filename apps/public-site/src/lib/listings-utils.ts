@@ -30,6 +30,18 @@ export interface ListingQuery {
     useRanking?: boolean; // Flag to enable smart ranking
     agentName?: string | null;
     agentId?: string | null;
+    // Advanced filters
+    buildingType?: string | null;
+    ownershipType?: string | null;
+    listedSince?: string | null;
+    minLandSize?: number | null;
+    maxLandSize?: number | null;
+    minStoreys?: number | null;
+    maxStoreys?: number | null;
+    minMaintFee?: number | null;
+    maxMaintFee?: number | null;
+    minTax?: number | null;
+    maxTax?: number | null;
 }
 
 /**
@@ -241,30 +253,43 @@ export async function getListingsForShortcode(
 /**
  * Centralized Order By Builder
  */
-export function buildOrderByClause(query: ListingQuery): Prisma.ListingOrderByWithRelationInput {
+export function buildOrderByClause(query: ListingQuery): Prisma.ListingOrderByWithRelationInput | Prisma.ListingOrderByWithRelationInput[] {
     const { sortBy, order = 'desc' } = query;
     const sortOrder = (order === 'asc' || order === 'desc') ? order : 'desc';
 
+    // Base secondary sort to ensure consistency
+    const secondarySort: Prisma.ListingOrderByWithRelationInput = { modificationTimestamp: 'desc' };
+
+    let primarySort: Prisma.ListingOrderByWithRelationInput;
+
     switch (sortBy) {
         case 'price':
-            return { listPrice: sortOrder };
+            primarySort = { listPrice: sortOrder }; break;
         case 'beds':
-            return { bedroomsTotal: sortOrder };
+            primarySort = { bedroomsTotal: sortOrder }; break;
         case 'baths':
-            return { bathroomsTotal: sortOrder };
+            primarySort = { bathroomsTotal: sortOrder }; break;
         case 'sqft':
-            return { livingArea: sortOrder };
+            primarySort = { livingArea: sortOrder }; break;
         case 'year':
-            return { yearBuilt: sortOrder };
+            primarySort = { yearBuilt: sortOrder }; break;
         case 'newest':
         case 'date':
         case 'updated':
-            return { modificationTimestamp: sortOrder };
+            primarySort = { modificationTimestamp: sortOrder }; break;
         case 'createdAt':
-            return { createdAt: sortOrder };
+            primarySort = { createdAt: sortOrder }; break;
         default:
-            return { modificationTimestamp: 'desc' };
+            primarySort = { modificationTimestamp: 'desc' }; break;
     }
+
+    // CRITICAL: Always prioritize listings WITH photos to improve UI quality.
+    // Putting primaryPhotoUrl: 'desc' first means truthy strings (URLs) come before null/null-like.
+    return [
+        { primaryPhotoUrl: { sort: 'desc', nulls: 'last' } as any },
+        primarySort,
+        secondarySort
+    ];
 }
 
 /**
@@ -331,45 +356,58 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
     propertyType: (v) => {
         const s = String(v).trim();
         if (!s || s === 'Any') return null;
+        
+        // Support multiple types via comma separation
+        const types = s.split(',').map(t => t.trim()).filter(Boolean);
+        
+        const getConditionForType = (t: string): Prisma.ListingWhereInput => {
+            if (t === 'Residential') {
+                return {
+                    OR: [
+                        { propertyType: { contains: 'Residential', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Single Family', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Multi-family', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Condo', mode: 'insensitive' } }
+                    ]
+                };
+            }
+            if (t === 'Commercial') {
+                return {
+                    OR: [
+                        { propertyType: { contains: 'Commercial', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Industrial', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Office', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Retail', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Business', mode: 'insensitive' } }
+                    ]
+                };
+            }
+            if (t === 'Lease') {
+                return {
+                    OR: [
+                        { propertyType: { contains: 'Lease', mode: 'insensitive' } },
+                        { propertySubType: { contains: 'Lease', mode: 'insensitive' } },
+                        { publicRemarks: { contains: 'Lease', mode: 'insensitive' } },
+                        { rawData: { path: ['TransactionType'], equals: 'For Lease' } }
+                    ]
+                };
+            }
+            return {
+                OR: [
+                    { propertyType: { contains: t, mode: 'insensitive' } },
+                    { propertySubType: { contains: t, mode: 'insensitive' } }
+                ]
+            };
+        };
+
+        if (types.length <= 1) return getConditionForType(types[0]);
+
         return {
-            OR: [
-                { propertyType: { contains: s, mode: 'insensitive' } },
-                { propertySubType: { contains: s, mode: 'insensitive' } }
-            ]
+            OR: types.map(getConditionForType)
         };
     },
     type: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
-    listingType: (v) => {
-        const s = String(v).trim();
-        if (!s || s === 'Any') return null;
-        if (s === 'Residential') {
-            return {
-                OR: [
-                    { propertyType: { contains: 'Residential', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Single Family', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Multi-family', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Condo', mode: 'insensitive' } }
-                ]
-            };
-        }
-        if (s === 'Commercial') {
-            return {
-                OR: [
-                    { propertyType: { contains: 'Commercial', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Industrial', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Office', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Retail', mode: 'insensitive' } },
-                    { propertySubType: { contains: 'Business', mode: 'insensitive' } }
-                ]
-            };
-        }
-        return { 
-            OR: [
-                { propertyType: { contains: s, mode: 'insensitive' } },
-                { propertySubType: { contains: s, mode: 'insensitive' } }
-            ]
-        };
-    },
+    listingType: (v, q) => FILTER_MAP.propertyType(v, q),
     featured: (v) => (v === true || v === 'true') ? { isFeatured: true } : null,
     standardStatus: (v) => {
         const s = String(v).trim();
@@ -386,11 +424,43 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
         if (!s || s === 'Any') return null;
         return {
             OR: [
-                { listingKey: { contains: s, mode: 'insensitive' } }, // Some systems use ID here
+                { listingKey: { contains: s, mode: 'insensitive' } },
                 { rawData: { path: ['ListAgentKey'], equals: s } }
             ]
         };
     },
+
+    // ── Advanced Filters ──────────────────────────────────────────────
+    buildingType: (v) => {
+        const s = String(v).trim();
+        if (!s || s === 'Any') return null;
+        return {
+            OR: [
+                { rawData: { path: ['StructureType'], array_contains: s } },
+                { propertySubType: { contains: s, mode: 'insensitive' } }
+            ]
+        };
+    },
+    ownershipType: (v) => {
+        const s = String(v).trim();
+        if (!s || s === 'Any') return null;
+        return { rawData: { path: ['CommonInterest'], string_contains: s } };
+    },
+    listedSince: (v) => {
+        const s = String(v).trim();
+        if (!s) return null;
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return null;
+        return { modificationTimestamp: { gte: d } };
+    },
+    minLandSize: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['LotSizeArea'], gte: n } } : null; },
+    maxLandSize: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['LotSizeArea'], lte: n } } : null; },
+    minStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], gte: String(n) } } : null; },
+    maxStoreys: (v) => { const n = safeInt(v); return n !== null ? { rawData: { path: ['Stories'], lte: String(n) } } : null; },
+    minMaintFee: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['AssociationFee'], gte: n } } : null; },
+    maxMaintFee: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['AssociationFee'], lte: n } } : null; },
+    minTax: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['TaxAnnualAmount'], gte: n } } : null; },
+    maxTax: (v) => { const n = safeFloat(v); return n !== null ? { rawData: { path: ['TaxAnnualAmount'], lte: n } } : null; },
 };
 
 function queryHasGeoBounds(q: ListingQuery) {

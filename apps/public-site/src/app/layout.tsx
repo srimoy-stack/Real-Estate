@@ -5,7 +5,6 @@ import { AuthProvider } from '@repo/auth';
 import { getFontUrls, getBrandingCssVars } from '@repo/types';
 import { Header } from '../components/sections/Header';
 import { Footer } from '../components/sections/Footer';
-import { LeadGate } from '../components/auth/LeadGate';
 
 export default function RootLayout({
   children,
@@ -46,7 +45,6 @@ export default function RootLayout({
         <AuthProvider>
           <WebsiteProvider website={website}>
             <Header />
-            <LeadGate />
             <main className="min-h-[70vh]">
               {children}
             </main>

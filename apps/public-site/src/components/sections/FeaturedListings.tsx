@@ -4,22 +4,20 @@ import React from 'react';
 import { ListingsSection } from './ListingsSection';
 
 /**
- * FeaturedListings section - a preconfigured ListingsSection
- * for the homepage that shows active (featured) listings.
- * 
- * Uses the dynamic ListingsSection engine under the hood,
- * so data is fetched via listingsService, never hardcoded.
+ * FeaturedListings section — Homepage preview.
+ * Shows a curated set of 6 premium listings to entice visitors.
+ * "View All" button leads to /search where full search + auth gate awaits.
  */
 export const FeaturedListings: React.FC = () => {
     return (
         <ListingsSection
             limit={20}
             sort="latest"
-            title="Premium Collection"
-            subtitle="Explore our hand-picked properties representing the pinnacle of design, location, and value in today's most desirable markets."
+            title="Featured Commercial & Lease Properties"
+            subtitle="Explore premium commercial opportunities and high-value lease listings curated for professional investors and businesses."
             showViewAll={true}
-            viewAllHref="/properties"
-            variant="idx"
+            viewAllHref="/search?propertyType=Commercial,Lease"
+            filters={{ propertyType: "Commercial,Lease" }}
         />
     );
 };

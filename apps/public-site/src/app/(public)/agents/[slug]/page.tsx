@@ -5,7 +5,7 @@ import { Agent, Listing } from '@repo/types';
 import { agentService, listingService } from '@repo/services';
 import { AgentProfileBanner } from '@/components/agents/AgentProfileBanner';
 import { AgentContactForm } from '@/components/agents/AgentContactForm';
-import { PropertyCard } from '@/components/sections/PropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 import { notFound } from 'next/navigation';
 
 interface AgentProfilePageProps {
@@ -92,7 +92,7 @@ export default function AgentProfilePage({ params }: AgentProfilePageProps) {
                             {listings.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {listings.map((listing) => (
-                                        <PropertyCard key={listing.id} listing={listing} />
+                                        <UnifiedPropertyCard key={listing.id} listing={listing} />
                                     ))}
                                 </div>
                             ) : (

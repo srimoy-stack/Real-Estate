@@ -39,6 +39,18 @@ export const mockCommunities: Community[] = [
     },
     {
         id: 'c4',
+        slug: 'brampton',
+        name: 'Brampton',
+        description: 'A vibrant city northwest of Toronto known for its parks, diverse food scene, and family-friendly neighbourhoods.',
+        image: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?auto=format&fit=crop&q=80&w=800',
+        listingCount: 10,
+        avgPrice: 870000,
+        amenities: ['Parks & Trails', 'Family Friendly', 'Transit Access'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    },
+    {
+        id: 'c5',
         slug: 'muskoka',
         name: 'Muskoka',
         description: 'Canada\'s premier cottage country destination, where rustic charm meets modern luxury on the shores of crystal clear lakes.',

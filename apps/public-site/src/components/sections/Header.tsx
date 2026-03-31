@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { useWebsite } from '../../lib/tenant/website-context';
 
@@ -10,7 +11,8 @@ export const Header = () => {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
-    const { user } = useAuth();
+    const router = useRouter();
+    const { user, logout } = useAuth();
     const website = useWebsite();
 
     useEffect(() => {
@@ -30,14 +32,14 @@ export const Header = () => {
     };
 
     return (
-        <header className={`sticky top-0 z-50 w-full transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm py-2' : 'bg-white py-4'}`}>
+        <header className={`sticky top-0 z-50 w-full transition-all duration-500 ${isScrolled ? 'bg-white border-b border-slate-100 py-2' : 'bg-white py-4'}`}>
             <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10">
                 <div className="flex items-center justify-between">
 
                     {/* Logo Section */}
                     <div className="flex-shrink-0 min-w-max mr-12">
                         <Link href="/" className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center">
                                 <span className="text-white font-black text-xl italic leading-none">A</span>
                             </div>
                             <span className="text-2xl font-black tracking-tighter text-slate-900 hidden sm:block">
@@ -73,7 +75,7 @@ export const Header = () => {
 
                                 {/* Dropdown Menu */}
                                 {link.children && link.children.length > 0 && (
-                                    <div className={`absolute top-full left-1/2 -translate-x-1/2 min-w-[240px] bg-white rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-slate-100 p-2 transition-all duration-300 origin-top transform-gpu ${activeDropdown === link.id ? 'opacity-100 visible translate-y-2' : 'opacity-0 invisible -translate-y-2 scale-95'
+                                    <div className={`absolute top-full left-1/2 -translate-x-1/2 min-w-[240px] bg-white rounded-3xl border border-slate-100 p-2 transition-all duration-300 origin-top transform-gpu ${activeDropdown === link.id ? 'opacity-100 visible translate-y-2' : 'opacity-0 invisible -translate-y-2 scale-95'
                                         }`}>
                                         <div className="space-y-1">
                                             {link.children.sort((a, b) => a.order - b.order).map(child => (
@@ -102,17 +104,23 @@ export const Header = () => {
                         </a>
 
                         {user ? (
-                            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
-                                <Link href="/saved-listings" className="h-9 px-4 bg-white text-slate-900 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center transition-all shadow-sm hover:shadow-md border border-slate-50 group">
+                            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                                <Link href="/saved-listings" className="h-9 px-4 bg-white text-slate-900 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center transition-all border border-slate-50 group">
                                     <svg className="w-3.5 h-3.5 mr-2 text-indigo-500 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" /></svg>
                                     Saved
                                 </Link>
-                                <Link href="/account/saved-listings" className="h-9 w-9 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg">
+                                <Link href="/account/saved-listings" className="h-9 w-9 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </Link>
+                                <button
+                                    onClick={() => { logout(); router.push('/'); }}
+                                    className="h-9 px-4 text-slate-500 hover:text-red-600 font-black text-[10px] uppercase tracking-widest transition-all"
+                                >
+                                    Log Out
+                                </button>
                             </div>
                         ) : (
-                            <Link href="/login" className="h-11 px-8 bg-indigo-600 hover:bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl flex items-center transition-all shadow-xl shadow-indigo-100">
+                            <Link href="/login" className="h-11 px-8 bg-indigo-600 hover:bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl flex items-center transition-all">
                                 Sign In
                             </Link>
                         )}
@@ -180,7 +188,7 @@ export const Header = () => {
                             <Link
                                 href="/login"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="w-full h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black uppercase tracking-widest shadow-xl"
+                                className="w-full h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black uppercase tracking-widest"
                             >
                                 Sign In
                             </Link>

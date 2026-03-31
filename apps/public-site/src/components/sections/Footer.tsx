@@ -18,7 +18,7 @@ export const Footer = () => {
                     {/* Column 1: About */}
                     <div className="space-y-8">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                                 <span className="text-white font-black text-base italic leading-none">A</span>
                             </div>
                             <span className="text-xl font-black tracking-tighter text-slate-900 uppercase">
@@ -80,7 +80,7 @@ export const Footer = () => {
                                 <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
                                     <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                 </div>
-                                <p className="font-bold text-slate-700">support@antigravity.realty</p>
+                                <p className="font-bold text-slate-700">support@skyline.com</p>
                             </div>
                         </div>
                         <div className="pt-4">

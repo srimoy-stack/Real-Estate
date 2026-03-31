@@ -1,32 +1,22 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { HeroSection } from './components/HeroSection';
-import { FilterBar } from './components/FilterBar';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { SearchParams } from './SearchBar';
+import { fetchAggregatedListings, fetchListings } from '@/app/listings-demo/api';
+import { FilterBar } from '@/app/listings-demo/components/FilterBar';
 import { UnifiedPropertyCard } from '@/components/ui';
-import { ListingGridSkeleton } from './components/Skeletons';
-import { EmptyState, ErrorState } from './components/StateDisplays';
-import { fetchAggregatedListings } from './api';
+import { ListingGridSkeleton } from '@/app/listings-demo/components/Skeletons';
+import { EmptyState, ErrorState } from '@/app/listings-demo/components/StateDisplays';
+import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
+import { resolveGeoBounds } from '@/app/listings-demo/utils';
 
-import { MLSProperty, FilterState, DEFAULT_FILTERS } from './types';
-import { resolveGeoBounds } from './utils';
-import { MapPlaceholder } from './components/MapPlaceholder';
-import { useSearchParams, useRouter } from 'next/navigation';
+const PAGE_SIZE = 15;
 
-// Standardized page size for API and UI
-// Standardized page size for API and UI
-const PAGE_SIZE = 90;
+interface HomeSearchResultsProps {
+    searchParams: SearchParams | null;
+}
 
-export default function ListingsDemoPage() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-
-    const [filters, setFilters] = useState<FilterState>(() => ({
-        ...DEFAULT_FILTERS,
-        searchQuery: searchParams.get('q') || '',
-        city: searchParams.get('city') || 'Toronto'
-    }));
-
+export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
     const [listings, setListings] = useState<MLSProperty[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,11 +26,18 @@ export default function ListingsDemoPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
 
+    const [filters, setFilters] = useState<FilterState>({
+        ...DEFAULT_FILTERS,
+        city: 'Toronto',
+        propertyType: 'Commercial,Lease', // LOCKED: Homepage only shows Commercial & Lease
+    });
+
     const searchIdRef = useRef<number>(0);
     const resultsRef = useRef<HTMLDivElement>(null);
+    const hasAutoLoaded = useRef(false);
 
-    // Initial search
-    const handleSearch = useCallback(async (customFilters?: FilterState) => {
+    // Core search — same API as listings-demo
+    const executeSearch = useCallback(async (activeFilters: FilterState, scrollToResults = true) => {
         const currentSearchId = ++searchIdRef.current;
 
         try {
@@ -53,13 +50,9 @@ export default function ListingsDemoPage() {
             setCurrentPage(1);
             setTotalPages(0);
 
-            const activeFilters = customFilters || filters;
             const baseBounds = resolveGeoBounds(activeFilters.city);
             const enrichedFilters = { ...activeFilters, ...baseBounds };
 
-            console.log(`[Search #${currentSearchId}] Fetching batches for ${activeFilters.city}...`);
-
-            // Fetch multiple pages (0, 100, 200) in parallel internally
             const data = await fetchAggregatedListings(enrichedFilters, PAGE_SIZE);
 
             if (currentSearchId !== searchIdRef.current) return;
@@ -67,23 +60,26 @@ export default function ListingsDemoPage() {
             setListings(data.listings);
             setFilteredTotal(data.total);
             setGlobalTotalCount(data.platformTotal || data.totalCount || 0);
-            setTotalPages(Math.ceil(data.total / PAGE_SIZE)); 
+            setTotalPages(Math.ceil(data.total / PAGE_SIZE));
             setCurrentPage(1);
 
-            // Sync URL
-            const url = new URL(typeof window !== 'undefined' ? window.location.href : '');
-            url.searchParams.set('q', activeFilters.searchQuery);
-            url.searchParams.set('city', activeFilters.city);
-            router.push(url.pathname + url.search, { scroll: false });
-
+            if (scrollToResults) {
+                setTimeout(() => {
+                    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
         } catch (err: any) {
-            setError(err.message || 'Search failed');
+            if (currentSearchId === searchIdRef.current) {
+                setError(err.message || 'Search failed');
+            }
         } finally {
-            setIsLoading(false);
+            if (currentSearchId === searchIdRef.current) {
+                setIsLoading(false);
+            }
         }
-    }, [filters, router]);
+    }, []);
 
-    // Go to specific page
+    // Pagination
     const goToPage = async (page: number) => {
         if (isLoading || page < 1 || (totalPages > 0 && page > totalPages)) return;
 
@@ -94,8 +90,6 @@ export default function ListingsDemoPage() {
             const bounds = resolveGeoBounds(filters.city);
             const enrichedFilters = { ...filters, ...bounds };
 
-            // fetchListings handles single page fetch
-            const { fetchListings } = await import('./api');
             const res = await fetchListings(enrichedFilters, page, PAGE_SIZE);
 
             setListings(res.listings);
@@ -103,7 +97,6 @@ export default function ListingsDemoPage() {
             setFilteredTotal(res.total);
             setTotalPages(Math.ceil(res.total / PAGE_SIZE));
 
-            // Scroll to results
             resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (err: any) {
             setError(err.message || 'Failed to load page');
@@ -112,93 +105,100 @@ export default function ListingsDemoPage() {
         }
     };
 
+    // Auto-load on page load — no click required
     useEffect(() => {
-        handleSearch();
-    }, [handleSearch, filters.listingType]);
+        if (!hasAutoLoaded.current) {
+            hasAutoLoaded.current = true;
+            executeSearch(filters, false);
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const handleSearchQueryChange = (query: string) => {
-        setFilters((prev: any) => ({ ...prev, searchQuery: query }));
-    };
-
-    const handleListingTypeChange = (type: 'Residential' | 'Commercial') => {
-        setFilters((prev: any) => ({ ...prev, listingType: type }));
-    };
+    // When hero search bar submits — update filters and re-search
+    useEffect(() => {
+        if (searchParams) {
+            const newFilters: FilterState = {
+                ...filters,
+                city: searchParams.city || 'Toronto',
+                searchQuery: searchParams.query || '',
+                listingType: searchParams.listingType,
+                propertyType: 'Commercial,Lease', // LOCKED: Homepage never shows Residential
+                minPrice: searchParams.minPrice || '',
+                maxPrice: searchParams.maxPrice || '',
+                sortBy: 'newest',
+                order: 'desc',
+            };
+            setFilters(newFilters);
+            executeSearch(newFilters, true);
+        }
+    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <HeroSection
-                searchQuery={filters.searchQuery}
-                onSearchQueryChange={handleSearchQueryChange}
-                listingType={filters.listingType}
-                onListingTypeChange={handleListingTypeChange}
-                onSearch={() => handleSearch()}
-                totalCount={globalTotalCount}
-            />
-
+        <section ref={resultsRef} className="w-full bg-slate-50/80 scroll-mt-4">
+            {/* Full FilterBar — same as listings-demo */}
             <FilterBar
                 filters={filters}
                 onFiltersChange={setFilters}
-                onSearch={() => handleSearch()}
+                onSearch={() => executeSearch(filters)}
                 isLoading={isLoading}
             />
 
-            <main ref={resultsRef} className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full flex-1">
-                {hasSearched && !isLoading && !error && (
-                    <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                {/* Results Header */}
+                {hasSearched && !isLoading && !error && listings.length > 0 && (
+                    <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                                 Showing results for {filters.city || 'All Cities'}
-                                {!filters.city && <span className="text-gray-400 font-medium text-base ml-2">(including nearby areas)</span>}
                             </h2>
-                            <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">
-                                {globalTotalCount.toLocaleString()} total platform properties · Found {filteredTotal.toLocaleString()} {filteredTotal === 1 ? 'match' : 'matches'} for your search ·
-                                <span className="text-emerald-600 ml-1">{(filters.city || 'ALL CITIES').toUpperCase()}</span>
+                            <p className="text-sm text-slate-700 font-bold uppercase tracking-wider mt-1">
+                                {globalTotalCount.toLocaleString()} total platform properties · Found {filteredTotal.toLocaleString()} {filteredTotal === 1 ? 'match' : 'matches'} ·
+                                <span className="text-brand-red ml-1">{(filters.city || 'ALL CITIES').toUpperCase()}</span>
                             </p>
                         </div>
 
-                        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-bold text-emerald-700 shadow-sm border border-emerald-100">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[10px] font-black text-brand-red shadow-sm border border-red-100 uppercase tracking-widest">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
                             </span>
-                            Live Sync
+                            REALTOR.ca® · Live MLS® Data
                         </div>
                     </div>
                 )}
 
-                {hasSearched && !error && <MapPlaceholder city={filters.city} />}
-
+                {/* Loading */}
                 {isLoading && <ListingGridSkeleton count={8} />}
 
+                {/* Error */}
                 {error && !isLoading && (
-                    <ErrorState message={error} onRetry={() => handleSearch()} />
+                    <ErrorState message={error} onRetry={() => executeSearch(filters)} />
                 )}
 
+                {/* Empty */}
                 {!isLoading && !error && hasSearched && listings.length === 0 && (
                     <EmptyState />
                 )}
 
+                {/* Results Grid */}
                 {!isLoading && listings.length > 0 && (
-                    <div className="flex flex-col gap-12">
-                        <section>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="h-px flex-1 bg-slate-200" />
-                                <div className="px-5 py-2 rounded-full bg-emerald-600 text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">
-                                    {(filters.city || 'Results').toUpperCase()} · {filteredTotal.toLocaleString()} MATCHES
-                                </div>
-                                <div className="h-px flex-1 bg-slate-200" />
+                    <div>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="h-px flex-1 bg-slate-200" />
+                            <div className="px-5 py-2 rounded-full bg-brand-red text-[10px] font-black text-white uppercase tracking-[0.2em] shadow-lg">
+                                {(filters.city || 'Results').toUpperCase()} · {filteredTotal.toLocaleString()} MATCHES
                             </div>
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {listings.map((l: MLSProperty, i: number) => (
-                                    <UnifiedPropertyCard key={l.ListingKey || `l-${i}`} listing={l} index={i} />
-                                ))}
-                            </div>
-                        </section>
+                            <div className="h-px flex-1 bg-slate-200" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                            {listings.slice(0, PAGE_SIZE).map((l: MLSProperty, i: number) => (
+                                <UnifiedPropertyCard key={l.ListingKey || `l-${i}`} listing={l} index={i} />
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* Pagination */}
-                {!isLoading && listings.length > 0 && (
+                {!isLoading && listings.length > 0 && totalPages > 1 && (
                     <div className="mt-16 flex flex-col items-center gap-8 border-t border-slate-100 pt-12">
                         <div className="flex items-center gap-2">
                             <button
@@ -229,7 +229,7 @@ export default function ListingsDemoPage() {
                                             key={pageNum}
                                             onClick={() => goToPage(pageNum)}
                                             className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${currentPage === pageNum
-                                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                                    ? 'bg-brand-red text-white shadow-lg shadow-red-200'
                                                     : 'border border-slate-100 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                                                 }`}
                                         >
@@ -259,34 +259,12 @@ export default function ListingsDemoPage() {
                         </p>
                     </div>
                 )}
-            </main>
-
-            <footer className="mt-20 border-t border-gray-100 bg-white/80 backdrop-blur-sm">
-                <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                    <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 shadow-lg shadow-emerald-600/20 text-sm font-bold text-white">
-                                RE
-                            </div>
-                            <div>
-                                <span className="block text-sm font-bold text-gray-900 tracking-tight">Premium Real Estate Platform</span>
-                                <span className="block text-[10px] text-gray-400 font-medium">VERIFIED DATA FEED</span>
-                            </div>
-                        </div>
-                        <div className="text-center sm:text-right">
-                            <p className="mt-2 text-xs font-bold text-gray-900">
-                                © {new Date().getFullYear()} Real Estate Platform All rights reserved.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            </div>
 
             <style jsx global>{`
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 .animate-in { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-                .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
             `}</style>
-        </div>
+        </section>
     );
-}
+};

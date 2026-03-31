@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, PropertyType } from '@repo/types';
-import { PropertyCard } from '@/components/sections/PropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 import { MapView } from '@/components/listings/MapView';
 
 export default function MapBasedSearchPage() {
@@ -164,7 +164,7 @@ export default function MapBasedSearchPage() {
                                         onMouseLeave={() => setActiveListingId(null)}
                                         className="animate-in fade-in slide-in-from-bottom-2 duration-300"
                                     >
-                                        <PropertyCard listing={listing} />
+                                        <UnifiedPropertyCard listing={listing} />
                                     </div>
                                 ))}
                             </div>

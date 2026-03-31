@@ -3,8 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, ListingSectionFilters, ListingSortOrder } from '@repo/types';
-import { PropertyCard } from './PropertyCard';
-import { IDXPropertyCard } from '../idx/IDXPropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 
 // ─── Types ─────────────────────────────────────────────
 export interface ListingsSectionConfig {
@@ -31,8 +30,6 @@ export interface ListingsSectionProps {
     viewAllHref?: string;
     /** Custom CSS class */
     className?: string;
-    /** Card variant: 'default' | 'idx' */
-    variant?: 'default' | 'idx';
     /** Name of a managed shortcode configuration */
     configName?: string;
 }
@@ -47,7 +44,6 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     showViewAll = true,
     viewAllHref = '/listings',
     className = '',
-    variant = 'default',
     configName,
 }) => {
     const [listings, setListings] = useState<Listing[]>([]);
@@ -137,8 +133,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </div>
 
                     {/* Card skeletons */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-                        {Array.from({ length: Math.min(limit, 6) }).map((_, i) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
+                        {Array.from({ length: Math.min(limit, 8) }).map((_, i) => (
                             <div key={i} className="animate-pulse">
                                 <div className="bg-slate-100 rounded-[32px] overflow-hidden">
                                     <div className="aspect-[16/10] sm:aspect-[4/5] bg-slate-200" />
@@ -270,18 +266,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </div>
 
                 {/* ─── Listings Grid ────────────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${limit > 9 ? 'xl:grid-cols-4' : ''} gap-8 lg:gap-10`}>
                     {listings.map((listing, index) => (
                         <div
                             key={listing.id}
                             className="opacity-0 animate-[fadeSlideUp_0.5s_ease-out_forwards]"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            {variant === 'idx' ? (
-                                <IDXPropertyCard listing={listing} />
-                            ) : (
-                                <PropertyCard listing={listing} />
-                            )}
+                            <UnifiedPropertyCard listing={listing} index={index} />
                         </div>
                     ))}
                 </div>

@@ -84,6 +84,7 @@ function mapListingCompact(item: any) {
     agentPhone: item.ListAgentDirectPhone || null,
     officeName: item.ListOfficeName || null,
     primaryPhoto: primaryMedia,
+    primaryPhotoUrl: primaryMedia,
     modificationTimestamp: item.ModificationTimestamp ? new Date(item.ModificationTimestamp) : null,
     listingDate: item.ListingDate ? new Date(item.ListingDate) : (item.OriginalEntryTimestamp ? new Date(item.OriginalEntryTimestamp) : null),
     // Sidecar storage for agent data not in the primary schema to avoid breaking migrations

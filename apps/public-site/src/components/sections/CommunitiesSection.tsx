@@ -3,12 +3,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const CITIES = [
-    { name: 'Toronto', count: 432, image: 'https://images.unsplash.com/photo-1517090504586-fde19ea6066f?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Vancouver', count: 215, image: 'https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Montreal', count: 184, image: 'https://images.unsplash.com/photo-1519177113768-4983045eaa5f?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Calgary', count: 96, image: 'https://images.unsplash.com/photo-1549419163-9528d7120619?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Ottawa', count: 72, image: 'https://images.unsplash.com/photo-1551631484-93510e8f8102?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Mississauga', count: 54, image: 'https://images.unsplash.com/photo-1536746803623-cdf26444bc11?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Toronto', count: 432, image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Vancouver', count: 215, image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Montreal', count: 184, 
+        image: 'https://images.unsplash.com/photo-1585863810141-f628043c7df4?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Calgary', count: 96, image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Ottawa', count: 72, image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Mississauga', count: 54, image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=800' },
 ];
 
 export const CommunitiesSection = () => {

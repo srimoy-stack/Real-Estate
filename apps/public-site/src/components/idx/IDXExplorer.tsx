@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, PropertyType, ListingStatus } from '@repo/types';
-import { IDXPropertyCard } from './IDXPropertyCard';
+import { UnifiedPropertyCard } from '@/components/ui';
 import { IDXMapPlaceholder } from './IDXMapPlaceholder';
 
 // ─── Filter State ──────────────────────────────────────
@@ -63,7 +63,7 @@ export const IDXExplorer: React.FC = () => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [showMap, setShowMap] = useState(true);
     const [mobileMapOpen, setMobileMapOpen] = useState(false);
-    const [highlightedId, setHighlightedId] = useState<string | null>(null);
+    const [highlightedId, _setHighlightedId] = useState<string | null>(null);
     const [selectedMapListing, setSelectedMapListing] = useState<Listing | null>(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
 
@@ -462,10 +462,9 @@ export const IDXExplorer: React.FC = () => {
                                             className="opacity-0 animate-[fadeIn_0.4s_ease-out_forwards]"
                                             style={{ animationDelay: `${(index % 12) * 50}ms` }}
                                         >
-                                            <IDXPropertyCard
+                                            <UnifiedPropertyCard
                                                 listing={listing}
-                                                isHighlighted={highlightedId === listing.id}
-                                                onHover={setHighlightedId}
+                                                index={index}
                                             />
                                         </div>
                                     ))}
