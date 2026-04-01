@@ -39,6 +39,8 @@ export interface NormalizedProperty {
   city: string;
   province: string;
   postalCode: string;
+  latitude: number | null;
+  longitude: number | null;
 
   // Residential stats
   bedrooms: number;
@@ -211,6 +213,9 @@ export function normalizeListing(listing: any): NormalizedProperty {
     bathrooms: listing.bathrooms != null && listing.bathrooms > 0 ? listing.bathrooms : 0,
     sqft: listing.squareFootage || listing.squareFeet || listing.livingArea || 0,
 
+    latitude: listing.latitude || listing.location?.lat || null,
+    longitude: listing.longitude || listing.location?.lng || null,
+
     propertySubType: subType,
     zoningDescription: listing.zoningDescription || null,
     lotSizeArea: listing.lotSizeArea || null,
@@ -271,6 +276,9 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
         ? listing.BathroomsTotalInteger
         : 0,
     sqft: listing.LivingArea || 0,
+
+    latitude: listing.Latitude || null,
+    longitude: listing.Longitude || null,
 
     propertySubType: subType,
     zoningDescription: listing.ZoningDescription || null,

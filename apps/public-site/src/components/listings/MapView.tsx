@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { SafeImage, resolvePrice } from '@/components/ui';
-import { Listing } from '@repo/types';
+import { autoNormalize, NormalizedProperty } from '@/components/ui/normalize-property';
 
 // Fix for default marker icons in Next.js
 if (typeof window !== 'undefined') {
@@ -39,16 +39,7 @@ if (typeof window !== 'undefined') {
     });
 }
 
-interface MapViewProps {
-    listings: Listing[];
-    onMarkerClick?: (listing: Listing) => void;
-    activeListingId?: string | null;
-}
-
-/**
- * BoundsUpdater component to sync map view with listings
- */
-function BoundsUpdater({ listings }: { listings: Listing[] }) {
+function BoundsUpdater({ listings }: { listings: NormalizedProperty[] }) {
     const map = useMap();
     
     useEffect(() => {
@@ -62,20 +53,19 @@ function BoundsUpdater({ listings }: { listings: Listing[] }) {
     return null;
 }
 
-export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId }) => {
-    const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+export const MapView: React.FC<{ listings: any[]; activeListingId?: string | null }> = ({ listings, activeListingId }) => {
+    const [selectedListing, setSelectedListing] = useState<NormalizedProperty | null>(null);
 
-    const geotaggedListings = useMemo(() => 
-        listings.filter(l => 
-            (l.latitude && l.longitude) || 
-            (l.location && l.location.lat && l.location.lng)
-        ),
+    const normalizedListings = useMemo(() => 
+        listings.map(l => autoNormalize(l)), 
     [listings]);
 
-    const getCoords = (l: any): [number, number] => {
-        if (l.latitude && l.longitude) return [l.latitude, l.longitude];
-        if (l.location && l.location.lat && l.location.lng) return [l.location.lat, l.location.lng];
-        return [0, 0];
+    const geotaggedListings = useMemo(() => 
+        normalizedListings.filter(l => l.latitude && l.longitude),
+    [normalizedListings]);
+
+    const getCoords = (l: NormalizedProperty): [number, number] => {
+        return [l.latitude!, l.longitude!];
     };
 
     const center: [number, number] = useMemo(() => {
@@ -101,11 +91,11 @@ export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId }) =
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
                 
-                <BoundsUpdater listings={listings} />
+                <BoundsUpdater listings={normalizedListings} />
 
                 {geotaggedListings.map(listing => {
                     const isActive = activeListingId === listing.id || selectedListing?.id === listing.id;
-                    const priceText = resolvePrice(listing.price, (listing as any).leaseAmount, (listing as any).leaseRatePerSqft, 'residential').text;
+                    const priceDisplay = resolvePrice(listing.price, (listing as any).leaseAmount, (listing as any).leaseRatePerSqft, listing.category);
                     const pos = getCoords(listing);
 
                     return (
@@ -121,7 +111,7 @@ export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId }) =
                                 <div className="p-0 overflow-hidden rounded-xl">
                                     <div className="relative h-32 w-full">
                                         <SafeImage
-                                            src={(listing.images && listing.images[0]) || (listing as any).primaryPhotoUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
+                                            src={listing.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
                                             fill
                                             className="object-cover"
                                             alt={listing.title}
@@ -132,11 +122,11 @@ export const MapView: React.FC<MapViewProps> = ({ listings, activeListingId }) =
                                     </div>
                                     <div className="p-4 bg-white">
                                         <h4 className="text-sm font-black text-slate-900 leading-tight mb-0.5 truncate">{listing.title}</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 truncate">{listing.address}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 truncate">{listing.city}, {listing.province}</p>
                                         <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                                            <span className="text-sm font-black text-red-600">{priceText}</span>
+                                            <span className="text-sm font-black text-red-600">{priceDisplay.text}</span>
                                             <Link
-                                                href={`/listing/${listing.mlsNumber || (listing as any).listingKey}`}
+                                                href={listing.href}
                                                 className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors"
                                             >
                                                 Details

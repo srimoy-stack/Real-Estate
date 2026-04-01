@@ -1,166 +1,220 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { listingService } from '@repo/services';
-import { Listing, PropertyType } from '@repo/types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { UnifiedPropertyCard } from '@/components/ui';
+import { FilterBar } from '@/app/listings-demo/components/FilterBar';
+import { fetchAggregatedListings, fetchListings } from '@/app/listings-demo/api';
+import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
+import { resolveGeoBounds } from '@/app/listings-demo/utils';
 import dynamic from 'next/dynamic';
 
 const MapView = dynamic(
   () => import('@/components/listings/MapView').then((mod) => mod.MapView),
-  { 
+  {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-slate-100 animate-pulse rounded-[32px] flex items-center justify-center">
+      <div className="w-full h-full bg-slate-100 animate-pulse rounded-2xl flex items-center justify-center">
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Interactive Map...</span>
       </div>
     )
   }
 );
 
+const PAGE_SIZE = 90;
+
+// ─── Property Type Pill Options ─────────────────────────────────
+const PROPERTY_TYPE_OPTIONS = [
+    { label: 'All Types', value: 'Any', icon: '🏢' },
+    { label: 'Residential', value: 'Residential', icon: '🏠' },
+    { label: 'Commercial', value: 'Commercial', icon: '🏗️' },
+    { label: 'Lease', value: 'Lease', icon: '📝' },
+];
+
 export default function MapBasedSearchPage() {
-    const [listings, setListings] = useState<Listing[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const [listings, setListings] = useState<MLSProperty[]>([]);
+    const [filteredTotal, setFilteredTotal] = useState(0);
+    const [globalTotalCount, setGlobalTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showMap, setShowMap] = useState(true);
     const [activeListingId, setActiveListingId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
 
-    // Filters
-    const [filters, setFilters] = useState({
-        city: '',
-        propertyType: '' as any,
-        minPrice: '',
-        maxPrice: '',
-        bedrooms: '',
-        bathrooms: '',
-    });
+    const searchIdRef = useRef<number>(0);
 
-    const fetchListings = useCallback(async () => {
-        setLoading(true);
+    // ─── Filters (same FilterState as search page) ──────────────
+    const [filters, setFilters] = useState<FilterState>(() => ({
+        ...DEFAULT_FILTERS,
+        searchQuery: searchParams.get('q') || '',
+        city: searchParams.get('city') || '',
+        propertyType: searchParams.get('propertyType') || 'Any',
+        minPrice: searchParams.get('minPrice') || '',
+        maxPrice: searchParams.get('maxPrice') || '',
+        sortBy: searchParams.get('sortBy') || 'newest',
+        order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+    }));
+
+    // ─── Core Search ────────────────────────────────────────────
+    const handleSearch = useCallback(async (customFilters?: FilterState) => {
+        const currentSearchId = ++searchIdRef.current;
+
         try {
-            const query: any = {
-                city: filters.city || undefined,
-                propertyType: filters.propertyType || undefined,
-                minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-                maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-                bedrooms: filters.bedrooms ? Number(filters.bedrooms) : undefined,
-                bathrooms: filters.bathrooms ? Number(filters.bathrooms) : undefined,
-                limit: 20
-            };
-            const response = await listingService.search(query);
-            if (response.success) {
-                setListings(response.data);
-                setTotalCount(response.pagination.total);
+            setLoading(true);
+            setListings([]);
+            setFilteredTotal(0);
+            setGlobalTotalCount(0);
+            setCurrentPage(1);
+            setTotalPages(0);
+
+            const activeFilters = customFilters || filters;
+            const baseBounds = activeFilters.city ? resolveGeoBounds(activeFilters.city) : {};
+            const enrichedFilters = { ...activeFilters, ...baseBounds };
+
+            const data = await fetchAggregatedListings(enrichedFilters, PAGE_SIZE);
+
+            if (currentSearchId !== searchIdRef.current) return;
+
+            setListings(data.listings);
+            setFilteredTotal(data.total);
+            setGlobalTotalCount(data.platformTotal || data.totalCount || 0);
+            setTotalPages(Math.ceil(data.total / PAGE_SIZE));
+            setCurrentPage(1);
+
+            // Sync URL
+            const url = new URL(window.location.href);
+            if (activeFilters.city) url.searchParams.set('city', activeFilters.city);
+            else url.searchParams.delete('city');
+            if (activeFilters.searchQuery) url.searchParams.set('q', activeFilters.searchQuery);
+            if (activeFilters.propertyType && activeFilters.propertyType !== 'Any') {
+                url.searchParams.set('propertyType', activeFilters.propertyType);
+            } else {
+                url.searchParams.delete('propertyType');
             }
-        } catch (error) {
-            console.error('Failed to fetch listings:', error);
+            router.replace(url.pathname + url.search, { scroll: false });
+
+        } catch (err: any) {
+            if (currentSearchId === searchIdRef.current) {
+                console.error('Map search failed:', err);
+            }
+        } finally {
+            if (currentSearchId === searchIdRef.current) {
+                setLoading(false);
+            }
+        }
+    }, [filters, router]);
+
+    // ─── Pagination ─────────────────────────────────────────────
+    const goToPage = async (page: number) => {
+        if (loading || page < 1 || (totalPages > 0 && page > totalPages)) return;
+
+        try {
+            setLoading(true);
+            const bounds = filters.city ? resolveGeoBounds(filters.city) : {};
+            const enrichedFilters = { ...filters, ...bounds };
+            const res = await fetchListings(enrichedFilters, page, PAGE_SIZE);
+
+            setListings(res.listings);
+            setCurrentPage(page);
+            setFilteredTotal(res.total);
+            setTotalPages(Math.ceil(res.total / PAGE_SIZE));
+        } catch (err: any) {
+            console.error('Failed to load page:', err);
         } finally {
             setLoading(false);
         }
-    }, [filters]);
-
-    useEffect(() => {
-        fetchListings();
-    }, [fetchListings]);
-
-    const handleFilterChange = (key: string, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
     };
+
+    // ─── Property Type Quick Toggle ─────────────────────────────
+    const handlePropertyTypeChange = (value: string) => {
+        const newFilters = { ...filters, propertyType: value };
+        setFilters(newFilters);
+        handleSearch(newFilters);
+    };
+
+    // ─── Auto-search on mount ───────────────────────────────────
+    useEffect(() => {
+        handleSearch();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <main className="min-h-screen bg-white">
             <div className="flex flex-col lg:flex-row h-[calc(100vh-72px)] overflow-hidden">
 
-                {/* Left Panel: Filters and Grid — Realtor.ca High-Density Style */}
-                <aside className={`flex-1 flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-500 overflow-hidden ${showMap ? 'lg:w-[50%] xl:w-[45%]' : 'lg:w-full'
+                {/* ══════════ LEFT PANEL: Filters + Listings ══════════ */}
+                <aside className={`flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-500 overflow-hidden ${showMap ? 'lg:w-[55%] xl:w-[50%]' : 'lg:w-full'
                     }`}>
 
-                    {/* Compact Filter Header */}
-                    <div className="bg-white p-5 border-b border-slate-100 shadow-sm z-10">
-                        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    {/* ── Header ── */}
+                    <div className="bg-white px-5 pt-5 pb-3 border-b border-slate-100 shadow-sm z-10">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                             <div className="flex flex-col">
                                 <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">
                                     Properties <span className="text-brand-red">in {filters.city || 'Canada'}</span>
                                 </h1>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                    {totalCount.toLocaleString()} Listings Found
-                                </span>
+                                <div className="flex items-center gap-3 mt-1">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        {filteredTotal.toLocaleString()} Matches
+                                    </span>
+                                    {globalTotalCount > 0 && (
+                                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                            · {globalTotalCount.toLocaleString()} Platform Total
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setShowMap(!showMap)}
-                                className="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-red hover:text-white transition-all shadow-sm"
-                            >
-                                {showMap ? 'Hide Map' : 'Show Map View'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[9px] font-black text-brand-red border border-red-100 uppercase tracking-widest">
+                                    <span className="relative flex h-1.5 w-1.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-red" />
+                                    </span>
+                                    REALTOR.ca® · Live MLS® Data
+                                </div>
+                                <button
+                                    onClick={() => setShowMap(!showMap)}
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-red hover:text-white transition-all shadow-sm"
+                                >
+                                    {showMap ? 'Hide Map' : 'Show Map'}
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Professional Compact Filter Bar */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
-                            <input
-                                placeholder="City/MLS®"
-                                value={filters.city}
-                                onChange={(e) => handleFilterChange('city', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700 focus:bg-white focus:border-brand-red outline-none transition-all placeholder:text-slate-300"
-                            />
-
-                            <select
-                                value={filters.propertyType}
-                                onChange={(e) => handleFilterChange('propertyType', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700 outline-none appearance-none cursor-pointer hover:bg-slate-100 transition-colors"
-                            >
-                                <option value="">Prop Type</option>
-                                {Object.values(PropertyType).map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
-                            </select>
-
-                            <select
-                                value={filters.minPrice}
-                                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
-                            >
-                                <option value="">Min Price</option>
-                                <option value="500000">$500k</option>
-                                <option value="1000000">$1M</option>
-                                <option value="2000000">$2M</option>
-                            </select>
-
-                            <select
-                                value={filters.maxPrice}
-                                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
-                            >
-                                <option value="">Max Price</option>
-                                <option value="1000000">$1M</option>
-                                <option value="2000000">$2M</option>
-                                <option value="5000000">$5M</option>
-                            </select>
-
-                            <select
-                                value={filters.bedrooms}
-                                onChange={(e) => handleFilterChange('bedrooms', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
-                            >
-                                <option value="">Beds</option>
-                                <option value="1">1+</option>
-                                <option value="2">2+</option>
-                                <option value="3">3+</option>
-                                <option value="4">4+</option>
-                            </select>
-
-                            <select
-                                value={filters.bathrooms}
-                                onChange={(e) => handleFilterChange('bathrooms', e.target.value)}
-                                className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold text-slate-700"
-                            >
-                                <option value="">Baths</option>
-                                <option value="1">1+</option>
-                                <option value="2">2+</option>
-                                <option value="3">3+</option>
-                            </select>
+                        {/* ── Property Type Quick Tabs ── */}
+                        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-400 mr-1">
+                                Type
+                            </span>
+                            {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => handlePropertyTypeChange(opt.value)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                                        filters.propertyType === opt.value
+                                            ? 'bg-brand-red text-white shadow-sm'
+                                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 hover:border-slate-300'
+                                    }`}
+                                >
+                                    <span className="text-xs">{opt.icon}</span>
+                                    {opt.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Listings Scrollable Area — dense grid */}
-                    <div className="flex-1 overflow-y-auto p-5 scroll-smooth custom-scrollbar bg-slate-50/30">
+                    {/* ── Full FilterBar (same as /search) ── */}
+                    <FilterBar
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onSearch={() => handleSearch()}
+                        isLoading={loading}
+                    />
+
+                    {/* ── Listings Scrollable Area ── */}
+                    <div className="flex-1 overflow-y-auto p-4 scroll-smooth custom-scrollbar bg-slate-50/30">
                         {loading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[1, 2, 3, 4, 5, 6].map(i => (
@@ -168,25 +222,79 @@ export default function MapBasedSearchPage() {
                                 ))}
                             </div>
                         ) : listings.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
-                                {listings.map((listing) => (
-                                    <div
-                                        key={listing.id}
-                                        onMouseEnter={() => setActiveListingId(listing.id)}
-                                        onMouseLeave={() => setActiveListingId(null)}
-                                        className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                                    >
-                                        <UnifiedPropertyCard listing={listing} />
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
+                                    {listings.map((listing) => (
+                                        <div
+                                            key={listing.ListingKey}
+                                            onMouseEnter={() => setActiveListingId(listing.ListingKey)}
+                                            onMouseLeave={() => setActiveListingId(null)}
+                                            className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                                        >
+                                            <UnifiedPropertyCard listing={listing} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* ── Pagination ── */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-2 py-6 border-t border-slate-100">
+                                        <button
+                                            onClick={() => goToPage(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 text-xs shadow-sm transition-all hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                        </button>
+
+                                        <div className="flex items-center gap-1">
+                                            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                                                let pageNum: number;
+                                                if (totalPages <= 5) pageNum = i + 1;
+                                                else if (currentPage <= 3) pageNum = i + 1;
+                                                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                                else pageNum = currentPage - 2 + i;
+
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => goToPage(pageNum)}
+                                                        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition-all ${currentPage === pageNum
+                                                            ? 'bg-brand-red text-white shadow-sm'
+                                                            : 'border border-slate-100 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
+                                                            }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <button
+                                            onClick={() => goToPage(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 text-xs shadow-sm transition-all hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                        </button>
+
+                                        <span className="ml-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {currentPage}/{totalPages}
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
+                                )}
+                            </>
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                                 <span className="text-4xl">🔎</span>
                                 <h3 className="text-lg font-black text-slate-900 uppercase">No Listings Found</h3>
                                 <p className="text-xs text-slate-400 font-bold max-w-xs">Adjust your filters to discover more properties in the MLS® network.</p>
                                 <button
-                                    onClick={() => setFilters({ city: '', propertyType: '' as any, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '' })}
+                                    onClick={() => {
+                                        const resetFilters = { ...DEFAULT_FILTERS };
+                                        setFilters(resetFilters);
+                                        handleSearch(resetFilters);
+                                    }}
                                     className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red hover:underline"
                                 >
                                     Reset Discovery
@@ -196,7 +304,7 @@ export default function MapBasedSearchPage() {
                     </div>
                 </aside>
 
-                {/* Right Panel: Map */}
+                {/* ══════════ RIGHT PANEL: Map ══════════ */}
                 {showMap && (
                     <section className="flex-1 h-full relative p-4 bg-white lg:p-6 lg:pl-0 animate-in fade-in slide-in-from-right-8 duration-700">
                         <MapView
@@ -206,7 +314,7 @@ export default function MapBasedSearchPage() {
                     </section>
                 )}
 
-                {/* Mobile Toggle Button */}
+                {/* Mobile Toggle */}
                 <button
                     onClick={() => setShowMap(!showMap)}
                     className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-50 px-8 py-4 bg-slate-900 text-white rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl flex items-center gap-3 active:scale-95 transition-all"
