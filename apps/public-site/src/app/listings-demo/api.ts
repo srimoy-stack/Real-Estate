@@ -179,8 +179,17 @@ export async function fetchListings(
             if (filters.listedSince) setParam('listedSince', filters.listedSince);
 
             // Types — skip "Any"
-            if (filters.propertyType && filters.propertyType !== 'Any') setParam('propertyType', filters.propertyType);
-            setParam('listingType', filters.listingType);
+            // CRITICAL: Only send ONE of propertyType or listingType, never both.
+            // They both map to the same filter processor on the backend, so sending both
+            // creates conflicting AND conditions (e.g., Commercial AND Residential = 0 results).
+            if (filters.propertyType && filters.propertyType !== 'Any') {
+                setParam('propertyType', filters.propertyType);
+                // Do NOT send listingType when propertyType is explicitly set
+            } else if (filters.listingType && filters.listingType !== 'Residential') {
+                // Only send listingType as a fallback when no specific propertyType is chosen
+                // and listingType is something meaningful (not the default 'Residential')
+                setParam('listingType', filters.listingType);
+            }
             if (filters.featured) internalParams.set('featured', 'true');
             setParam('keywords', filters.keywords);
 

@@ -89,7 +89,7 @@ export interface MLSApiResponse {
 export interface FilterState {
     // Hero section
     searchQuery: string;
-    listingType: 'Residential' | 'Commercial';
+    listingType: 'Residential' | 'Commercial' | 'Any';
 
     // Row 1: Transaction / Property Type
     transactionType: string;  // 'For Sale' | 'For Rent'
@@ -136,7 +136,7 @@ export interface FilterState {
 
 export const DEFAULT_FILTERS: FilterState = {
     searchQuery: '',
-    listingType: 'Residential',
+    listingType: 'Any',
     transactionType: 'For Sale',
     propertyType: 'Any',
     minPrice: '',
@@ -174,6 +174,7 @@ export const PROPERTY_TYPES = [
     'Any',
     'Residential',
     'Commercial',
+    'Condo',
     'Lease'
 ];
 

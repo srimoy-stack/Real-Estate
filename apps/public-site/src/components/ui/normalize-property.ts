@@ -180,8 +180,8 @@ function safeImageUrl(url: any): string {
  */
 export function normalizeListing(listing: any): NormalizedProperty {
   const subType = derivePropertyType(listing);
-  const city = listing.city && listing.city !== 'null' ? listing.city : '';
-  const province = listing.province && listing.province !== 'null' ? listing.province : (listing.stateOrProvince || '');
+  const city = listing.city && String(listing.city).toLowerCase() !== 'null' ? listing.city : '';
+  const province = listing.province && String(listing.province).toLowerCase() !== 'null' ? listing.province : (listing.stateOrProvince && String(listing.stateOrProvince).toLowerCase() !== 'null' ? listing.stateOrProvince : '');
   const rawAddress = listing.title || listing.address || '';
 
   const title = buildSafeTitle(rawAddress, subType, city);
@@ -245,8 +245,8 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
   );
 
   const subType = listing.PropertySubType || listing.PropertyType || derivePropertyType(listing);
-  const city = listing.City && listing.City !== 'null' ? listing.City : '';
-  const province = listing.StateOrProvince || '';
+  const city = listing.City && String(listing.City).toLowerCase() !== 'null' ? listing.City : '';
+  const province = listing.StateOrProvince && String(listing.StateOrProvince).toLowerCase() !== 'null' ? listing.StateOrProvince : '';
   const rawAddress = listing.UnparsedAddress || '';
 
   const title = buildSafeTitle(rawAddress, subType, city);

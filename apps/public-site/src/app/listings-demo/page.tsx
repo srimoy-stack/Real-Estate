@@ -120,7 +120,7 @@ export default function ListingsDemoPage() {
         setFilters((prev: any) => ({ ...prev, searchQuery: query }));
     };
 
-    const handleListingTypeChange = (type: 'Residential' | 'Commercial') => {
+    const handleListingTypeChange = (type: 'Residential' | 'Commercial' | 'Any') => {
         setFilters((prev: any) => ({ ...prev, listingType: type }));
     };
 

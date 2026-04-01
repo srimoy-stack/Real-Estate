@@ -418,7 +418,7 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
         };
     },
     type: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
-    listingType: (v, q) => FILTER_MAP.propertyType(v, q),
+    listingType: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
     featured: (v) => (v === true || v === 'true') ? { isFeatured: true } : null,
     standardStatus: (v) => {
         const s = String(v).trim();

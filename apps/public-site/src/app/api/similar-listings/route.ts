@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSimilarListings } from '@/lib/similar-listings';
 import { enrichListingsWithCompliance } from '@/lib/ddf-compliance';
-import { buildCacheKey, getCached, setCache } from '@/lib/redis';
+import { getCached, setCache } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,13 +16,11 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '8', 10), 20);
 
     if (!listingKey) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: listingKey' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing listingKey' }, { status: 400 });
     }
 
-    // ── Cache Check ─────────────────────────────────────────────
+    // ── Cache Efficiency Normalization ──────────────────────────
+    // Round coords to 4 decimals (approx 11m) to increase cache hits
     const cacheKey = `similar:${listingKey}:${limit}`;
     const cached = await getCached(cacheKey);
     if (cached) {

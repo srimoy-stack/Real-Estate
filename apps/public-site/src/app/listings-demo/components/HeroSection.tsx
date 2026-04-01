@@ -6,8 +6,8 @@ import { SafeImage } from '@/components/ui';
 interface HeroSectionProps {
     searchQuery: string;
     onSearchQueryChange: (query: string) => void;
-    listingType: 'Residential' | 'Commercial';
-    onListingTypeChange: (type: 'Residential' | 'Commercial') => void;
+    listingType: 'Residential' | 'Commercial' | 'Any';
+    onListingTypeChange: (type: 'Residential' | 'Commercial' | 'Any') => void;
     onSearch: () => void;
     totalCount?: number;
 }

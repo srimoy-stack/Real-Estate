@@ -174,11 +174,11 @@ export async function GET(request: NextRequest) {
         City: listing.city,
         StateOrProvince: listing.province,
         PostalCode: listing.postalCode,
-        Latitude: listing.latitude,
-        Longitude: listing.longitude,
-        BedroomsTotal: listing.bedroomsTotal,
-        BathroomsTotalInteger: listing.bathroomsTotal,
-        PublicRemarks: listing.publicRemarks,
+        Latitude: listing.latitude || raw.Latitude || raw.latitude || null,
+        Longitude: listing.longitude || raw.Longitude || raw.longitude || null,
+        BedroomsTotal: listing.bedroomsTotal || raw.BedroomsTotal || 0,
+        BathroomsTotalInteger: listing.bathroomsTotal || raw.BathroomsTotalInteger || 0,
+        PublicRemarks: listing.publicRemarks || raw.PublicRemarks || '',
         ModificationTimestamp: listing.modificationTimestamp?.toISOString(),
         agentName: listing.agentName || raw.ListAgentFullName,
         agentPhone: listing.agentPhone || raw.ListAgentDirectPhone,
@@ -187,36 +187,31 @@ export async function GET(request: NextRequest) {
         primaryPhoto: listing.primaryPhoto || listing.primaryPhotoUrl || null,
         primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
         Media: (() => {
-          const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
-          const isValidImageUrl = (url: string) => {
-            if (!url || url.length < 10) return false;
-            if (NON_IMAGE.test(url)) return false;
-            try { const u = new URL(url); if (u.pathname === '/' || u.pathname === '') return false; } catch { return false; }
-            return true;
+          const isValidImageUrl = (url: any) => {
+            if (!url || typeof url !== 'string' || url.length < 5) return false;
+            if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i.test(url)) return false;
+            return true; // Trust the URL if it exists and isn't a known non-image doc
           };
+          
           const rawMedia =
-            (Array.isArray(listing.mediaJson) &&
-              listing.mediaJson.length > 0 &&
-              listing.mediaJson) ||
+            (Array.isArray(listing.mediaJson) && listing.mediaJson.length > 0 && listing.mediaJson) ||
             (Array.isArray(raw.Media) && raw.Media.length > 0 && raw.Media) ||
             null;
+            
           if (rawMedia) {
-            const validMedia = rawMedia.filter(
-              (m: any) => m && m.MediaURL && isValidImageUrl(m.MediaURL)
-            );
+            const validMedia = rawMedia.map((m: any) => {
+              const url = m.MediaURL || m.MediaUrl || m.url || m.path;
+              if (isValidImageUrl(url)) return { MediaURL: url, PreferredPhotoYN: !!m.PreferredPhotoYN };
+              return null;
+            }).filter(Boolean);
+            
             if (validMedia.length > 0) return validMedia;
           }
+
           // Fallback: use primaryPhotoUrl or rawData photo fields
-          const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || null;
-          if (photoUrl && isValidImageUrl(photoUrl))
+          const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || raw.primaryPhotoUrl || raw.primaryPhoto || null;
+          if (isValidImageUrl(photoUrl))
             return [{ MediaURL: photoUrl, PreferredPhotoYN: true, Order: 0 }];
-          const rawPhoto =
-            raw.Photo?.[0]?.HighResPath ||
-            raw.Photo?.[0]?.LargePhotoPath ||
-            raw.Photo?.[0]?.MedResPath ||
-            null;
-          if (rawPhoto && isValidImageUrl(rawPhoto))
-            return [{ MediaURL: rawPhoto, PreferredPhotoYN: true, Order: 0 }];
           return [];
         })(),
       };

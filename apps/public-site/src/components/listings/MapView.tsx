@@ -6,13 +6,12 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import L from 'leaflet';
-import { SafeImage, resolvePrice } from '@/components/ui';
+import { SafeImage } from '@/components/ui';
 import { autoNormalize, NormalizedProperty } from '@/components/ui/normalize-property';
 
 // Fix for default marker icons in Next.js
 if (typeof window !== 'undefined') {
     (window as any).L = L;
-    // Load leaflet-draw after window.L is set
     require('leaflet-draw');
 
     delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -23,26 +22,33 @@ if (typeof window !== 'undefined') {
     });
 }
 
-// Declare icons as nullable to avoid SSR errors
-let customIcon: any = null;
-let activeIcon: any = null;
-
-// Initialize on client
-if (typeof window !== 'undefined') {
-    customIcon = new L.DivIcon({
-        className: 'custom-div-icon',
-        html: `<div class="w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-lg"></div>`,
-        iconSize: [12, 12],
-        iconAnchor: [6, 6],
-    });
-
-    activeIcon = new L.DivIcon({
-        className: 'custom-div-icon active',
-        html: `<div class="w-5 h-5 bg-red-600 rounded-full border-2 border-white shadow-xl animate-pulse"></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-    });
+// ─── Format Price for Marker ───────────────────────────────────
+function formatMarkerPrice(price: number | null): string {
+    if (price === null || price === undefined || price <= 0) return 'Price TBD';
+    if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M`;
+    if (price >= 1000) return `$${(price / 1000).toFixed(0)}k`;
+    return `$${price}`;
 }
+
+// ─── Marker Icons ────────────────────────────────────────────────
+const createMarkerIcon = (label: string, isHovered: boolean, isActive: boolean) => {
+    if (typeof window === 'undefined') return undefined;
+    
+    const bgColor = isActive ? 'bg-red-600' : isHovered ? 'bg-red-500' : 'bg-slate-900';
+    const textColor = 'text-white';
+    const scale = isActive || isHovered ? 'scale-110 shadow-xl' : 'scale-100 shadow-md';
+    const zIndex = isActive ? 'z-[1000]' : isHovered ? 'z-[900]' : 'z-[100]';
+
+    return new L.DivIcon({
+        className: `custom-price-marker ${zIndex}`,
+        html: `<div class="px-2 py-1 rounded-full ${bgColor} ${textColor} ${scale} border border-white/50 font-black text-[10px] tracking-tight transition-all duration-300 flex items-center justify-center min-w-[45px]">
+                 ${label}
+               </div>`,
+        iconSize: [45, 24],
+        iconAnchor: [22, 12],
+    });
+};
+
 
 // ─── Types ───────────────────────────────────────────────────────
 export interface DrawBounds {
@@ -55,37 +61,34 @@ export interface DrawBounds {
 export interface MapViewProps {
     listings: any[];
     activeListingId?: string | null;
+    hoveredListingId?: string | null;
     enableDraw?: boolean;
     onDrawComplete?: (bounds: DrawBounds) => void;
     onDrawClear?: () => void;
+    onMarkerClick?: (listingId: string) => void;
     isDrawActive?: boolean;
 }
 
 // ─── BoundsUpdater ───────────────────────────────────────────────
 function BoundsUpdater({ listings, skipUpdate }: { listings: NormalizedProperty[]; skipUpdate?: boolean }) {
     const map = useMap();
-    
     useEffect(() => {
-        if (skipUpdate) return;
+        if (skipUpdate || listings.length === 0) return;
         const geotagged = listings.filter(l => l.latitude && l.longitude);
         if (geotagged.length > 0) {
             const bounds = L.latLngBounds(geotagged.map(l => [l.latitude!, l.longitude!] as [number, number]));
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
         }
     }, [listings, map, skipUpdate]);
-    
     return null;
 }
 
 // ─── DrawControl Component ───────────────────────────────────────
-// Uses manual Draw Handlers for better React compatibility and to avoid toolbar icon issues
 function DrawControl({ 
     onDrawComplete, 
-    onDrawClear, 
     isDrawActive 
 }: { 
     onDrawComplete?: (bounds: DrawBounds) => void;
-    onDrawClear?: () => void;
     isDrawActive?: boolean;
 }) {
     const map = useMap();
@@ -107,18 +110,19 @@ function DrawControl({
     }, []);
 
     useEffect(() => {
-        if (!map || !isDrawActive) {
+        if (!map) return;
+        if (!isDrawActive) {
             stopDrawing();
             return;
         }
 
-        // Enable rectangle drawing as the default manual mode
         const handler = new (L as any).Draw.Rectangle(map, {
             shapeOptions: {
-                color: '#d0021b',
-                weight: 2,
+                color: '#ef4444', // red-500
+                weight: 3,
                 fillOpacity: 0.1,
-                fillColor: '#d0021b',
+                fillColor: '#ef4444',
+                dashArray: '5, 10'
             }
         });
 
@@ -130,32 +134,21 @@ function DrawControl({
             drawnItemsRef.current.addLayer(e.layer);
 
             const bounds = e.layer.getBounds();
-            const drawBounds: DrawBounds = {
+            onDrawComplete?.({
                 latMin: bounds.getSouth(),
                 latMax: bounds.getNorth(),
                 lngMin: bounds.getWest(),
                 lngMax: bounds.getEast(),
-            };
-
-            onDrawComplete?.(drawBounds);
+            });
             stopDrawing();
         };
 
         map.on(L.Draw.Event.CREATED, handleCreated);
-        
         return () => {
             map.off(L.Draw.Event.CREATED, handleCreated);
             stopDrawing();
         };
     }, [map, isDrawActive, onDrawComplete, stopDrawing]);
-
-    // Handle clear from parent
-    useEffect(() => {
-        if (!isDrawActive && !activeHandlerRef.current && drawnItemsRef.current.getLayers().length === 0) {
-            // No action needed
-        }
-        // If draw is not active and child just wants to clear everything
-    }, [isDrawActive]);
 
     return null;
 }
@@ -164,107 +157,83 @@ function DrawControl({
 export const MapView: React.FC<MapViewProps> = ({ 
     listings, 
     activeListingId,
+    hoveredListingId,
     enableDraw = false,
     onDrawComplete,
     onDrawClear,
+    onMarkerClick,
     isDrawActive = false,
 }) => {
-    const [selectedListing, setSelectedListing] = useState<NormalizedProperty | null>(null);
     const [hasDrawnArea, setHasDrawnArea] = useState(false);
 
     const normalizedListings = useMemo(() => 
         listings.map(l => autoNormalize(l)), 
     [listings]);
 
-    const geotaggedListings = useMemo(() => 
-        normalizedListings.filter(l => l.latitude && l.longitude),
-    [normalizedListings]);
-
-    const getCoords = (l: NormalizedProperty): [number, number] => {
-        return [l.latitude!, l.longitude!];
-    };
-
-    const center: [number, number] = useMemo(() => {
-        if (geotaggedListings.length > 0) {
-            const coords = geotaggedListings.map(getCoords);
-            const avgLat = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
-            const avgLng = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
-            return [avgLat, avgLng];
-        }
-        return [43.6532, -79.3832]; // Default Toronto
-    }, [geotaggedListings]);
 
     const handleDrawComplete = useCallback((bounds: DrawBounds) => {
         setHasDrawnArea(true);
         onDrawComplete?.(bounds);
     }, [onDrawComplete]);
 
-    const handleDrawClear = useCallback(() => {
-        setHasDrawnArea(false);
-        onDrawClear?.();
-    }, [onDrawClear]);
 
     return (
         <div className="relative w-full h-full bg-[#f8f9fa] rounded-[32px] overflow-hidden border border-slate-200 group shadow-inner z-0">
             <MapContainer
-                center={center}
+                center={[43.6532, -79.3832]}
                 zoom={12}
                 scrollWheelZoom={true}
                 className="h-full w-full"
             >
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    attribution='&copy; OpenStreetMap contributors'
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                 />
                 
-                <BoundsUpdater listings={normalizedListings} skipUpdate={hasDrawnArea} />
+                <BoundsUpdater listings={normalizedListings} skipUpdate={hasDrawnArea || isDrawActive} />
 
-                {/* Draw Controls */}
                 {enableDraw && (
                     <DrawControl
                         onDrawComplete={handleDrawComplete}
-                        onDrawClear={handleDrawClear}
                         isDrawActive={isDrawActive}
                     />
                 )}
 
-                {geotaggedListings.map(listing => {
-                    const isActive = activeListingId === listing.id || selectedListing?.id === listing.id;
-                    const priceDisplay = resolvePrice(listing.price, listing.leaseAmount, listing.leaseRatePerSqft, listing.category);
-                    const pos = getCoords(listing);
+                {listings.map((l: any) => {
+                    const id = l.ListingKey || l.id;
+                    const lat = l.Latitude || l.latitude;
+                    const lng = l.Longitude || l.longitude;
+                    const price = l.ListPrice || l.price;
 
+                    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+
+                    const isHovered = hoveredListingId === id;
+                    const isActive = activeListingId === id;
+                    
                     return (
                         <Marker
-                            key={listing.id}
-                            position={pos}
-                            icon={isActive ? activeIcon : customIcon}
+                            key={id}
+                            position={[lat, lng]}
+                            icon={createMarkerIcon(formatMarkerPrice(price), isHovered, isActive)}
                             eventHandlers={{
-                                click: () => setSelectedListing(listing),
+                                click: () => onMarkerClick?.(id),
                             }}
                         >
-                            <Popup className="custom-map-popup" minWidth={280}>
-                                <div className="p-0 overflow-hidden rounded-xl">
-                                    <div className="relative h-32 w-full">
+                            <Popup className="custom-popup" closeButton={false}>
+                                <div className="w-64 overflow-hidden rounded-2xl bg-white shadow-2xl">
+                                    <div className="relative aspect-video w-full bg-slate-100">
                                         <SafeImage
-                                            src={listing.imageUrl || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa'}
-                                            fill
-                                            className="object-cover"
-                                            alt={listing.title}
+                                            src={l.Media?.[0]?.MediaURL || l.imageUrl || ''}
+                                            alt={l.UnparsedAddress}
+                                            className="h-full w-full object-cover"
                                         />
-                                        <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg">
-                                            {listing.status || 'Active'}
-                                        </div>
                                     </div>
                                     <div className="p-4 bg-white">
-                                        <h4 className="text-sm font-black text-slate-900 leading-tight mb-0.5 truncate">{listing.title}</h4>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 truncate">{listing.city}, {listing.province}</p>
-                                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                                            <span className="text-sm font-black text-red-600">{priceDisplay.text}</span>
-                                            <Link
-                                                href={listing.href}
-                                                className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors"
-                                            >
-                                                Details
+                                        <h4 className="text-sm font-black text-slate-900 truncate">{l.UnparsedAddress || l.title || 'Property'}</h4>
+                                        <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-50">
+                                            <span className="text-sm font-black text-red-600">{formatMarkerPrice(price)}</span>
+                                            <Link href={`/listing/${id}`} className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-widest transition-all hover:bg-emerald-600">
+                                                View Home
                                             </Link>
                                         </div>
                                     </div>
@@ -275,63 +244,57 @@ export const MapView: React.FC<MapViewProps> = ({
                 })}
             </MapContainer>
 
-            {/* Legend Badge */}
-            <div className="absolute top-6 left-6 z-[1000]">
-                <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-xl border border-slate-200 shadow-xl px-4 py-2.5 select-none">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600">Verified MLS® Map View</span>
+            {/* Premium Overlays */}
+            <div className="absolute top-6 left-6 z-[1000] pointer-events-none">
+                <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200 shadow-xl px-4 py-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 leading-none mb-1">Live Inventory</span>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 leading-none">Syncing with Board MLS®</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Draw Mode Indicator */}
+            {/* Draw Mode Interaction Hint */}
             {isDrawActive && (
-                <div className="absolute top-6 right-6 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 bg-red-600 text-white rounded-xl shadow-xl px-4 py-2.5 select-none">
-                        <svg className="w-4 h-4 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Draw Mode: Click & Drag on Map</span>
+                <div className="absolute inset-0 z-[1001] bg-slate-900/10 pointer-events-none flex items-center justify-center animate-in fade-in duration-500">
+                    <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-2xl px-6 py-4 shadow-2xl flex flex-col items-center gap-3 border border-white/10 scale-in-center">
+                        <div className="flex items-center gap-2">
+                             <svg className="w-5 h-5 text-red-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            <span className="text-xs font-black uppercase tracking-widest">Draw Search Area</span>
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest opacity-80">Click and drag on the map to filter homes</p>
                     </div>
                 </div>
             )}
 
-            {/* Drawn Area Badge */}
+            {/* Custom Clear Button if Filter Active */}
             {hasDrawnArea && !isDrawActive && (
-                <div className="absolute top-6 right-6 z-[1000] animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 bg-emerald-600 text-white rounded-xl shadow-xl px-4 py-2.5 select-none">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                 <div className="absolute top-6 right-6 z-[1000]">
+                    <button 
+                        onClick={() => { setHasDrawnArea(false); onDrawClear?.(); }}
+                        className="flex items-center gap-2 bg-emerald-600 text-white rounded-xl shadow-xl px-4 py-2.5 transition-all hover:bg-emerald-700 active:scale-95 group"
+                    >
+                        <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Custom Area Filter Active</span>
-                    </div>
-                </div>
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Clear Area Filter</span>
+                    </button>
+                 </div>
             )}
 
             <style jsx global>{`
-                .custom-map-popup .leaflet-popup-content-wrapper {
-                    padding: 0 !important;
-                    overflow: hidden;
-                    border-radius: 16px;
+                .custom-map-popup .leaflet-popup-content-wrapper { padding: 0 !important; overflow: hidden; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+                .custom-map-popup .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
+                .custom-map-popup .leaflet-popup-tip-container { display: none; }
+                .leaflet-draw-tooltip { 
+                    background: #0f172a; border-radius: 8px; color: white; padding: 6px 12px; 
+                    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+                    border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
                 }
-                .custom-map-popup .leaflet-popup-content {
-                    margin: 0 !important;
-                    width: 280px !important;
-                }
-                .custom-map-popup .leaflet-popup-tip-container {
-                    display: none;
-                }
-                /* Draw Styling */
-                .leaflet-draw-tooltip {
-                    background: #334155;
-                    color: white;
-                    border-radius: 4px;
-                    padding: 4px 8px;
-                    font-size: 10px;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 0.1em;
-                    border: none;
-                }
+                .custom-map-marker { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
             `}</style>
         </div>
     );

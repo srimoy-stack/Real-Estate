@@ -114,7 +114,7 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
     }).length;
 
     return (
-        <div className="sticky top-0 z-40 border-b border-gray-100 bg-white">
+        <div className="sticky top-0 z-[60] border-b border-gray-100 bg-white shadow-sm shadow-slate-200/50">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                 {/* ── Primary Row ────────────────────────────────────────────── */}
@@ -180,8 +180,10 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
                             </button>
                         )}
 
-                        <button id="filter-search" onClick={onSearch} disabled={isLoading}
-                            className="flex items-center gap-1.5 rounded-lg bg-brand-red px-5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-60"
+                        <button id="filter-search" 
+                            onClick={(e) => { e.stopPropagation(); onSearch(); }} 
+                            disabled={isLoading}
+                            className="relative z-[70] flex items-center gap-1.5 rounded-lg bg-brand-red px-5 py-2 text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-60 shadow-lg shadow-brand-red/20"
                         >
                             {isLoading ? (
                                 <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -200,7 +202,7 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
 
                 {/* ── Advanced Filters Panel ──────────────── */}
                 {isExpanded && (
-                    <div className="border-t border-gray-100 py-4 animate-in">
+                    <div className="relative z-[55] border-t border-gray-100 py-4 animate-in fade-in slide-in-from-top-2 duration-300 bg-white shadow-xl shadow-slate-200/50">
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-4">
 
 
