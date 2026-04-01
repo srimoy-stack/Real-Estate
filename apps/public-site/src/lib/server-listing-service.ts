@@ -96,9 +96,22 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
 
 export async function getRelatedListingsDirect(listing: any, limit: number = 4) {
   try {
+    const currentMls = listing.mlsNumber || listing.listingKey;
+
+    // ── Primary: Use multi-factor recommendation engine ─────────
+    try {
+      const { getSimilarListings } = await import('./similar-listings');
+      const similar = await getSimilarListings(currentMls, limit);
+      if (similar.length > 0) {
+        return similar;
+      }
+    } catch (engineErr) {
+      console.warn('[Related Listings] Recommendation engine failed, falling back:', engineErr);
+    }
+
+    // ── Fallback: Simple city-based matching ─────────────────────
     const city = listing.city;
     const province = listing.province;
-    const currentMls = listing.mlsNumber || listing.listingKey;
 
     // Level 1: Same City
     let related = await prisma.listing.findMany({
@@ -146,7 +159,10 @@ export async function getRelatedListingsDirect(listing: any, limit: number = 4) 
       images: l.primaryPhotoUrl && isValidImageUrl(l.primaryPhotoUrl) ? [l.primaryPhotoUrl] : [],
       propertyType: l.propertySubType || l.propertyType || 'Residential',
       status: l.standardStatus || 'Active',
-      moreInformationLink: l.moreInformationLink || null
+      moreInformationLink: l.moreInformationLink || null,
+      latitude: l.latitude,
+      longitude: l.longitude,
+      location: { lat: l.latitude || 0, lng: l.longitude || 0 },
     }));
   } catch (error) {
     console.error('[Server Listing Service] Error fetching related listings:', error);

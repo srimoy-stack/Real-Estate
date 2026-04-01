@@ -7,7 +7,6 @@ import {
 } from '@/lib/server-listing-service';
 import { ListingGallery } from '@/components/listings/ListingGallery';
 import {
-  UnifiedPropertyCard,
   SafeImage,
   autoNormalize,
   resolvePrice,
@@ -19,6 +18,7 @@ import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
 import { PropertyStats } from '@/components/listings/PropertyStats';
 import { StickyInquirySidebar } from '@/components/listings/StickyInquirySidebar';
 import { SaveButton } from '@/components/listings/SaveButton';
+import { SimilarListings } from '@/components/listings/SimilarListings';
 import { RealtorBadge } from '@/app/listings-demo/components/RealtorBadge';
 import {
   fireDDFAnalyticsPing,
@@ -564,53 +564,13 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
           </div>
         </div>
 
-        {/* Related Listings */}
-        <section id="related-listings" className="space-y-12 pt-24">
-          <div className="flex items-end justify-between">
-            <div className="space-y-3">
-              <h2 className="text-4xl font-black italic tracking-tight text-slate-900">
-                Similar Listings
-              </h2>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Hand-picked for you in {city}
-              </p>
-            </div>
-            <Link
-              href="/listings"
-              className="hidden items-center gap-3 text-xs font-black uppercase tracking-widest text-indigo-600 transition-all hover:gap-5 sm:flex"
-            >
-              View all
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={3}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {relatedListings.length > 0 ? (
-              relatedListings.map((l) => (
-                <UnifiedPropertyCard key={l.id} listing={l} />
-              ))
-            ) : (
-                // Fallback for demo parity — ensure it never looks empty
-                [1,2,3,4].map((i) => (
-                  <div key={i} className="animate-pulse space-y-4">
-                    <div className="aspect-[4/3] rounded-3xl bg-slate-100" />
-                    <div className="space-y-2">
-                       <div className="h-4 w-2/3 rounded-lg bg-slate-100" />
-                       <div className="h-3 w-1/3 rounded-lg bg-slate-50" />
-                    </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </section>
+        {/* Related Listings — AI-Powered Recommendations */}
+        <SimilarListings
+          listingKey={listing.mlsNumber}
+          city={city}
+          limit={8}
+          fallbackListings={relatedListings}
+        />
       </div>
     </div>
   );

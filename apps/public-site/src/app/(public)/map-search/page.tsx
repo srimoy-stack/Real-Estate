@@ -8,6 +8,7 @@ import { fetchAggregatedListings, fetchListings } from '@/app/listings-demo/api'
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
 import { resolveGeoBounds } from '@/app/listings-demo/utils';
 import dynamic from 'next/dynamic';
+import type { DrawBounds } from '@/components/listings/MapView';
 
 const MapView = dynamic(
   () => import('@/components/listings/MapView').then((mod) => mod.MapView),
@@ -44,6 +45,10 @@ export default function MapBasedSearchPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
 
+    // ─── Draw State ─────────────────────────────────────────────
+    const [isDrawActive, setIsDrawActive] = useState(false);
+    const [drawnBounds, setDrawnBounds] = useState<DrawBounds | null>(null);
+
     const searchIdRef = useRef<number>(0);
 
     // ─── Filters (same FilterState as search page) ──────────────
@@ -59,7 +64,7 @@ export default function MapBasedSearchPage() {
     }));
 
     // ─── Core Search ────────────────────────────────────────────
-    const handleSearch = useCallback(async (customFilters?: FilterState) => {
+    const handleSearch = useCallback(async (customFilters?: FilterState, customBounds?: DrawBounds | null) => {
         const currentSearchId = ++searchIdRef.current;
 
         try {
@@ -71,8 +76,22 @@ export default function MapBasedSearchPage() {
             setTotalPages(0);
 
             const activeFilters = customFilters || filters;
-            const baseBounds = activeFilters.city ? resolveGeoBounds(activeFilters.city) : {};
-            const enrichedFilters = { ...activeFilters, ...baseBounds };
+            const activeBounds = customBounds !== undefined ? customBounds : drawnBounds;
+            
+            // Use drawn bounds if available, otherwise fall back to city-based bounds
+            let enrichedFilters: FilterState;
+            if (activeBounds) {
+                enrichedFilters = {
+                    ...activeFilters,
+                    latitudeMin: activeBounds.latMin,
+                    latitudeMax: activeBounds.latMax,
+                    longitudeMin: activeBounds.lngMin,
+                    longitudeMax: activeBounds.lngMax,
+                };
+            } else {
+                const baseBounds = activeFilters.city ? resolveGeoBounds(activeFilters.city) : {};
+                enrichedFilters = { ...activeFilters, ...baseBounds };
+            }
 
             const data = await fetchAggregatedListings(enrichedFilters, PAGE_SIZE);
 
@@ -105,7 +124,31 @@ export default function MapBasedSearchPage() {
                 setLoading(false);
             }
         }
-    }, [filters, router]);
+    }, [filters, drawnBounds, router]);
+
+    // ─── Draw Handlers ──────────────────────────────────────────
+    const handleDrawComplete = useCallback((bounds: DrawBounds) => {
+        setDrawnBounds(bounds);
+        setIsDrawActive(false);
+        // Trigger search with the drawn bounds
+        handleSearch(undefined, bounds);
+    }, [handleSearch]);
+
+    const handleDrawClear = useCallback(() => {
+        setDrawnBounds(null);
+        // Re-search without bounds
+        handleSearch(undefined, null);
+    }, [handleSearch]);
+
+    const toggleDrawMode = useCallback(() => {
+        setIsDrawActive(prev => !prev);
+    }, []);
+
+    const clearDrawnArea = useCallback(() => {
+        setDrawnBounds(null);
+        setIsDrawActive(false);
+        handleSearch(undefined, null);
+    }, [handleSearch]);
 
     // ─── Pagination ─────────────────────────────────────────────
     const goToPage = async (page: number) => {
@@ -113,8 +156,21 @@ export default function MapBasedSearchPage() {
 
         try {
             setLoading(true);
-            const bounds = filters.city ? resolveGeoBounds(filters.city) : {};
-            const enrichedFilters = { ...filters, ...bounds };
+            
+            let enrichedFilters: FilterState;
+            if (drawnBounds) {
+                enrichedFilters = {
+                    ...filters,
+                    latitudeMin: drawnBounds.latMin,
+                    latitudeMax: drawnBounds.latMax,
+                    longitudeMin: drawnBounds.lngMin,
+                    longitudeMax: drawnBounds.lngMax,
+                };
+            } else {
+                const bounds = filters.city ? resolveGeoBounds(filters.city) : {};
+                enrichedFilters = { ...filters, ...bounds };
+            }
+            
             const res = await fetchListings(enrichedFilters, page, PAGE_SIZE);
 
             setListings(res.listings);
@@ -164,6 +220,14 @@ export default function MapBasedSearchPage() {
                                             · {globalTotalCount.toLocaleString()} Platform Total
                                         </span>
                                     )}
+                                    {drawnBounds && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                            </svg>
+                                            Custom Area
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -174,6 +238,37 @@ export default function MapBasedSearchPage() {
                                     </span>
                                     REALTOR.ca® · Live MLS® Data
                                 </div>
+
+                                {/* Draw Area Toggle */}
+                                <button
+                                    onClick={toggleDrawMode}
+                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-1.5 ${
+                                        isDrawActive
+                                            ? 'bg-red-600 text-white shadow-red-600/20'
+                                            : drawnBounds
+                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                    {isDrawActive ? 'Drawing...' : drawnBounds ? 'Redraw' : 'Draw Area'}
+                                </button>
+
+                                {/* Clear Drawn Area */}
+                                {drawnBounds && (
+                                    <button
+                                        onClick={clearDrawnArea}
+                                        className="px-3 py-2 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
+                                        title="Clear drawn area"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
+
                                 <button
                                     onClick={() => setShowMap(!showMap)}
                                     className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-red hover:text-white transition-all shadow-sm"
@@ -288,17 +383,33 @@ export default function MapBasedSearchPage() {
                             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-4">
                                 <span className="text-4xl">🔎</span>
                                 <h3 className="text-lg font-black text-slate-900 uppercase">No Listings Found</h3>
-                                <p className="text-xs text-slate-400 font-bold max-w-xs">Adjust your filters to discover more properties in the MLS® network.</p>
-                                <button
-                                    onClick={() => {
-                                        const resetFilters = { ...DEFAULT_FILTERS };
-                                        setFilters(resetFilters);
-                                        handleSearch(resetFilters);
-                                    }}
-                                    className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red hover:underline"
-                                >
-                                    Reset Discovery
-                                </button>
+                                <p className="text-xs text-slate-400 font-bold max-w-xs">
+                                    {drawnBounds 
+                                        ? 'No listings found within the drawn area. Try drawing a larger area or clearing the selection.'
+                                        : 'Adjust your filters to discover more properties in the MLS® network.'
+                                    }
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    {drawnBounds && (
+                                        <button
+                                            onClick={clearDrawnArea}
+                                            className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600 hover:underline"
+                                        >
+                                            Clear Area
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            const resetFilters = { ...DEFAULT_FILTERS };
+                                            setFilters(resetFilters);
+                                            setDrawnBounds(null);
+                                            handleSearch(resetFilters, null);
+                                        }}
+                                        className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red hover:underline"
+                                    >
+                                        Reset Discovery
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -310,6 +421,10 @@ export default function MapBasedSearchPage() {
                         <MapView
                             listings={listings}
                             activeListingId={activeListingId}
+                            enableDraw={true}
+                            isDrawActive={isDrawActive}
+                            onDrawComplete={handleDrawComplete}
+                            onDrawClear={handleDrawClear}
                         />
                     </section>
                 )}

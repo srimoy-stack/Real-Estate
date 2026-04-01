@@ -7,6 +7,7 @@ import { SafeImage } from '@/components/ui';
 import { listingService } from '@repo/services';
 import { ListingStatus, Listing } from '@repo/types';
 import { LeadCaptureForm } from '@/components/listings/LeadCaptureForm';
+import { SimilarListings } from '@/components/listings/SimilarListings';
 
 interface ListingDetailProps {
   params: { id: string };
@@ -390,29 +391,12 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
               </div>
             </div>
 
-            {/* Similar Properties */}
-            <div className="space-y-8 pt-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">Similar <span className="text-amber-600">to this home</span></h2>
-                <Link href="/listings" className="text-xs font-black uppercase tracking-widest text-amber-600 hover:text-amber-700">See All Listings</Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {[
-                  { title: 'The Glass Pavilion Mansion', location: '12 Peak View Rd, Toronto', price: '$12,500,000', img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800' },
-                  { title: 'Skyline Penthouse Suites', location: '101 Bay St, Toronto', price: '$3,800,000', img: 'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=800' }
-                ].map((item, i) => (
-                  <div key={i} className="group cursor-pointer">
-                    <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                      <SafeImage src={item.img} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-900">Featured</div>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors mb-1">{item.title}</h3>
-                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mb-2">{item.location}</p>
-                    <div className="text-lg font-black text-slate-900">{item.price}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Similar Properties — AI-Powered Recommendations */}
+            <SimilarListings
+              listingKey={listing.mlsNumber || listing.id}
+              city={listing.city}
+              limit={4}
+            />
 
             {/* Footer Disclaimer */}
             <div className="mt-20 pt-10 border-t border-slate-200">
