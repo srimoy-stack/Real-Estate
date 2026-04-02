@@ -17,6 +17,7 @@
  */
 
 import { PLACEHOLDER_IMAGE } from './design-tokens';
+import { resolveListingUrl } from '@/lib/resolve-listing-url';
 
 export type PropertyCategory = 'residential' | 'commercial' | 'lease';
 
@@ -213,8 +214,8 @@ export function normalizeListing(listing: any): NormalizedProperty {
     bathrooms: listing.bathrooms != null && listing.bathrooms > 0 ? listing.bathrooms : 0,
     sqft: listing.squareFootage || listing.squareFeet || listing.livingArea || 0,
 
-    latitude: listing.latitude || listing.location?.lat || null,
-    longitude: listing.longitude || listing.location?.lng || null,
+    latitude: listing.latitude ?? listing.location?.lat ?? null,
+    longitude: listing.longitude ?? listing.location?.lng ?? null,
 
     propertySubType: subType,
     zoningDescription: listing.zoningDescription || null,
@@ -228,10 +229,10 @@ export function normalizeListing(listing: any): NormalizedProperty {
     images: listing.images || [],
     imageCount: listing.images?.length || 0,
 
-    modifiedAt: listing.modificationTimestamp || listing.updatedAt || null,
+    modifiedAt: listing.listingDate || listing.modificationTimestamp || listing.updatedAt || null,
     createdAt: listing.createdAt || null,
 
-    moreInformationLink: listing.moreInformationLink || null,
+    moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.brokerageName || null,
   };
 }
@@ -277,8 +278,8 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
         : 0,
     sqft: listing.LivingArea || 0,
 
-    latitude: listing.Latitude || null,
-    longitude: listing.Longitude || null,
+    latitude: listing.Latitude ?? null,
+    longitude: listing.Longitude ?? null,
 
     propertySubType: subType,
     zoningDescription: listing.ZoningDescription || null,
@@ -292,10 +293,10 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
     images: listing.Media?.map((m: any) => m.MediaURL).filter(Boolean) || listing.images || [],
     imageCount: listing.Media?.length || 0,
 
-    modifiedAt: listing.ModificationTimestamp || null,
-    createdAt: listing.OriginalEntryTimestamp || null,
+    modifiedAt: listing.ListingDate || listing.ModificationTimestamp || null,
+    createdAt: listing.CreatedAt || listing.OriginalEntryTimestamp || null,
 
-    moreInformationLink: listing.moreInformationLink || listing.ListingURL || null,
+    moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.officeName || null,
   };
 }

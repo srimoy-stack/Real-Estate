@@ -107,8 +107,8 @@ function ListingStructuredData({ listing, domain }: { listing: any; domain: stri
       listing.latitude && listing.longitude
         ? {
           '@type': 'GeoCoordinates',
-          latitude: Number(listing.latitude) || 0,
-          longitude: Number(listing.longitude) || 0,
+          latitude: Number(listing.latitude) ?? 0,
+          longitude: Number(listing.longitude) ?? 0,
         }
         : undefined,
     offers:

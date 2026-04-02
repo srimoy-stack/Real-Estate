@@ -6,7 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import L from 'leaflet';
-import { SafeImage } from '@/components/ui';
+import { SafeImage } from '@/components/ui/SafeImage';
 import { autoNormalize, NormalizedProperty } from '@/components/ui/normalize-property';
 
 // Fix for default marker icons in Next.js
@@ -201,11 +201,11 @@ export const MapView: React.FC<MapViewProps> = ({
 
                 {listings.map((l: any) => {
                     const id = l.ListingKey || l.id;
-                    const lat = l.Latitude || l.latitude;
-                    const lng = l.Longitude || l.longitude;
+                    const lat = l.Latitude ?? l.latitude;
+                    const lng = l.Longitude ?? l.longitude;
                     const price = l.ListPrice || l.price;
 
-                    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+                    if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return null;
 
                     const isHovered = hoveredListingId === id;
                     const isActive = activeListingId === id;

@@ -1,22 +1,31 @@
 'use client';
 
 import React from 'react';
+import { resolveListingUrl } from '@/lib/resolve-listing-url';
 
 interface RealtorBadgeProps {
     listingUrl?: string | null;
     moreInformationLink?: string | null;
+    /** Optional: pass raw listing data for robust URL resolution */
+    listing?: any;
     variant?: 'full' | 'compact' | 'minimal';
 }
 
 /**
  * CREA DDF Compliant Badge (Tailored for Main Public Site)
+ *
+ * Uses resolveListingUrl for robust link resolution:
+ *   rawData.ListingURL → moreInformationLink → constructed fallback
  */
 export function RealtorBadge({
     listingUrl,
     moreInformationLink,
+    listing,
     variant = 'full',
 }: RealtorBadgeProps) {
-    const link = moreInformationLink || listingUrl;
+    const link = listing
+        ? resolveListingUrl(listing) || moreInformationLink || listingUrl
+        : moreInformationLink || listingUrl;
 
     if (variant === 'minimal') {
         return (

@@ -47,6 +47,8 @@ export interface MLSProperty {
     Stories?: string | null;
     ListingURL: string;
     ModificationTimestamp: string;
+    ListingDate?: string | null;
+    CreatedAt?: string | null;
     OriginalEntryTimestamp?: string;
     CommonInterest?: string | null;
     StructureType?: string[];

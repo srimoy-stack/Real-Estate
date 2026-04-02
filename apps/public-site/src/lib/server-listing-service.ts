@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { withActive, buildWhereClause, buildOrderByClause } from './listings-utils';
 import { MLSListing } from '@repo/services';
+import { resolveListingUrl } from './resolve-listing-url';
 
 const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
 export const isValidImageUrl = (url: string) => {
@@ -70,8 +71,8 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
       createdAt: listing.modificationTimestamp?.toISOString() || listing.createdAt.toISOString(),
       description: listing.publicRemarks || '',
       location: { 
-        lat: listing.latitude || 0, 
-        lng: listing.longitude || 0 
+        lat: listing.latitude ?? 0, 
+        lng: listing.longitude ?? 0 
       },
       agentName: listing.agentName || raw.ListAgentFullName || '',
       agentPhone: listing.agentPhone || raw.ListAgentDirectPhone || undefined,
@@ -159,10 +160,10 @@ export async function getRelatedListingsDirect(listing: any, limit: number = 4) 
       images: l.primaryPhotoUrl && isValidImageUrl(l.primaryPhotoUrl) ? [l.primaryPhotoUrl] : [],
       propertyType: l.propertySubType || l.propertyType || 'Residential',
       status: l.standardStatus || 'Active',
-      moreInformationLink: l.moreInformationLink || null,
+      moreInformationLink: resolveListingUrl({ moreInformationLink: l.moreInformationLink, rawData: l.rawData, listingKey: l.listingKey, listingId: l.listingId }),
       latitude: l.latitude,
       longitude: l.longitude,
-      location: { lat: l.latitude || 0, lng: l.longitude || 0 },
+      location: { lat: l.latitude ?? 0, lng: l.longitude ?? 0 },
     }));
   } catch (error) {
     console.error('[Server Listing Service] Error fetching related listings:', error);
@@ -253,8 +254,8 @@ export async function searchListingsDirect(params: ListingQueryParams) {
         propertyType: l.propertySubType || l.propertyType,
         status: l.standardStatus || 'Active',
         isFeatured: !!l.isFeatured,
-        moreInformationLink: l.moreInformationLink || null,
-        location: { lat: l.latitude || 0, lng: l.longitude || 0 }
+        moreInformationLink: resolveListingUrl({ moreInformationLink: l.moreInformationLink, rawData: l.rawData, listingKey: l.listingKey, listingId: l.listingId }),
+        location: { lat: l.latitude ?? 0, lng: l.longitude ?? 0 }
       };
     });
 

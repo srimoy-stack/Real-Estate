@@ -42,9 +42,12 @@ const REQUIRED_FIELDS = ['listingKey', 'standardStatus'] as const;
 /**
  * Resolves the moreInformationLink for a listing.
  * Priority:
- *   1. Existing moreInformationLink from DB
- *   2. ListingURL from rawData (DDF OData field)
- *   3. Constructed REALTOR.ca fallback URL
+ *   1. ListingURL from rawData (DDF OData field — includes full slug)
+ *   2. Existing moreInformationLink from DB
+ *   3. Base REALTOR.ca URL (compliance fallback only — not a direct listing link)
+ *
+ * NOTE: We do NOT construct /real-estate/{id} URLs — they 404 on realtor.ca
+ * because the full slug (address) is required in the URL path.
  *
  * NEVER modifies listing data — returns the resolved link separately.
  */
@@ -54,34 +57,34 @@ export function resolveMoreInformationLink(listing: {
     listingId?: string | null;
     rawData?: any;
 }): string {
-    // Priority 1: Existing DB field
-    if (listing.moreInformationLink && isValidUrl(listing.moreInformationLink)) {
-        return listing.moreInformationLink;
-    }
-
-    // Priority 2: rawData.ListingURL (CREA DDF OData standard field)
+    // Priority 1: rawData.ListingURL (CREA DDF OData — most reliable, includes slug)
     const raw = listing.rawData || {};
-    if (raw.ListingURL && isValidUrl(raw.ListingURL)) {
-        return raw.ListingURL;
-    }
+    const fromRaw = normalizeAndValidateUrl(raw.ListingURL);
+    if (fromRaw) return fromRaw;
 
-    // Priority 3: Construct REALTOR.ca fallback
-    const id = listing.listingId || listing.listingKey;
-    if (id) {
-        return `${REALTOR_CA_BASE_URL}/real-estate/${id}`;
-    }
+    // Priority 2: Existing DB field
+    const fromDb = normalizeAndValidateUrl(listing.moreInformationLink);
+    if (fromDb) return fromDb;
 
+    // Compliance fallback: link to REALTOR.ca homepage
+    // We do NOT construct /real-estate/{id} — it 404s without the full slug
     return REALTOR_CA_BASE_URL;
 }
 
-function isValidUrl(str: string): boolean {
-    try {
-        const url = new URL(str);
-        return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-        return false;
+/** Auto-prepend https:// for DDF protocol-less URLs (e.g. "www.realtor.ca/...") */
+function normalizeAndValidateUrl(str: string | null | undefined): string | null {
+    if (!str || typeof str !== 'string') return null;
+    let url = str.trim();
+    if (url.startsWith('www.')) {
+        url = 'https://' + url;
     }
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return url;
+    } catch {}
+    return null;
 }
+
 
 // ── 2. Listing Compliance Validation ─────────────────────────────────────────
 

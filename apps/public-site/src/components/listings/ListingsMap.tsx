@@ -1,53 +1,38 @@
-                                                                                         'use client';
+'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
-import { SafeImage } from '@/components/ui';
+import { SafeImage } from '@/components/ui/SafeImage';
 
-// Fix for default marker icons in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+// Fix Leaflet default icon issues in Next.js
+const customIcon = L.icon({
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom pin icon
-const customIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2Q5NzcwNiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0yMSAxMGMwIDctOSAxMy05IDEyczktNiA5LTEzYTkgOSAwIDAgMC0xOCAwYzAgNyA5IDEzIDkgMTNaIj48L3BhdGg+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMCIgcj0iMyIgZmlsbD0id2hpdGUiIHN0cm9rZT0ibm9uZSI+PC9jaXJjbGU+PC9zdmc+',
-    iconSize: [38, 38],
-    iconAnchor: [19, 38],
-    popupAnchor: [0, -38],
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
 });
 
 interface MapEventHandlerProps {
-    onBoundsChange: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void;
+    onBoundsChange: (bounds: L.LatLngBounds) => void;
 }
 
 function MapEventHandler({ onBoundsChange }: MapEventHandlerProps) {
     const map = useMapEvents({
         moveend: () => {
-            const bounds = map.getBounds();
-            onBoundsChange({
-                minLat: bounds.getSouthWest().lat,
-                maxLat: bounds.getNorthEast().lat,
-                minLng: bounds.getSouthWest().lng,
-                maxLng: bounds.getNorthEast().lng,
-            });
+            onBoundsChange(map.getBounds());
         },
         zoomend: () => {
-            const bounds = map.getBounds();
-            onBoundsChange({
-                minLat: bounds.getSouthWest().lat,
-                maxLat: bounds.getNorthEast().lat,
-                minLng: bounds.getSouthWest().lng,
-                maxLng: bounds.getNorthEast().lng,
-            });
+            onBoundsChange(map.getBounds());
         },
     });
     return null;
@@ -57,56 +42,42 @@ interface ListingsMapProps {
     initialListings: any[];
 }
 
+/**
+ * ListingsMap — High-performance cluster map for property discovery.
+ * Uses react-leaflet for rendering and react-leaflet-cluster for markers.
+ */
 export function ListingsMap({ initialListings }: ListingsMapProps) {
-    const router = useRouter();
-    const [listings, setListings] = useState<any[]>(initialListings);
+    const [listings] = useState<any[]>(initialListings);
+    const [center, setCenter] = useState<[number, number]>([43.6532, -79.3832]);
+    const [zoom] = useState(12);
 
-    // Calculate initial center based on available listings
-    const center = useMemo(() => {
+    // Initial center calculation based on listings
+    useEffect(() => {
+        if (!initialListings || initialListings.length === 0) return;
+
         // Default center (Toronto approximate)
         const defaultCenter: [number, number] = [43.6532, -79.3832];
         const withCoords = initialListings.filter(l => 
-            (l.location?.lat || l.latitude || l.Latitude) && 
-            (l.location?.lng || l.longitude || l.Longitude)
+            (l.location?.lat ?? l.latitude ?? l.Latitude) != null && 
+            (l.location?.lng ?? l.longitude ?? l.Longitude) != null
         );
         
         if (withCoords.length > 0) {
-            const avgLat = withCoords.reduce((sum, l) => sum + (l.location?.lat || l.latitude || l.Latitude || 0), 0) / withCoords.length;
-            const avgLng = withCoords.reduce((sum, l) => sum + (l.location?.lng || l.longitude || l.Longitude || 0), 0) / withCoords.length;
+            const avgLat = withCoords.reduce((sum, l) => sum + (l.location?.lat ?? l.latitude ?? l.Latitude ?? 0), 0) / withCoords.length;
+            const avgLng = withCoords.reduce((sum, l) => sum + (l.location?.lng ?? l.longitude ?? l.Longitude ?? 0), 0) / withCoords.length;
             
             // Validate result to avoid NaN
             if (!isNaN(avgLat) && !isNaN(avgLng)) {
-                return [avgLat, avgLng] as [number, number];
+                setCenter([avgLat, avgLng]);
+            } else {
+                setCenter(defaultCenter);
             }
         }
-        return defaultCenter;
     }, [initialListings]);
 
-    // Update listings when props change
-    useEffect(() => {
-        setListings(initialListings);
-    }, [initialListings]);
-
-    const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
-        // Get current params from window to be absolutely certain we have the latest state
-        const currentParams = new URLSearchParams(window.location.search);
-        
-        // Update coordinates
-        currentParams.set('minLat', bounds.minLat.toString());
-        currentParams.set('maxLat', bounds.maxLat.toString());
-        currentParams.set('minLng', bounds.minLng.toString());
-        currentParams.set('maxLng', bounds.maxLng.toString());
-        
-        // CRITICAL: Always force view=map during map interactions to prevent grid-view regression
-        currentParams.set('view', 'map');
-        currentParams.delete('page');
-        
-        const newUrl = `/listings?${currentParams.toString()}`;
-        
-        // Only push if the URL actually changed to prevent loops
-        if (window.location.search !== `?${currentParams.toString()}`) {
-            router.push(newUrl, { scroll: false });
-        }
+    const handleBoundsChange = (_bounds: L.LatLngBounds) => {
+        // Logic for fetching markers based on bounds could go here
+        // Currently we just use the initial set for demo stability
     };
 
     return (
@@ -114,13 +85,13 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
             <MapContainer
                 key={`${center[0]}-${center[1]}`} // Force re-render when center changes radically
                 center={center}
-                zoom={12}
+                zoom={zoom}
                 scrollWheelZoom={true}
                 className="h-full w-full"
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
                 <MapEventHandler onBoundsChange={handleBoundsChange} />
@@ -131,9 +102,9 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                     spiderfyOnMaxZoom={true}
                 >
                     {listings.map((listing) => {
-                        const lat = listing.location?.lat || listing.latitude || listing.Latitude;
-                        const lng = listing.location?.lng || listing.longitude || listing.Longitude;
-                        if (!lat || !lng) return null;
+                        const lat = listing.location?.lat ?? listing.latitude ?? listing.Latitude;
+                        const lng = listing.location?.lng ?? listing.longitude ?? listing.Longitude;
+                        if (lat == null || lng == null) return null;
 
                         const id = listing.id || listing.mlsNumber || listing.ListingKey || listing.listingKey;
 
@@ -195,11 +166,13 @@ export function ListingsMap({ initialListings }: ListingsMapProps) {
                 }
                 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
                     background-color: rgba(217, 119, 6, 0.6);
+                    border: none;
                 }
                 .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
                     background-color: rgb(217, 119, 6);
                     color: white;
                     font-weight: 900;
+                    border-radius: 50%;
                 }
             `}</style>
         </div>

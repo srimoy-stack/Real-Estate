@@ -269,7 +269,7 @@ export default function ListingDetailPage() {
                                 </div>
                                 <button className="w-full rounded-2xl bg-emerald-500 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-emerald-400 shadow-lg">Request Information</button>
                                 <div className="mt-8 pt-8 border-t border-white/10 text-center sm:text-left">
-                                    <RealtorBadge listingUrl={listing.ListingURL} moreInformationLink={listing.moreInformationLink} />
+                                    <RealtorBadge listingUrl={listing.ListingURL} moreInformationLink={listing.moreInformationLink} listing={listing} />
                                 </div>
                             </div>
                         </div>

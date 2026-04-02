@@ -118,8 +118,8 @@ export function sortListings(listings: MLSProperty[], filters: FilterState): MLS
             case 'date':
             case 'updated':
             default:
-                const timeA = new Date(a.ModificationTimestamp || 0).getTime();
-                const timeB = new Date(b.ModificationTimestamp || 0).getTime();
+                const timeA = new Date(a.ListingDate || a.ModificationTimestamp || 0).getTime();
+                const timeB = new Date(b.ListingDate || b.ModificationTimestamp || 0).getTime();
                 return isDesc ? timeB - timeA : timeA - timeB;
         }
     });

@@ -57,6 +57,8 @@ export async function GET(request: NextRequest, { params }: { params: { listingK
         YearBuilt: listing.yearBuilt,
         PublicRemarks: listing.publicRemarks,
         ModificationTimestamp: listing.modificationTimestamp?.toISOString(),
+        ListingDate: listing.listingDate?.toISOString() || null,
+        CreatedAt: listing.createdAt?.toISOString() || null,
         // Agent/office details
         ListAgentFullName: listing.agentName || raw.ListAgentFullName || null,
         ListAgentDirectPhone: listing.agentPhone || raw.ListAgentDirectPhone || null,

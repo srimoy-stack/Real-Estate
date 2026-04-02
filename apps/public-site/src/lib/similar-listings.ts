@@ -174,7 +174,7 @@ export async function getSimilarListings(
             images,
             propertyType: l.propertySubType || l.propertyType,
             status: l.standardStatus || 'Active',
-            location: { lat: l.latitude || 0, lng: l.longitude || 0 },
+            location: { lat: l.latitude ?? 0, lng: l.longitude ?? 0 },
             similarityScore: total
         };
     });

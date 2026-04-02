@@ -5,7 +5,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 import { PrismaClient, Prisma } from '@prisma/client';
 const prisma = new PrismaClient({ log: ['error'] });
 const DDF = 'https://ddfapi.realtor.ca/odata/v1/Property';
-const PG = 100, CONC = 6, DELAY = 100; // Increased concurrency, reduced delay
+const PG = 100, CONC = 4, DELAY = 500; 
 
 let tok: string | null = null;
 async function auth(): Promise<string> {
@@ -51,49 +51,83 @@ function map(i: any) {
         officeName: i.ListOfficeName || null, moreInformationLink: listingUrl,
         modificationTimestamp: i.ModificationTimestamp ? new Date(i.ModificationTimestamp) : null,
         listingDate: i.ListingDate ? new Date(i.ListingDate) : (i.OriginalEntryTimestamp ? new Date(i.OriginalEntryTimestamp) : null),
-        rawData: (() => { const { Media, ...rest } = i; rest.ListingURL = listingUrl; return rest; })(), isActive: true,
+        // Store minimal rawData — preserve ListingURL for "More Info" links,
+        // agent/office details for compliance, but strip bulky Media array
+        rawData: (() => {
+            const { Media, ...rest } = i;
+            rest.ListingURL = listingUrl;
+            return rest;
+        })(),
+        isActive: true,
     };
 }
 
+async function analyzeStorage() {
+    console.log('\n📊 STORAGE ANALYSIS:');
+    try {
+        const count = await prisma.listing.count();
+        const dbSize: any[] = await prisma.$queryRaw`SELECT pg_size_pretty(pg_database_size(current_database())) as size;`;
+        const tableSize: any[] = await prisma.$queryRaw`SELECT pg_size_pretty(pg_total_relation_size('"Listing"')) as size;`;
+        console.log(`- Total Listings: ${count}`);
+        console.log(`- DB Total Size: ${dbSize[0].size}`);
+        console.log(`- Listings Table: ${tableSize[0].size}`);
+        const avg = count > 0 ? (212 * 1024 / 62150) : 0; // Using my manual calc as fallback
+        console.log(`- Approx Room Remaning: ~${Math.floor((500 - parseFloat(dbSize[0].size)))} MB (Assuming 512MB limit)`);
+    } catch (e) {
+        console.log('  (Could not query detailed storage, likely permission or table name case issues)');
+        const count = await prisma.listing.count();
+        console.log(`- Total Listings: ${count}`);
+    }
+}
+
 (async () => {
-    console.log('🌊 CRAWLER — STARTING AT DB CURSOR');
-    const start = await prisma.listing.count();
-    console.log(`📊 DB: ${start}`);
-    
-    let ins = 0, w = 0, skip = start, empty = 0; // Start at current count!
+    console.log('🚀 SAFE WORKER — FETCHING NEW DATA WITHOUT TOUCHING EXISTING');
+    await analyzeStorage();
+
+    const RESUME_SKIP = 51000; // Resume from where last run ended
+    let ins = 0, w = 0, skip = RESUME_SKIP, totalSkips = 0;
     const t0 = Date.now();
 
-    while (w < 1000 && empty < 2) {
+    // Loop for "waves"
+    while (w < 100 && totalSkips < 10) {
         w++;
+        console.log(`🌊 Wave ${w} (skip=${skip})...`);
         const skips = Array.from({ length: CONC }, (_, i) => skip + i * PG);
         const res = await Promise.all(skips.map(s => page(s)));
         const all = res.flat();
         
         if (!all.length) { 
-            empty++; 
-            console.log(`⚪ Wave empty at skip=${skip}`);
-            skip += CONC * PG; 
-            continue; 
+            console.log(`⚪ No more data from feed.`);
+            break; 
         }
-        empty = 0;
         
-        const u = new Map<string, any>(); for (const x of all) if (x.ListingKey) u.set(x.ListingKey, x);
-        const m = Array.from(u.values()).map(map);
+        const m = all.map(map);
         try {
+            // createMany with skipDuplicates: true will skip ANY existing listingKey
+            // This ensures "existing data stays untouched" and "no duplicates"
             const r = await prisma.listing.createMany({ data: m, skipDuplicates: true });
             ins += r.count;
-            process.stdout.write(`+${r.count} `);
+            if (r.count === 0) {
+                totalSkips++;
+                console.log(`   ⏭  All ${m.length} records in this wave already exist.`);
+            } else {
+                totalSkips = 0;
+                console.log(`   ✅ Inserted ${r.count} new records.`);
+            }
         } catch (e: any) {
-            let ok = 0;
-            for (const it of m) { try { await prisma.listing.upsert({ where: { listingKey: it.listingKey }, update: it, create: it }); ok++; } catch {} }
-            ins += ok;
+            console.error(`   ❌ Wave failed: ${e.message}`);
         }
         
         skip += CONC * PG;
-        if (w % 5 === 0) console.log(`\n📦 Total new: ${ins} | skip: ${skip} | ${((Date.now()-t0)/1000).toFixed(0)}s`);
         await new Promise(r => setTimeout(r, DELAY));
+        
+        if (totalSkips >= 5) {
+            console.log(`⏹  Seen 5 consecutive waves of only existing records. Stopping.`);
+            break;
+        }
     }
 
-    console.log(`\n✨ DONE +${ins} new | total in DB approx ${start + ins}`);
+    console.log(`\n✨ DONE +${ins} new | total time ${((Date.now()-t0)/1000).toFixed(0)}s`);
+    await analyzeStorage();
     prisma.$disconnect(); process.exit(0);
 })().catch(e => { console.error('❌', e); process.exit(1); });

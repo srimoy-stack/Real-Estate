@@ -222,11 +222,19 @@ export function formatNumber(num: number | null | undefined): string {
 
 // ─── Freshness badge ─────────────────────────────────────────────
 export type FreshnessBadge =
-  | { label: string; color: 'green' | 'blue' }
+  | { label: string; color: 'green' | 'blue' | 'gray' }
   | null;
 
 /**
- * Returns a freshness badge descriptor or null (> 7 days old).
+ * Returns a freshness badge based on the listing date (when listed for sale).
+ * Shows accurate time since listing, not DDF modification time.
+ *
+ * - Today / < 24h → "NEW TODAY" (green)
+ * - < 3 days → "X DAYS AGO" (green)
+ * - < 7 days → "X DAYS AGO" (blue)
+ * - < 14 days → "X DAYS AGO" (blue)
+ * - < 30 days → "X DAYS AGO" (gray)
+ * - > 30 days → null (no badge)
  */
 export function getFreshnessBadge(
   modifiedAt: string | Date | undefined | null,
@@ -240,17 +248,37 @@ export function getFreshnessBadge(
   if (isNaN(then)) return null;
 
   const diffMs = now - then;
+  if (diffMs < 0) return { label: 'New today', color: 'green' }; // future dates = just listed
+
   const diffH = Math.floor(diffMs / 3_600_000);
   const diffD = Math.floor(diffMs / 86_400_000);
 
-  // Today path
-  if (diffH < 24) return { label: 'Today', color: 'green' };
-  
-  // Yesterday path
-  if (diffD === 1) return { label: '1 day ago', color: 'blue' };
-  
-  // Recent path (up to 7 days)
-  if (diffD < 7) return { label: `${diffD} days ago`, color: 'blue' };
+  // Brand new
+  if (diffH < 24) return { label: 'New today', color: 'green' };
+
+  // Very recent (1-3 days)
+  if (diffD <= 3) return { label: `${diffD} ${diffD === 1 ? 'day' : 'days'} ago`, color: 'green' };
+
+  // Recent (4-7 days)
+  if (diffD <= 7) return { label: `${diffD} days ago`, color: 'blue' };
+
+  // Moderate (1-2 weeks)
+  if (diffD <= 14) {
+    const weeks = Math.floor(diffD / 7);
+    return { label: `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`, color: 'blue' };
+  }
+
+  // Older (2-4 weeks)
+  if (diffD <= 30) {
+    const weeks = Math.floor(diffD / 7);
+    return { label: `${weeks} weeks ago`, color: 'gray' };
+  }
+
+  // Months
+  if (diffD <= 90) {
+    const months = Math.floor(diffD / 30);
+    return { label: `${months} ${months === 1 ? 'month' : 'months'} ago`, color: 'gray' };
+  }
 
   return null;
 }

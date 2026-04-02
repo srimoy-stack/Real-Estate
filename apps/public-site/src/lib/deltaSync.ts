@@ -2,7 +2,7 @@ import { prisma } from './prisma';
 import { Prisma } from '@prisma/client';
 import { getMLSAccessToken } from './mls/tokenManager';
 
-const BATCH_SIZE = 200;
+const BATCH_SIZE = 100; // DDF Web API maximum is 100 per page
 const DDF_URL = 'https://ddfapi.realtor.ca/odata/v1/Property';
 const RATE_LIMIT_DELAY = 1000;
 
@@ -190,7 +190,12 @@ async function upsertListing(item: any, stats: SyncStats) {
         listingDate: item.ListingDate
             ? new Date(item.ListingDate)
             : (item.OriginalEntryTimestamp ? new Date(item.OriginalEntryTimestamp) : null),
-        rawData: Prisma.DbNull, // Optimization: NO LONGER STORE HEAVY RAW JSON to save space
+        rawData: (() => {
+            // Store full DDF payload (required for advanced filters, agent details, Lead API)
+            // Strip Media array to avoid duplication — already stored in mediaJson column
+            const { Media, ...rawWithoutMedia } = item;
+            return rawWithoutMedia;
+        })(),
         isActive: true // REACTIVATE if was soft-deleted
     };
 
@@ -282,14 +287,43 @@ async function processSafeDeletions(token: string, stats: SyncStats) {
 function processMedia(media: any[]): { primary: string | null; array: any[] } {
     if (!media || media.length === 0) return { primary: null, array: [] };
 
-    // Standardize and Lighten
-    const processed = media.map(m => ({
-        MediaURL: m.MediaURL,
-        Order: m.Order || 0,
-        MediaModificationTimestamp: m.MediaModificationTimestamp || null
-    })).sort((a, b) => a.Order - b.Order);
+    const NON_IMAGE_EXTENSIONS = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|txt|csv|zip)$/i;
 
-    // Primary: Order 0 or first
+    const processed = media
+        .filter(m => {
+            // Determine effective URL (prefer HighRes if available)
+            const url = m?.HighResMediaURL || m?.MediaURL || m?.LowResMediaURL;
+            if (!url || typeof url !== 'string') return false;
+            
+            const trimmedUrl = url.trim();
+            if (trimmedUrl.length < 10) return false;
+            
+            // Reject non-image documents/archives
+            if (NON_IMAGE_EXTENSIONS.test(trimmedUrl)) return false;
+            
+            // Validate URL structure
+            try {
+                const parsed = new URL(trimmedUrl);
+                // Reject URLs with no path (likely just a domain)
+                if (parsed.pathname === '/' || parsed.pathname === '') return false;
+            } catch { 
+                return false; 
+            }
+            
+            return true;
+        })
+        .map(m => {
+            // Standardize: pick best resolution and ensure fields exist
+            const bestUrl = (m.HighResMediaURL || m.MediaURL || m.LowResMediaURL).trim();
+            return {
+                MediaURL: bestUrl,
+                Order: m.Order || 0,
+                MediaModificationTimestamp: m.MediaModificationTimestamp || null
+            };
+        })
+        .sort((a, b) => a.Order - b.Order);
+
+    // Final Primary Check: Ensure we pick Order 0, otherwise first available
     const primaryObj = processed.find(m => m.Order === 0) || processed[0];
 
     return {

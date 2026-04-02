@@ -172,7 +172,7 @@ export async function fetchRankedListings(
                       "publicRemarks" ILIKE $1 OR
                       "listingId" ILIKE $1
                   )
-                ORDER BY relevance DESC, "modificationTimestamp" DESC
+                ORDER BY relevance DESC, "listingDate" DESC, "modificationTimestamp" DESC
                 LIMIT ${limit} OFFSET ${skip}
             `, term, cityPrefix, minPrice, maxPrice, beds, baths, propType);
         };
@@ -294,12 +294,25 @@ export function buildOrderByClause(query: ListingQuery): Prisma.ListingOrderByWi
             primarySort = { modificationTimestamp: 'desc' }; break;
     }
 
-    // CRITICAL: Always prioritize listings WITH photos to improve UI quality.
-    // Putting primaryPhotoUrl: 'desc' first means truthy strings (URLs) come before null/null-like.
+    // Always ensure we have a fallback for ties
+    const fallbackSort: Prisma.ListingOrderByWithRelationInput = { id: 'desc' };
+
+    // Primary goal: Newest First
+    if (sortBy === 'newest' || sortBy === 'date' || sortBy === 'updated' || !sortBy) {
+        return [
+            primarySort, // modificationTimestamp
+            { listingDate: 'desc' },
+            { primaryPhotoUrl: { sort: 'desc', nulls: 'last' } as any },
+            fallbackSort
+        ];
+    }
+
+    // Default behavior for other sorts: Photos first to ensure high-quality grid
     return [
         { primaryPhotoUrl: { sort: 'desc', nulls: 'last' } as any },
         primarySort,
-        secondarySort
+        secondarySort,
+        fallbackSort
     ];
 }
 

@@ -12,6 +12,7 @@ import {
 } from './design-tokens';
 import { NormalizedProperty, autoNormalize } from './normalize-property';
 import { SafeImage } from './SafeImage';
+import { resolveListingUrl } from '@/lib/resolve-listing-url';
 
 // ─── Realtor.ca wordmark SVG (official red #cc0000) ───────────────
 const RealtorLogo = () => (
@@ -41,6 +42,9 @@ const PinIcon = () => (
 export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardProps) {
   // ─── Normalize data ──
   const prop: NormalizedProperty = listing._normalized ? listing : autoNormalize(listing);
+
+  // Failsafe: resolve URL from both normalized and raw data
+  const externalUrl = prop.moreInformationLink || resolveListingUrl(listing);
 
   // ─── Derived values ──
   const seed = prop.mlsNumber || prop.id || index;
@@ -182,7 +186,7 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
             {freshnessBadge && (
               <span 
                 className={`inline-flex rounded-md px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm ${
-                  freshnessBadge.color === 'green' ? 'bg-[#16a34a]' : 'bg-[#2563eb]'
+                  freshnessBadge.color === 'green' ? 'bg-[#16a34a]' : freshnessBadge.color === 'blue' ? 'bg-[#2563eb]' : 'bg-[#6B7280]'
                 }`}
               >
                 {freshnessBadge.label}
@@ -247,14 +251,14 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
       </div>
 
       {/* ══════════════ REALTOR.ca More Info Strip ══════════════ */}
-      {prop.moreInformationLink && (
+      {externalUrl && (
         <div
           data-external-link
           className="border-t border-[#E5E7EB] bg-[#FFF8F8] px-4 py-2.5"
           onClick={(e) => e.stopPropagation()}
         >
           <a
-            href={prop.moreInformationLink}
+            href={externalUrl}
             target="_blank"
             rel="noopener noreferrer"
             data-external-link

@@ -1,10 +1,13 @@
 'use client';
 
 import React from 'react';
+import { resolveListingUrl } from '@/lib/resolve-listing-url';
 
 interface RealtorBadgeProps {
     listingUrl?: string | null;
     moreInformationLink?: string | null;
+    /** Optional: pass raw listing data for robust URL resolution */
+    listing?: any;
     lang?: 'en' | 'fr';
     variant?: 'full' | 'compact';
 }
@@ -16,14 +19,18 @@ interface RealtorBadgeProps {
  * 1. A link back to REALTOR.ca (moreInformationLink)
  * 2. The REALTOR.ca trademark attribution
  *
- * Uses moreInformationLink (priority) → listingUrl (fallback)
+ * Uses resolveListingUrl for robust resolution:
+ *   rawData.ListingURL → moreInformationLink → constructed fallback
  */
 export function RealtorBadge({
     listingUrl,
     moreInformationLink,
+    listing,
     variant = 'full',
 }: RealtorBadgeProps) {
-    const link = moreInformationLink || listingUrl;
+    const link = listing
+        ? resolveListingUrl(listing) || moreInformationLink || listingUrl
+        : moreInformationLink || listingUrl;
 
     if (variant === 'compact') {
         return (

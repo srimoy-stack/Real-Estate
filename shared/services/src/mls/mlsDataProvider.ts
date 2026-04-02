@@ -63,6 +63,18 @@ export class ApiMlsProvider implements IMlsDataProvider {
         params.set('maxYearBuilt', filters.maxYearBuilt.toString());
       if (filters.limit) params.set('limit', filters.limit.toString());
       if (filters.page) params.set('page', filters.page.toString());
+      if (filters.sort) {
+        if (filters.sort === 'newest') {
+          params.set('sortBy', 'newest');
+          params.set('order', 'desc');
+        } else if (filters.sort === 'price_asc' || filters.sort === 'price-low-high') {
+          params.set('sortBy', 'price');
+          params.set('order', 'asc');
+        } else if (filters.sort === 'price_desc' || filters.sort === 'price-high-low') {
+          params.set('sortBy', 'price');
+          params.set('order', 'desc');
+        }
+      }
 
       const url = `${this.getBaseUrl()}/api/internal-listings?${params.toString()}`;
       if (typeof window === 'undefined') console.log(`[ApiMlsProvider] Server Fetch: ${url}`);
