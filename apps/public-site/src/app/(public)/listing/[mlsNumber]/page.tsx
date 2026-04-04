@@ -6,6 +6,18 @@ import {
   getRelatedListingsDirect 
 } from '@/lib/server-listing-service';
 import { ListingGallery } from '@/components/listings/ListingGallery';
+import { extractListingDetails } from '@/lib/extract-listing-details';
+import {
+  PropertySummarySection,
+  BuildingDetailsSection,
+  InteriorFeaturesSection,
+  ExteriorFeaturesSection,
+  UtilitiesSection,
+  RoomsTableSection,
+  LandDetailsSection,
+  AssociationSection,
+  RealtorBadge,
+} from '@/components/listing/PropertyDetailSections';
 import {
   SafeImage,
   autoNormalize,
@@ -18,8 +30,7 @@ import { MortgageCalculator } from '@/components/listings/MortgageCalculator';
 import { PropertyStats } from '@/components/listings/PropertyStats';
 import { StickyInquirySidebar } from '@/components/listings/StickyInquirySidebar';
 import { SaveButton } from '@/components/listings/SaveButton';
-import { SimilarListings } from '@/components/listings/SimilarListings';
-import { RealtorBadge } from '@/app/listings-demo/components/RealtorBadge';
+import { SimilarListings as SimilarListingsComp } from '@/components/listings/SimilarListings';
 import {
   fireDDFAnalyticsPing,
   extractClientIP,
@@ -447,9 +458,27 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               </section>
             )}
 
+            {/* ──── Deep Property Details (from rawData) ──── */}
+            {(() => {
+              const details = extractListingDetails(listing);
+              return (
+                <div id="property-features" className="space-y-10">
+                  <PropertySummarySection data={details.propertySummary} />
+                  <BuildingDetailsSection data={details.building} />
+                  <InteriorFeaturesSection data={details.interior} />
+                  <ExteriorFeaturesSection data={details.exterior} />
+                  <UtilitiesSection data={details.utilities} />
+                  <RoomsTableSection data={details.rooms} />
+                  <LandDetailsSection data={details.land} />
+                  <AssociationSection data={details.association} />
+                  <RealtorBadge moreInformationLink={moreInfoLink} />
+                </div>
+              );
+            })()}
+
             {/* Mortgage Calculator — only show when price is known */}
             {prop.price && prop.price > 0 && <MortgageCalculator price={prop.price} />}
-            <PropertyStats />
+            <PropertyStats listing={listing} />
 
             {/* Location */}
             <section id="property-map" className="space-y-8">
@@ -565,12 +594,22 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
         </div>
 
         {/* Related Listings — AI-Powered Recommendations */}
-        <SimilarListings
-          listingKey={listing.mlsNumber}
-          city={city}
-          limit={8}
-          fallbackListings={relatedListings}
-        />
+        {(() => {
+          const details = extractListingDetails(listing);
+          const community = details.propertySummary.communityName;
+          const locationLabel = community 
+            ? `${city} (${community})` 
+            : city;
+
+          return relatedListings && relatedListings.length > 0 && (
+            <SimilarListingsComp
+              listingKey={listing.mlsNumber}
+              city={locationLabel}
+              limit={8}
+              fallbackListings={relatedListings}
+            />
+          );
+        })()}
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 /**
- * ─── Production-Safe Backfill: Fill Missing Listing Fields ── v3 ──
+ * ─── Production-Safe Backfill: Fill Missing Listing Fields ── v4 ──
  *
  * PHASE 1 (SQL bulk): Fast bulk SQL for moreInformationLink + primaryPhotoUrl
  * PHASE 2 (rawData):  Cursor-batched extraction from rawData JSON for
  *                     agentName, agentPhone, officeName, mediaJson, primaryPhotoUrl
- * PHASE 3 (API):      DDF API fallback for agent/office fields still NULL
+ * PHASE 3 (API):      DDF API feed crawl (High-Speed Recovery)
  *
  * SAFETY:
  *   ✅ NEVER overwrites existing non-null values (WHERE col IS NULL)
@@ -17,10 +17,7 @@
  * USAGE:
  *   DRY RUN:         npx tsx scripts/backfill-listings.ts
  *   REAL RUN:        npx tsx scripts/backfill-listings.ts --commit
- *   PHASE 1 ONLY:    npx tsx scripts/backfill-listings.ts --commit --phase1
- *   PHASE 2 ONLY:    npx tsx scripts/backfill-listings.ts --commit --phase2
- *   PHASE 3 ONLY:    npx tsx scripts/backfill-listings.ts --commit --phase3
- *   SKIP API:        npx tsx scripts/backfill-listings.ts --commit --no-api
+ *   RESUME PHASE 3:  npx tsx scripts/backfill-listings.ts --commit --skip 4800
  *
  * ────────────────────────────────────────────────────────────────────
  */
@@ -29,24 +26,34 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient({ log: ['error'] });
 
 // ─── Configuration ──────────────────────────────────────────────────
 const BATCH_SIZE = 200;
-const BATCH_DELAY_MS = 75;
-const API_BATCH_SIZE = 20;
-const API_DELAY_MS = 350;
+const BATCH_DELAY_MS = 50;
+const API_PAGE_SIZE = 100;
 
 const DRY_RUN = !process.argv.includes('--commit');
 const PHASE1_ONLY = process.argv.includes('--phase1');
 const PHASE2_ONLY = process.argv.includes('--phase2');
 const PHASE3_ONLY = process.argv.includes('--phase3');
 const NO_API = process.argv.includes('--no-api');
-const SINGLE_PHASE = PHASE1_ONLY || PHASE2_ONLY || PHASE3_ONLY;
+const ONLY_PHOTOS = process.argv.includes('--photos-only');
+
+const argSkipIndex = process.argv.indexOf('--skip');
+const START_SKIP = argSkipIndex !== -1 ? parseInt(process.argv[argSkipIndex + 1], 10) : 0;
 
 const DDF = 'https://ddfapi.realtor.ca/odata/v1/Property';
+const DDF_MEMBER = 'https://ddfapi.realtor.ca/odata/v1/Member';
+const DDF_OFFICE = 'https://ddfapi.realtor.ca/odata/v1/Office';
+
+// ─── SQL Utility ───────────────────────────────────────────────────
+async function getCount(where: string) {
+  const res: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*) as cnt FROM "Listing" WHERE ${where}`);
+  return Number(res[0]?.cnt || 0);
+}
 
 // ─── Validation helpers ─────────────────────────────────────────────
 const INVALID_EXTENSIONS = ['.pdf', '.doc', '.docx', '.zip', '.rar', '.7z', '.gz'];
@@ -97,76 +104,115 @@ function extractValidMedia(media: unknown): any[] | null {
 let tok: string | null = null;
 async function auth(): Promise<string> {
   if (tok) return tok;
+  const id = process.env.MLS_CLIENT_ID || process.env.DDF_CLIENT_ID;
+  const secret = process.env.MLS_CLIENT_SECRET || process.env.DDF_CLIENT_SECRET;
+  
+  if (!id || !secret) {
+     throw new Error("Missing DDF credentials in .env (DDF_CLIENT_ID/SECRET)");
+  }
+
   const r = await fetch('https://identity.crea.ca/connect/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'client_credentials',
-      client_id: process.env.MLS_CLIENT_ID || process.env.DDF_CLIENT_ID || '',
-      client_secret: process.env.MLS_CLIENT_SECRET || process.env.DDF_CLIENT_SECRET || '',
+      client_id: id,
+      client_secret: secret,
       scope: 'DDFApi_Read',
     }),
   });
   const d = await r.json();
   tok = d.access_token;
-  setTimeout(() => { tok = null; }, (d.expires_in - 120) * 1000);
+  setTimeout(() => { tok = null; }, (d?.expires_in - 120) * 1000);
   console.log('  🔐 DDF token acquired');
   return tok!;
 }
 
-async function fetchByKeys(keys: string[]): Promise<Map<string, any>> {
-  const result = new Map<string, any>();
-  if (keys.length === 0) return result;
+/**
+ * Fetches all available members/offices to build a local lookup map
+ */
+async function buildAgentOfficeMaps() {
+  console.log('\n  🏗️  Building local Agent/Office name maps...');
   const t = await auth();
-  const filterStr = keys.map(k => `ListingKey eq '${k}'`).join(' or ');
-  const params = new URLSearchParams({
-    '$filter': filterStr,
-    '$select': 'ListingKey,ListingURL,ListAgentFullName,ListAgentDirectPhone,ListOfficeName',
-    '$top': keys.length.toString(),
-  });
-  try {
-    const r = await fetch(`${DDF}?${params}`, {
-      headers: { Authorization: `Bearer ${t}`, Accept: 'application/json' },
-      signal: AbortSignal.timeout(30000),
+  
+  const memberMap = new Map<string, string>(); 
+  const officeMap = new Map<string, string>(); 
+  const agentPhoneMap = new Map<string, string>();
+
+  // 1. Fetch Members
+  console.log('     Fetching Members...');
+  let skip = 0;
+  while (true) {
+    const params = new URLSearchParams({
+      '$top': '1000',
+      '$skip': skip.toString(),
+      // We try a broader select in case field names differ
+      '$select': 'MemberKey,MemberFirstName,MemberLastName,MemberFullName,MemberOfficePhone'
     });
-    if (!r.ok) {
-      const errText = await r.text();
-      console.error(`  ❌ API error ${r.status}: ${errText.substring(0, 200)}`);
-      return result;
-    }
-    const data = await r.json();
-    for (const item of (data.value || [])) {
-      if (item.ListingKey) result.set(item.ListingKey, item);
-    }
-  } catch (e: any) {
-    console.error(`  ❌ API fetch error: ${e.message}`);
+    try {
+      const r = await fetch(`${DDF_MEMBER}?${params}`, {
+        headers: { Authorization: `Bearer ${t}`, Accept: 'application/json' }
+      });
+      if (!r.ok) break;
+      const data = await r.json();
+      if (!data.value || data.value.length === 0) break;
+      for (const m of data.value) {
+        const fullName = m.MemberFullName || `${m.MemberFirstName || ''} ${m.MemberLastName || ''}`.trim();
+        if (fullName) memberMap.set(m.MemberKey, fullName);
+        if (m.MemberOfficePhone) agentPhoneMap.set(m.MemberKey, m.MemberOfficePhone);
+      }
+      if (data.value.length < 1000) break;
+      skip += 1000;
+      process.stdout.write(`.`);
+      if (skip % 5000 === 0) console.log(` (${skip} members cached)`);
+    } catch (e) { console.error('Member fetch error:', e); break; }
   }
-  return result;
+  console.log(`\n     ✅ Cached ${memberMap.size} members.`);
+
+  // 2. Fetch Offices
+  console.log('     Fetching Offices...');
+  skip = 0;
+  while (true) {
+    const params = new URLSearchParams({
+      '$top': '1000',
+      '$skip': skip.toString(),
+      '$select': 'OfficeKey,OfficeName'
+    });
+    try {
+      const r = await fetch(`${DDF_OFFICE}?${params}`, {
+        headers: { Authorization: `Bearer ${t}`, Accept: 'application/json' }
+      });
+      if (!r.ok) break;
+      const data = await r.json();
+      if (!data.value || data.value.length === 0) break;
+      for (const o of data.value) {
+        if (o.OfficeName) officeMap.set(o.OfficeKey, o.OfficeName);
+      }
+      if (data.value.length < 1000) break;
+      skip += 1000;
+      process.stdout.write(`.`);
+    } catch (e) { console.error('Office fetch error:', e); break; }
+  }
+  console.log(`\n     ✅ Cached ${officeMap.size} offices.`);
+
+  return { memberMap, officeMap, agentPhoneMap };
 }
 
 
 // ═══════════════════════════════════════════════════════════════════
-//  PHASE 1: Bulk SQL updates (fast — no row-by-row)
+//  PHASE 1: Bulk SQL updates
 // ═══════════════════════════════════════════════════════════════════
 async function phase1() {
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
   console.log('║  PHASE 1: Bulk SQL Backfill (links + photos)              ║');
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
 
-  // ─── 1a. moreInformationLink from rawData->>'ListingURL' ──────
-  const countLinkFromRaw: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "moreInformationLink" IS NULL
-      AND "rawData" IS NOT NULL
-      AND "rawData"->>'ListingURL' IS NOT NULL
-      AND "rawData"->>'ListingURL' != ''
-  `;
-  const linkFromRawCount = Number(countLinkFromRaw[0]?.cnt || 0);
-  console.log(`  📊 moreInformationLink from rawData.ListingURL: ${linkFromRawCount} candidates`);
+  // 1a. moreInformationLink from rawData->>'ListingURL'
+  const countLinkFromRaw = await getCount('"isActive" = true AND "moreInformationLink" IS NULL AND "rawData"->>\'ListingURL\' IS NOT NULL AND "rawData"->>\'ListingURL\' != \'\'');
+  console.log(`  📊 moreInformationLink from rawData.ListingURL: ${countLinkFromRaw} candidates`);
 
-  if (!DRY_RUN && linkFromRawCount > 0) {
-    const result1: any = await prisma.$executeRaw`
+  if (!DRY_RUN && countLinkFromRaw > 0) {
+    const res = await prisma.$executeRaw`
       UPDATE "Listing"
       SET "moreInformationLink" = CASE
         WHEN "rawData"->>'ListingURL' LIKE 'www.%'
@@ -176,203 +222,36 @@ async function phase1() {
       "updatedAt" = NOW()
       WHERE "isActive" = true
         AND "moreInformationLink" IS NULL
-        AND "rawData" IS NOT NULL
         AND "rawData"->>'ListingURL' IS NOT NULL
         AND "rawData"->>'ListingURL' != ''
     `;
-    console.log(`  ✅ Updated ${result1} rows with moreInformationLink from rawData`);
+    console.log(`  ✅ Updated ${res} rows.`);
   }
 
-  // ─── 1b. moreInformationLink constructed from listingId ──────
-  const countLinkConstruct: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "moreInformationLink" IS NULL
-      AND "listingId" IS NOT NULL
-  `;
-  const linkConstructCount = Number(countLinkConstruct[0]?.cnt || 0);
-  console.log(`  📊 moreInformationLink from listingId (construct): ${linkConstructCount} candidates`);
+  // 1b. moreInformationLink constructed from listingId
+  const countLinkConstruct = await getCount('"isActive" = true AND "moreInformationLink" IS NULL AND "listingId" IS NOT NULL');
+  console.log(`  📊 moreInformationLink from listingId (construct): ${countLinkConstruct} candidates`);
 
-  if (!DRY_RUN && linkConstructCount > 0) {
-    const result2: any = await prisma.$executeRaw`
+  if (!DRY_RUN && countLinkConstruct > 0) {
+    const res = await prisma.$executeRaw`
       UPDATE "Listing"
-      SET "moreInformationLink" = 'https://www.realtor.ca/real-estate/' || "listingId",
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "moreInformationLink" IS NULL
-        AND "listingId" IS NOT NULL
+      SET "moreInformationLink" = 'https://www.realtor.ca/real-estate/' || "listingId", "updatedAt" = NOW()
+      WHERE "isActive" = true AND "moreInformationLink" IS NULL AND "listingId" IS NOT NULL
     `;
-    console.log(`  ✅ Updated ${result2} rows with constructed moreInformationLink`);
+    console.log(`  ✅ Updated ${res} rows.`);
   }
 
-  // ─── 1c. primaryPhotoUrl from primaryPhoto column ─────────────
-  const countPhotoFromPrimary: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "primary_photo_url" IS NULL
-      AND "primaryPhoto" IS NOT NULL
-      AND "primaryPhoto" LIKE 'http%'
-      AND "primaryPhoto" NOT LIKE '%.pdf'
-      AND "primaryPhoto" NOT LIKE '%.doc'
-      AND "primaryPhoto" NOT LIKE '%.zip'
-  `;
-  const photoFromPrimaryCount = Number(countPhotoFromPrimary[0]?.cnt || 0);
-  console.log(`  📊 primaryPhotoUrl from primaryPhoto: ${photoFromPrimaryCount} candidates`);
+  // 1c. primaryPhotoUrl from primaryPhoto column
+  const countPhotoFromPrimary = await getCount('"isActive" = true AND "primary_photo_url" IS NULL AND "primaryPhoto" LIKE \'http%\'');
+  console.log(`  📊 primaryPhotoUrl from primaryPhoto: ${countPhotoFromPrimary} candidates`);
 
-  if (!DRY_RUN && photoFromPrimaryCount > 0) {
-    const result3: any = await prisma.$executeRaw`
+  if (!DRY_RUN && countPhotoFromPrimary > 0) {
+    const res = await prisma.$executeRaw`
       UPDATE "Listing"
-      SET "primary_photo_url" = "primaryPhoto",
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "primary_photo_url" IS NULL
-        AND "primaryPhoto" IS NOT NULL
-        AND "primaryPhoto" LIKE 'http%'
-        AND "primaryPhoto" NOT LIKE '%.pdf'
-        AND "primaryPhoto" NOT LIKE '%.doc'
-        AND "primaryPhoto" NOT LIKE '%.zip'
+      SET "primary_photo_url" = "primaryPhoto", "updatedAt" = NOW()
+      WHERE "isActive" = true AND "primary_photo_url" IS NULL AND "primaryPhoto" LIKE 'http%'
     `;
-    console.log(`  ✅ Updated ${result3} rows with primaryPhotoUrl from primaryPhoto`);
-  }
-
-  // ─── 1d. primaryPhotoUrl from rawData Media[0] ────────────────
-  const countPhotoFromRawMedia: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "primary_photo_url" IS NULL
-      AND "rawData" IS NOT NULL
-      AND jsonb_typeof("rawData"->'Media') = 'array'
-      AND jsonb_array_length("rawData"->'Media') > 0
-      AND "rawData"->'Media'->0->>'MediaURL' IS NOT NULL
-      AND "rawData"->'Media'->0->>'MediaURL' LIKE 'http%'
-      AND "rawData"->'Media'->0->>'MediaURL' NOT LIKE '%.pdf'
-  `;
-  const photoFromRawMediaCount = Number(countPhotoFromRawMedia[0]?.cnt || 0);
-  console.log(`  📊 primaryPhotoUrl from rawData.Media[0]: ${photoFromRawMediaCount} candidates`);
-
-  if (!DRY_RUN && photoFromRawMediaCount > 0) {
-    const result3b: any = await prisma.$executeRaw`
-      UPDATE "Listing"
-      SET "primary_photo_url" = "rawData"->'Media'->0->>'MediaURL',
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "primary_photo_url" IS NULL
-        AND "rawData" IS NOT NULL
-        AND jsonb_typeof("rawData"->'Media') = 'array'
-        AND jsonb_array_length("rawData"->'Media') > 0
-        AND "rawData"->'Media'->0->>'MediaURL' IS NOT NULL
-        AND "rawData"->'Media'->0->>'MediaURL' LIKE 'http%'
-        AND "rawData"->'Media'->0->>'MediaURL' NOT LIKE '%.pdf'
-    `;
-    console.log(`  ✅ Updated ${result3b} rows with primaryPhotoUrl from rawData.Media[0]`);
-  }
-
-  // ─── 1e. primaryPhotoUrl from mediaJson first element ─────────
-  const countPhotoFromMedia: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "primary_photo_url" IS NULL
-      AND "media_json" IS NOT NULL
-      AND jsonb_typeof("media_json") = 'array'
-      AND jsonb_array_length("media_json") > 0
-      AND "media_json"->0->>'MediaURL' IS NOT NULL
-      AND "media_json"->0->>'MediaURL' LIKE 'http%'
-  `;
-  const photoFromMediaCount = Number(countPhotoFromMedia[0]?.cnt || 0);
-  console.log(`  📊 primaryPhotoUrl from mediaJson[0]: ${photoFromMediaCount} candidates`);
-
-  if (!DRY_RUN && photoFromMediaCount > 0) {
-    const result4: any = await prisma.$executeRaw`
-      UPDATE "Listing"
-      SET "primary_photo_url" = "media_json"->0->>'MediaURL',
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "primary_photo_url" IS NULL
-        AND "media_json" IS NOT NULL
-        AND jsonb_typeof("media_json") = 'array'
-        AND jsonb_array_length("media_json") > 0
-        AND "media_json"->0->>'MediaURL' IS NOT NULL
-        AND "media_json"->0->>'MediaURL' LIKE 'http%'
-    `;
-    console.log(`  ✅ Updated ${result4} rows with primaryPhotoUrl from mediaJson`);
-  }
-
-  // ─── 1f. agentName from rawData.ListAgentFullName (bulk SQL) ──
-  const countAgentRaw: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "agentName" IS NULL
-      AND "rawData" IS NOT NULL
-      AND "rawData"->>'ListAgentFullName' IS NOT NULL
-      AND "rawData"->>'ListAgentFullName' != ''
-  `;
-  const agentRawCount = Number(countAgentRaw[0]?.cnt || 0);
-  console.log(`  📊 agentName from rawData.ListAgentFullName: ${agentRawCount} candidates`);
-
-  if (!DRY_RUN && agentRawCount > 0) {
-    const r: any = await prisma.$executeRaw`
-      UPDATE "Listing"
-      SET "agentName" = TRIM("rawData"->>'ListAgentFullName'),
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "agentName" IS NULL
-        AND "rawData" IS NOT NULL
-        AND "rawData"->>'ListAgentFullName' IS NOT NULL
-        AND "rawData"->>'ListAgentFullName' != ''
-    `;
-    console.log(`  ✅ Updated ${r} rows with agentName from rawData`);
-  }
-
-  // ─── 1g. agentPhone from rawData.ListAgentDirectPhone (bulk SQL)
-  const countPhoneRaw: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "agentPhone" IS NULL
-      AND "rawData" IS NOT NULL
-      AND "rawData"->>'ListAgentDirectPhone' IS NOT NULL
-      AND "rawData"->>'ListAgentDirectPhone' != ''
-  `;
-  const phoneRawCount = Number(countPhoneRaw[0]?.cnt || 0);
-  console.log(`  📊 agentPhone from rawData.ListAgentDirectPhone: ${phoneRawCount} candidates`);
-
-  if (!DRY_RUN && phoneRawCount > 0) {
-    const r: any = await prisma.$executeRaw`
-      UPDATE "Listing"
-      SET "agentPhone" = TRIM("rawData"->>'ListAgentDirectPhone'),
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "agentPhone" IS NULL
-        AND "rawData" IS NOT NULL
-        AND "rawData"->>'ListAgentDirectPhone' IS NOT NULL
-        AND "rawData"->>'ListAgentDirectPhone' != ''
-    `;
-    console.log(`  ✅ Updated ${r} rows with agentPhone from rawData`);
-  }
-
-  // ─── 1h. officeName from rawData.ListOfficeName (bulk SQL) ─────
-  const countOfficeRaw: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "officeName" IS NULL
-      AND "rawData" IS NOT NULL
-      AND "rawData"->>'ListOfficeName' IS NOT NULL
-      AND "rawData"->>'ListOfficeName' != ''
-  `;
-  const officeRawCount = Number(countOfficeRaw[0]?.cnt || 0);
-  console.log(`  📊 officeName from rawData.ListOfficeName: ${officeRawCount} candidates`);
-
-  if (!DRY_RUN && officeRawCount > 0) {
-    const r: any = await prisma.$executeRaw`
-      UPDATE "Listing"
-      SET "officeName" = TRIM("rawData"->>'ListOfficeName'),
-          "updatedAt" = NOW()
-      WHERE "isActive" = true
-        AND "officeName" IS NULL
-        AND "rawData" IS NOT NULL
-        AND "rawData"->>'ListOfficeName' IS NOT NULL
-        AND "rawData"->>'ListOfficeName' != ''
-    `;
-    console.log(`  ✅ Updated ${r} rows with officeName from rawData`);
+    console.log(`  ✅ Updated ${res} rows.`);
   }
 
   console.log('\n  ✅ Phase 1 complete.');
@@ -380,20 +259,18 @@ async function phase1() {
 
 
 // ═══════════════════════════════════════════════════════════════════
-//  PHASE 2: Cursor-based rawData extraction (mediaJson + remaining)
+//  PHASE 2: rawData Extraction
 // ═══════════════════════════════════════════════════════════════════
 async function phase2() {
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  PHASE 2: rawData Extraction (mediaJson + remaining)      ║');
+  console.log('║  PHASE 2: rawData Extraction (mediaJson + names)          ║');
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
 
-  // Count candidates: listings with rawData AND at least one NULL field
   const needCount = await prisma.listing.count({
     where: {
       isActive: true,
-      rawData: { not: { equals: null } },
+      rawData: { not: Prisma.JsonNull },
       OR: [
-        { mediaJson: { equals: null } },
         { primaryPhotoUrl: null },
         { agentName: null },
         { agentPhone: null },
@@ -404,33 +281,20 @@ async function phase2() {
   });
   console.log(`  📊 ${needCount} listings have rawData + at least one NULL field\n`);
 
-  if (needCount === 0) {
-    console.log('  ✅ Nothing to do for Phase 2.');
-    return;
-  }
+  if (needCount === 0) return;
 
   let cursor: number | undefined = undefined;
   let batchNum = 0;
   let totalUpdated = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
   const t0 = Date.now();
 
   while (true) {
     batchNum++;
-
-    const listings = await prisma.listing.findMany({
+    const listings: any[] = await prisma.listing.findMany({
       where: {
         isActive: true,
-        rawData: { not: { equals: null } },
-        OR: [
-          { mediaJson: { equals: null } },
-          { primaryPhotoUrl: null },
-          { agentName: null },
-          { agentPhone: null },
-          { officeName: null },
-          { moreInformationLink: null },
-        ],
+        rawData: { not: Prisma.JsonNull },
+        OR: [{ primaryPhotoUrl: null }, { agentName: null }, { officeName: null }, { moreInformationLink: null }],
       },
       orderBy: { id: 'asc' },
       take: BATCH_SIZE,
@@ -440,383 +304,150 @@ async function phase2() {
     if (listings.length === 0) break;
 
     let batchUpdated = 0;
-    let batchSkipped = 0;
-
     for (const listing of listings) {
       try {
-        // ─── Safely extract rawData ─────────────────────────
-        const raw = listing.rawData;
-        if (!raw || typeof raw !== 'object') {
-          batchSkipped++;
-          totalSkipped++;
-          continue;
-        }
-        const rd = raw as Record<string, any>;
-
+        const rd = (listing.rawData || {}) as Record<string, any>;
         const updateData: Record<string, any> = {};
 
-        // ── moreInformationLink ──
-        if (!listing.moreInformationLink) {
-          const url = normalizeUrl(rd.ListingURL);
-          if (url) {
-            updateData.moreInformationLink = url;
-          } else if (listing.listingId) {
-            updateData.moreInformationLink = `https://www.realtor.ca/real-estate/${listing.listingId}`;
-          }
-        }
-
-        // ── agentName ──
         if (!listing.agentName && isValidString(rd.ListAgentFullName)) {
-          updateData.agentName = (rd.ListAgentFullName as string).trim();
+          updateData.agentName = rd.ListAgentFullName.trim();
         }
-
-        // ── agentPhone ──
         if (!listing.agentPhone && isValidString(rd.ListAgentDirectPhone)) {
-          updateData.agentPhone = (rd.ListAgentDirectPhone as string).trim();
+          updateData.agentPhone = rd.ListAgentDirectPhone.trim();
         }
-
-        // ── officeName ──
         if (!listing.officeName && isValidString(rd.ListOfficeName)) {
-          updateData.officeName = (rd.ListOfficeName as string).trim();
+          updateData.officeName = rd.ListOfficeName.trim();
         }
-
-        // ── mediaJson ──
         if (!listing.mediaJson) {
-          const validMedia = extractValidMedia(rd.Media);
-          if (validMedia) {
-            updateData.mediaJson = validMedia;
-          }
+          const valid = extractValidMedia(rd.Media);
+          if (valid) updateData.mediaJson = valid;
         }
-
-        // ── primaryPhotoUrl (if still null after phase 1) ──
         if (!listing.primaryPhotoUrl) {
-          // Try primaryPhoto column first
-          if (isValidImageUrl(listing.primaryPhoto)) {
-            updateData.primaryPhotoUrl = (listing.primaryPhoto as string).trim();
-          }
-          // Then rawData.Media[0]
-          else if (Array.isArray(rd.Media) && rd.Media.length > 0 && isValidImageUrl(rd.Media[0]?.MediaURL)) {
-            updateData.primaryPhotoUrl = rd.Media[0].MediaURL.trim();
-          }
-          // Then from mediaJson we just built or existing
-          else {
-            const mj = updateData.mediaJson || (listing.mediaJson as any[] | null);
-            if (Array.isArray(mj) && mj.length > 0 && isValidImageUrl(mj[0]?.MediaURL)) {
-              updateData.primaryPhotoUrl = mj[0].MediaURL.trim();
-            }
-          }
-          // DO NOT insert placeholder — leave NULL if no valid image
+          const mj = updateData.mediaJson || listing.mediaJson;
+          if (Array.isArray(mj) && mj.length > 0) updateData.primaryPhotoUrl = mj[0].MediaURL;
         }
 
-        if (Object.keys(updateData).length === 0) {
-          batchSkipped++;
-          totalSkipped++;
-          continue;
-        }
-
-        if (DRY_RUN && batchNum <= 2) {
-          console.log(`  📝 [DRY] id=${listing.id} key=${listing.listingKey}`);
-          for (const [k, v] of Object.entries(updateData)) {
-            const display = k === 'mediaJson' ? `[${(v as any[]).length} images]` : v;
-            console.log(`      → ${k}: ${display}`);
+        if (Object.keys(updateData).length > 0) {
+          if (!DRY_RUN) {
+            await prisma.listing.update({ where: { id: listing.id }, data: updateData });
           }
+          batchUpdated++;
+          totalUpdated++;
         }
-
-        if (!DRY_RUN) {
-          await prisma.listing.update({ where: { id: listing.id }, data: updateData });
-        }
-        batchUpdated++;
-        totalUpdated++;
-      } catch (err: any) {
-        totalErrors++;
-        if (totalErrors <= 10) {
-          console.error(`  ❌ id=${listing.id}: ${err.message}`);
-        }
-      }
+      } catch (e) {}
     }
 
     cursor = listings[listings.length - 1].id;
-    batchSkipped = listings.length - batchUpdated;
-    totalSkipped += batchSkipped - (listings.length - batchUpdated - batchSkipped); // avoid double count
-
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    console.log(
-      `  📦 P2 Batch ${batchNum}: scanned=${listings.length} | updated=${batchUpdated} | skipped=${listings.length - batchUpdated} | total=${totalUpdated} | ${elapsed}s`
-    );
-
-    // Small delay to avoid DB stress
+    console.log(`  📦 P2 Batch ${batchNum}: scanned=${listings.length} | updated=${batchUpdated} | total=${totalUpdated} | ${elapsed}s`);
     await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
   }
-
-  console.log(`\n  ✅ Phase 2 complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors`);
 }
 
-
 // ═══════════════════════════════════════════════════════════════════
-//  PHASE 3: API-based backfill (agent, office — last resort)
+//  PHASE 3: DDF API Feed Crawl
 // ═══════════════════════════════════════════════════════════════════
 async function phase3() {
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  PHASE 3: DDF API Backfill (agent, phone, office)         ║');
+  console.log('║  PHASE 3: DDF API Feed Crawl (High-Speed Recovery)        ║');
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
 
-  const needCount = await prisma.listing.count({
-    where: {
-      isActive: true,
-      OR: [
-        { agentName: null },
-        { agentPhone: null },
-        { officeName: null },
-      ],
-    },
-  });
-  console.log(`  📊 ${needCount} listings still need agent/office data from API\n`);
+  const t = await auth();
+  const maps = !ONLY_PHOTOS ? await buildAgentOfficeMaps() : null;
 
-  if (needCount === 0) {
-    console.log('  ✅ Nothing to do for Phase 3.');
-    return;
-  }
-
-  let cursor: number | undefined = undefined;
-  let batchNum = 0;
+  console.log(`\n  🚜 Crawling Property Feed (Start from skip=${START_SKIP})...`);
+  let skip = START_SKIP;
   let totalUpdated = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
-  let consecutiveEmpty = 0;
+  let totalScanned = 0;
+  let consecutiveErrors = 0;
   const t0 = Date.now();
 
-  while (true) {
-    batchNum++;
-
-    const listings = await prisma.listing.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { agentName: null },
-          { agentPhone: null },
-          { officeName: null },
-        ],
-      },
-      select: {
-        id: true,
-        listingKey: true,
-        agentName: true,
-        agentPhone: true,
-        officeName: true,
-        moreInformationLink: true,
-      },
-      orderBy: { id: 'asc' },
-      take: API_BATCH_SIZE,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+  while (consecutiveErrors < 10) {
+    const params = new URLSearchParams({
+      '$top': API_PAGE_SIZE.toString(),
+      '$skip': skip.toString(),
+      '$select': 'ListingKey,ListingURL,ListAgentKey,ListOfficeKey,Media'
     });
+    
+    try {
+      const r = await fetch(`${DDF}?${params}`, {
+        headers: { Authorization: `Bearer ${t}`, Accept: 'application/json' },
+        signal: AbortSignal.timeout(60000),
+      });
 
-    if (listings.length === 0) break;
+      if (!r.ok) throw new Error(`API error ${r.status}`);
 
-    const keys = listings.map(l => l.listingKey).filter(Boolean);
-    const apiMap = await fetchByKeys(keys);
-    let batchUpdated = 0;
+      const data = await r.json();
+      const records = data.value || [];
+      if (records.length === 0) break;
+      
+      consecutiveErrors = 0;
+      totalScanned += records.length;
 
-    for (const listing of listings) {
-      try {
-        const apiRecord = apiMap.get(listing.listingKey);
-        if (!apiRecord) {
-          totalSkipped++;
-          continue;
-        }
+      const keys = records.map((r: any) => r.ListingKey).filter(Boolean);
+      const locals = await prisma.listing.findMany({
+        where: {
+          listingKey: { in: keys },
+          OR: [{ primaryPhotoUrl: null }, { agentName: null }, { officeName: null }]
+        },
+        select: { id: true, listingKey: true, primaryPhotoUrl: true, agentName: true, officeName: true }
+      });
+
+      for (const local of locals) {
+        const api = records.find((r: any) => r.ListingKey === local.listingKey);
+        if (!api) continue;
 
         const updateData: Record<string, any> = {};
-
-        if (!listing.agentName && isValidString(apiRecord.ListAgentFullName)) {
-          updateData.agentName = apiRecord.ListAgentFullName.trim();
+        if (!local.primaryPhotoUrl && api.Media) {
+          const v = extractValidMedia(api.Media);
+          if (v) {
+            updateData.mediaJson = v;
+            updateData.primaryPhotoUrl = v[0].MediaURL;
+          }
         }
-        if (!listing.agentPhone && isValidString(apiRecord.ListAgentDirectPhone)) {
-          updateData.agentPhone = apiRecord.ListAgentDirectPhone.trim();
-        }
-        if (!listing.officeName && isValidString(apiRecord.ListOfficeName)) {
-          updateData.officeName = apiRecord.ListOfficeName.trim();
-        }
-        if (!listing.moreInformationLink && apiRecord.ListingURL) {
-          const url = normalizeUrl(apiRecord.ListingURL);
-          if (url) updateData.moreInformationLink = url;
-        }
-
-        if (Object.keys(updateData).length === 0) {
-          totalSkipped++;
-          continue;
-        }
-
-        if (DRY_RUN && batchNum <= 3) {
-          console.log(`  📝 [DRY] id=${listing.id} key=${listing.listingKey}`);
-          for (const [k, v] of Object.entries(updateData)) {
-            console.log(`      → ${k}: ${v}`);
+        if (maps) {
+          if (!local.agentName && api.ListAgentKey && maps.memberMap.has(api.ListAgentKey)) {
+            updateData.agentName = maps.memberMap.get(api.ListAgentKey);
+            updateData.agentPhone = maps.agentPhoneMap.get(api.ListAgentKey);
+          }
+          if (!local.officeName && api.ListOfficeKey && maps.officeMap.has(api.ListOfficeKey)) {
+            updateData.officeName = maps.officeMap.get(api.ListOfficeKey);
           }
         }
 
-        if (!DRY_RUN) {
-          await prisma.listing.update({ where: { id: listing.id }, data: updateData });
+        if (Object.keys(updateData).length > 0) {
+          if (!DRY_RUN) await prisma.listing.update({ where: { id: local.id }, data: updateData });
+          totalUpdated++;
         }
-        batchUpdated++;
-        totalUpdated++;
-      } catch (err: any) {
-        totalErrors++;
-        console.error(`  ❌ id=${listing.id}: ${err.message}`);
       }
+
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      process.stdout.write('.');
+      if (totalScanned % 1000 === 0) {
+        console.log(` (Scanned ${totalScanned} | Updated ${totalUpdated} | skip=${skip} | ${elapsed}s)`);
+      }
+
+      if (records.length < API_PAGE_SIZE) break;
+      skip += API_PAGE_SIZE;
+    } catch (e: any) {
+      console.error(`\n  ⚠️  Warning at skip=${skip}: ${e.message}`);
+      consecutiveErrors++;
+      await new Promise(res => setTimeout(res, 2000));
+      skip += API_PAGE_SIZE;
     }
-
-    cursor = listings[listings.length - 1].id;
-
-    if (batchUpdated === 0) {
-      consecutiveEmpty++;
-    } else {
-      consecutiveEmpty = 0;
-    }
-
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-    console.log(
-      `  📦 P3 Batch ${batchNum}: scanned=${listings.length} | updated=${batchUpdated} | apiHits=${apiMap.size} | total=${totalUpdated}/${needCount} | ${elapsed}s`
-    );
-
-    if (consecutiveEmpty >= 50) {
-      console.log(`  ⏹  50 consecutive empty batches — API has no more useful data. Stopping.`);
-      break;
-    }
-
-    await new Promise(r => setTimeout(r, API_DELAY_MS));
   }
 
-  console.log(`\n  ✅ Phase 3 complete: ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors`);
+  console.log(`\n  ✅ Phase 3 complete: ${totalUpdated} updated, ${totalScanned} scanned.`);
 }
 
-
-// ═══════════════════════════════════════════════════════════════════
-//  MAIN
-// ═══════════════════════════════════════════════════════════════════
 (async () => {
-  console.log('═══════════════════════════════════════════════════════════');
-  console.log('  BACKFILL LISTINGS — Production-Safe Field Recovery v3');
-  console.log('═══════════════════════════════════════════════════════════');
-  console.log(`  Mode:       ${DRY_RUN ? '🔍 DRY RUN (no writes)' : '🔥 LIVE — writing to DB'}`);
-  const phases = PHASE1_ONLY ? 'Phase 1 only' :
-    PHASE2_ONLY ? 'Phase 2 only' :
-    PHASE3_ONLY ? 'Phase 3 only' :
-    NO_API ? 'Phase 1 + 2 (no API)' :
-    'Phase 1 + 2 + 3';
-  console.log(`  Phases:     ${phases}`);
-  console.log(`  Batch size: ${BATCH_SIZE} (Phase 2) / ${API_BATCH_SIZE} (Phase 3)`);
-  console.log('───────────────────────────────────────────────────────────');
-
-  if (!DRY_RUN) {
-    console.log('\n⚠️  LIVE MODE — Updates will be written to the database.');
-    console.log('    Starting in 3 seconds... (Ctrl+C to abort)\n');
-    await new Promise(r => setTimeout(r, 3000));
+  try {
+    if (!PHASE2_ONLY && !PHASE3_ONLY) await phase1();
+    if (!PHASE1_ONLY && !PHASE3_ONLY) await phase2();
+    if (!PHASE1_ONLY && !PHASE2_ONLY && !NO_API) await phase3();
+  } catch (e) {
+    console.error('\n❌ Fatal error:', e);
+  } finally {
+    await prisma.$disconnect();
   }
-
-  // ─── Pre-flight counts ─────────────────────────────────────────
-  const total = await prisma.listing.count({ where: { isActive: true } });
-  const nullLink = await prisma.listing.count({ where: { isActive: true, moreInformationLink: null } });
-  const nullPhoto = await prisma.listing.count({ where: { isActive: true, primaryPhotoUrl: null } });
-  const nullAgent = await prisma.listing.count({ where: { isActive: true, agentName: null } });
-  const nullPhone = await prisma.listing.count({ where: { isActive: true, agentPhone: null } });
-  const nullOffice = await prisma.listing.count({ where: { isActive: true, officeName: null } });
-  const nullMedia = await prisma.listing.count({ where: { isActive: true, mediaJson: { equals: null } } });
-
-  console.log(`\n📊 PRE-FLIGHT (${total} active listings):`);
-  console.log(`   NULL moreInformationLink: ${nullLink}`);
-  console.log(`   NULL primaryPhotoUrl:     ${nullPhoto}`);
-  console.log(`   NULL agentName:           ${nullAgent}`);
-  console.log(`   NULL agentPhone:          ${nullPhone}`);
-  console.log(`   NULL officeName:          ${nullOffice}`);
-  console.log(`   NULL mediaJson:           ${nullMedia}`);
-
-  const t0 = Date.now();
-
-  // ─── Run Phases ────────────────────────────────────────────────
-  if (!SINGLE_PHASE || PHASE1_ONLY) await phase1();
-  if (!SINGLE_PHASE || PHASE2_ONLY) await phase2();
-  if ((!SINGLE_PHASE && !NO_API) || PHASE3_ONLY) await phase3();
-
-  // ─── Post-run validation ──────────────────────────────────────
-  console.log('\n───────────────────────────────────────────────────────────');
-  console.log('  POST-RUN VALIDATION');
-  console.log('───────────────────────────────────────────────────────────');
-
-  const postLink = await prisma.listing.count({ where: { isActive: true, moreInformationLink: null } });
-  const postPhoto = await prisma.listing.count({ where: { isActive: true, primaryPhotoUrl: null } });
-  const postAgent = await prisma.listing.count({ where: { isActive: true, agentName: null } });
-  const postPhone = await prisma.listing.count({ where: { isActive: true, agentPhone: null } });
-  const postOffice = await prisma.listing.count({ where: { isActive: true, officeName: null } });
-  const postMedia = await prisma.listing.count({ where: { isActive: true, mediaJson: { equals: null } } });
-
-  console.log(`  moreInformationLink: ${nullLink} → ${postLink}  (fixed ${nullLink - postLink})`);
-  console.log(`  primaryPhotoUrl:     ${nullPhoto} → ${postPhoto}  (fixed ${nullPhoto - postPhoto})`);
-  console.log(`  agentName:           ${nullAgent} → ${postAgent}  (fixed ${nullAgent - postAgent})`);
-  console.log(`  agentPhone:          ${nullPhone} → ${postPhone}  (fixed ${nullPhone - postPhone})`);
-  console.log(`  officeName:          ${nullOffice} → ${postOffice}  (fixed ${nullOffice - postOffice})`);
-  console.log(`  mediaJson:           ${nullMedia} → ${postMedia}  (fixed ${nullMedia - postMedia})`);
-
-  // ── Specific validation: NULL primaryPhotoUrl where media exists
-  const photoNullButMediaExists: any[] = await prisma.$queryRaw`
-    SELECT COUNT(*) as cnt FROM "Listing"
-    WHERE "isActive" = true
-      AND "primary_photo_url" IS NULL
-      AND ("media_json" IS NOT NULL OR "primaryPhoto" IS NOT NULL)
-  `;
-  const orphanCount = Number(photoNullButMediaExists[0]?.cnt || 0);
-  if (orphanCount > 0) {
-    console.log(`\n  ⚠️  ${orphanCount} listings still have NULL primaryPhotoUrl despite having media data`);
-    console.log(`     (likely invalid image URLs that failed validation)`);
-  } else {
-    console.log(`\n  ✅ All listings with media data have a valid primaryPhotoUrl`);
-  }
-
-  // Sample 10 records
-  if (!DRY_RUN) {
-    console.log('\n  📋 Sample of 10 recently updated:');
-    const samples = await prisma.listing.findMany({
-      where: { isActive: true },
-      select: {
-        listingKey: true,
-        moreInformationLink: true,
-        agentName: true,
-        primaryPhotoUrl: true,
-        officeName: true,
-        mediaJson: true,
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 10,
-    });
-    for (const s of samples) {
-      const mediaCount = Array.isArray(s.mediaJson) ? (s.mediaJson as any[]).length : 0;
-      console.log(
-        `    ${s.listingKey} | link=${s.moreInformationLink ? '✅' : '❌'} | agent=${s.agentName || '—'} | photo=${s.primaryPhotoUrl ? '✅' : '❌'} | office=${s.officeName || '—'} | media=${mediaCount}`
-      );
-    }
-  }
-
-  const totalElapsed = ((Date.now() - t0) / 1000).toFixed(1);
-
-  // ── Summary ───────────────────────────────────────────────────
-  console.log(`\n═══════════════════════════════════════════════════════════`);
-  console.log(`  SUMMARY`);
-  console.log(`═══════════════════════════════════════════════════════════`);
-  console.log(`  Duration:     ${totalElapsed}s`);
-  console.log(`  Total active: ${total}`);
-  console.log(`  Fields fixed: ${(nullLink - postLink) + (nullPhoto - postPhoto) + (nullAgent - postAgent) + (nullPhone - postPhone) + (nullOffice - postOffice) + (nullMedia - postMedia)} field-values across all listings`);
-  console.log(`═══════════════════════════════════════════════════════════`);
-
-  if (DRY_RUN) {
-    console.log('\n💡 DRY RUN complete. To apply:');
-    console.log('   npx tsx scripts/backfill-listings.ts --commit');
-    console.log('   npx tsx scripts/backfill-listings.ts --commit --no-api     (skip DDF API)');
-    console.log('   npx tsx scripts/backfill-listings.ts --commit --phase1     (SQL bulk only)');
-    console.log('   npx tsx scripts/backfill-listings.ts --commit --phase2     (rawData extraction only)');
-    console.log('   npx tsx scripts/backfill-listings.ts --commit --phase3     (API only)\n');
-  }
-
-  await prisma.$disconnect();
-  process.exit(0);
-})().catch(async (err) => {
-  console.error('\n❌ FATAL ERROR:', err);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+})();

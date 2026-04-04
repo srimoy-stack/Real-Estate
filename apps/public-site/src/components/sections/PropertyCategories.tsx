@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { SafeImage } from '@/components/ui';
 
 const CATEGORIES = [
-    { title: 'Commercial', count: 124, image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial' },
-    { title: 'Lease', count: 310, image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Lease' },
-    { title: 'Office Space', count: 186, image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=office' },
-    { title: 'Industrial', count: 78, image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=industrial' },
-    { title: 'Retail', count: 142, image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial&q=retail' },
-    { title: 'Mixed Use', count: 56, image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=800', href: '/search?propertyType=Commercial,Lease' },
+    { title: 'Commercial', count: '5,086', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial' },
+    { title: 'Lease', count: '2,840', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?type=lease' },
+    { title: 'Office Space', count: '1,035', image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800', href: '/search?type=office' },
+    { title: 'Industrial', count: 917, image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&q=80&w=800', href: '/search?type=industrial' },
+    { title: 'Retail', count: '1,444', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', href: '/search?type=retail' },
+    { title: 'Mixed Use', count: 591, image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial&q=mixed' },
 ];
 
 export const PropertyCategories = () => {

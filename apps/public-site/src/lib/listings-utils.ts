@@ -45,6 +45,28 @@ export interface ListingQuery {
 }
 
 /**
+ * Centralized Category Configuration
+ * To update what counts as "Commercial", "Agriculture", or "Lease", 
+ * simply edit these lists. This provides flexibility for future changes.
+ */
+export const CLASSIFICATION_MAP = {
+    commercial: {
+        subTypes: ['Industrial', 'Office', 'Retail', 'Business', 'Investment', 'Warehouse', 'Agriculture', 'Acreage', 'Land', 'Hospitality', 'Commercial'],
+        excludeSubTypes: ['Single Family', 'Condo', 'Townhouse', 'Modular Home', 'Multi-family', 'Apartment'],
+        excludeTypes: ['Residential']
+    },
+    lease: {
+        keywords: ['Lease', 'Rent'],
+        remarks: ['for lease', 'for rent', 'commercial lease'],
+        excludeSubTypes: ['Single Family', 'Condo', 'Residential', 'Multi-family', 'Apartment']
+    },
+    residential: {
+        subTypes: ['Single Family', 'Condo', 'Townhouse', 'Modular Home', 'Duplex', 'Triplex', 'Fourplex', 'Multi-family', 'Apartment'],
+        types: ['Residential']
+    }
+} as const;
+
+/**
  * Centralized Soft-Delete Wrapper
  * Ensures isActive: true is enforced across the platform.
  */
@@ -86,6 +108,7 @@ const LISTING_SELECT_FIELDS = {
     photosChangeTimestamp: true,
     mediaJson: true,
     rawData: true, // Necessary if the API response expects these fields (per route.ts mapping)
+    listingDate: true,
 };
 
 /**
@@ -376,51 +399,76 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
     minYearBuilt: (v) => { const n = safeInt(v); return n !== null ? { yearBuilt: { gte: n } } : null; },
     maxYearBuilt: (v) => { const n = safeInt(v); return n !== null ? { yearBuilt: { lte: n } } : null; },
 
-    // 5. Types & Status
+    // 5. Types & Status — Uses normalizedPropertyType (DB source of truth)
     propertyType: (v) => {
         const s = String(v).trim();
         if (!s || s === 'Any') return null;
         
         // Support multiple types via comma separation
-        const types = s.split(',').map(t => t.trim()).filter(Boolean);
+        const types = s.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
         
         const getConditionForType = (t: string): Prisma.ListingWhereInput => {
-            if (t === 'Residential') {
+            const lowT = t.toLowerCase();
+            
+            // ── Dynamic Category Filtering ────────────────────────────────────
+            // Uses the centralized CLASSIFICATION_MAP for maximum flexibility.
+            
+            if (lowT === 'commercial') {
+                const config = CLASSIFICATION_MAP.commercial;
                 return {
-                    OR: [
-                        { propertyType: { contains: 'Residential', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Single Family', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Multi-family', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Condo', mode: 'insensitive' } }
+                    AND: [
+                        {
+                            OR: [
+                                ...config.subTypes.map(st => ({ propertySubType: { contains: st, mode: 'insensitive' as const } })),
+                            ]
+                        },
+                        {
+                            NOT: {
+                                OR: [
+                                    ...config.excludeSubTypes.map(st => ({ propertySubType: { contains: st, mode: 'insensitive' as const } })),
+                                    ...config.excludeTypes.map(st => ({ propertyType: { contains: st, mode: 'insensitive' as const } })),
+                                ]
+                            }
+                        }
                     ]
                 };
             }
-            if (t === 'Commercial') {
+            
+            if (lowT === 'lease') {
+                const config = CLASSIFICATION_MAP.lease;
                 return {
-                    OR: [
-                        { propertyType: { contains: 'Commercial', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Industrial', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Office', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Retail', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Business', mode: 'insensitive' } }
+                    AND: [
+                        {
+                            OR: [
+                                ...config.keywords.map(kw => ({ propertySubType: { contains: kw, mode: 'insensitive' as const } })),
+                                ...config.keywords.map(kw => ({ propertyType: { contains: kw, mode: 'insensitive' as const } })),
+                                ...config.remarks.map(rem => ({ publicRemarks: { contains: rem, mode: 'insensitive' as const } })),
+                            ]
+                        },
+                        {
+                            NOT: {
+                                OR: [
+                                    ...config.excludeSubTypes.map(st => ({ propertySubType: { contains: st, mode: 'insensitive' as const } })),
+                                ]
+                            }
+                        }
                     ]
                 };
             }
-            if (t === 'Lease') {
+            
+            if (lowT === 'residential') {
+                const config = CLASSIFICATION_MAP.residential;
                 return {
                     OR: [
-                        { propertyType: { contains: 'Lease', mode: 'insensitive' } },
-                        { propertySubType: { contains: 'Lease', mode: 'insensitive' } },
-                        { publicRemarks: { contains: 'Lease', mode: 'insensitive' } },
-                        { rawData: { path: ['TransactionType'], equals: 'For Lease' } }
+                        ...config.types.map(tp => ({ propertyType: { contains: tp, mode: 'insensitive' as const } })),
+                        ...config.subTypes.map(st => ({ propertySubType: { contains: st, mode: 'insensitive' as const } })),
                     ]
                 };
             }
+            
+            // For specific subtypes (e.g., "Duplex", "Farm")
             return {
-                OR: [
-                    { propertyType: { contains: t, mode: 'insensitive' } },
-                    { propertySubType: { contains: t, mode: 'insensitive' } }
-                ]
+                propertySubType: { contains: t, mode: 'insensitive' }
             };
         };
 

@@ -170,6 +170,7 @@ export async function GET(request: NextRequest) {
         standardStatus: listing.standardStatus,
         StandardStatus: listing.standardStatus,
         PropertySubType: listing.propertySubType,
+        normalizedPropertyType: listing.normalizedPropertyType,
         UnparsedAddress: listing.address,
         City: listing.city,
         StateOrProvince: listing.province,

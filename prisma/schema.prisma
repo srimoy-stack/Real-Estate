@@ -51,6 +51,8 @@ model Listing {
 
   rawData               Json?
 
+  normalizedPropertyType String?  @map("normalized_property_type")
+
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -60,6 +62,8 @@ model Listing {
   @@index([listingDate])
   @@index([createdAt])
   @@index([isActive, city, listPrice])
+  @@index([normalizedPropertyType])
+  @@index([isActive, normalizedPropertyType])
 }
 
 model Lead {

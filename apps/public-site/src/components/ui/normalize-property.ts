@@ -87,6 +87,13 @@ export interface NormalizedProperty {
  *   "Lease" → Lease
  */
 function deriveCategory(data: any): PropertyCategory {
+  // 1. DB Source of Truth (Prioritize normalizedPropertyType from our own API)
+  const dbType = data.normalizedPropertyType || data.normalized_property_type;
+  if (dbType && ['commercial', 'residential', 'lease'].includes(dbType.toLowerCase())) {
+    return dbType.toLowerCase() as PropertyCategory;
+  }
+
+  // 2. Legacy / External API Fallback Guessing Logic
   const type = (
     data.PropertyType ||
     data.propertyType ||
@@ -115,10 +122,12 @@ function deriveCategory(data: any): PropertyCategory {
     type.includes('retail') ||
     type.includes('industrial') ||
     type.includes('land') ||
-    type.includes('multi-family') ||
     type.includes('mixed')
   )
     return 'commercial';
+
+  // Multi-family is often classified as Residential in DB unless explicitly commercial
+  if (type.includes('multi-family')) return 'residential';
 
   return 'residential';
 }

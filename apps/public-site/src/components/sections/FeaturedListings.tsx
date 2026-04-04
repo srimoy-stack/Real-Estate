@@ -11,7 +11,7 @@ import { ListingsSection } from './ListingsSection';
 export const FeaturedListings: React.FC = () => {
     return (
         <ListingsSection
-            limit={20}
+            limit={60}
             sort="latest"
             title="Featured Commercial & Lease Properties"
             subtitle="Explore premium commercial opportunities and high-value lease listings curated for professional investors and businesses."
