@@ -11,13 +11,13 @@ import { ListingsSection } from './ListingsSection';
 export const FeaturedListings: React.FC = () => {
     return (
         <ListingsSection
-            limit={60}
+            limit={50}
             sort="latest"
             title="Featured Commercial & Lease Properties"
             subtitle="Explore premium commercial opportunities and high-value lease listings curated for professional investors and businesses."
             showViewAll={true}
-            viewAllHref="/search?propertyType=Commercial,Lease"
-            filters={{ propertyType: "Commercial,Lease" }}
+            viewAllHref="/search?propertyType=Commercial,Lease&province=Ontario"
+            filters={{ propertyType: "Commercial,Lease", province: "Ontario" }}
         />
     );
 };

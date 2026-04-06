@@ -14,7 +14,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
 
     return (
         <Link href={`/blog/${post.slug}`} className="group block h-full">
-            <div className="flex flex-col h-full bg-white rounded-[2rem] overflow-hidden border border-slate-100 hover:border-indigo-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
+            <div className="flex flex-col h-full bg-white rounded-[2rem] overflow-hidden border border-slate-100 hover:border-red-100 shadow-sm hover:shadow-2xl hover:shadow-[#4F46E5]/10 transition-all duration-500">
                 <div className="relative aspect-video overflow-hidden bg-slate-100">
                     {post.featuredImage ? (
                         <SafeImage
@@ -44,7 +44,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
                             <span className="h-1 w-1 rounded-full bg-slate-200" />
                             <span>{post.author}</span>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-indigo-600 transition-colors">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-[#4F46E5] transition-colors">
                             {post.title}
                         </h3>
                         <p className="text-slate-500 font-medium line-clamp-3 leading-relaxed">
@@ -53,7 +53,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({ post }) => {
                     </div>
 
                     <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                        <div className="text-indigo-600 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        <div className="text-[#4F46E5] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
                             Read More
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                         </div>

@@ -9,7 +9,7 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          red: '#e11b22', // Realtor.ca Signature Red
+          red: '#4F46E5', // Rebranded from Red to SquareFT Indigo
           navy: '#0F172A',
           charcoal: '#333333',
         },

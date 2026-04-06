@@ -14,13 +14,6 @@ import { NormalizedProperty, autoNormalize } from './normalize-property';
 import { SafeImage } from './SafeImage';
 import { resolveListingUrl } from '@/lib/resolve-listing-url';
 
-// ─── Realtor.ca wordmark SVG (official red #cc0000) ───────────────
-const RealtorLogo = () => (
-  <svg viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="REALTOR.ca" className="h-[13px] w-auto">
-    <text x="0" y="17" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="15" fill="#cc0000" letterSpacing="0.5">REALTOR</text>
-    <text x="79" y="17" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="15" fill="#cc0000">.ca</text>
-  </svg>
-);
 
 // ─── Props ───────────────────────────────────────────────────────
 interface UnifiedPropertyCardProps {
@@ -28,6 +21,8 @@ interface UnifiedPropertyCardProps {
   listing: any;
   /** Stagger animation index */
   index?: number;
+  /** Callback when auth is required (user not logged in). If set, card click is gated. */
+  onAuthRequired?: () => void;
 }
 
 // ─── Icons ───────────────────────────────────────────────────────
@@ -39,7 +34,7 @@ const PinIcon = () => (
 );
 
 // ─── Component ───────────────────────────────────────────────────
-export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardProps) {
+export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: UnifiedPropertyCardProps) {
   // ─── Normalize data ──
   const prop: NormalizedProperty = listing._normalized ? listing : autoNormalize(listing);
 
@@ -137,6 +132,12 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if user clicked the external link
     if ((e.target as HTMLElement).closest('[data-external-link]')) return;
+    // Gate navigation behind auth if callback provided
+    if (onAuthRequired) {
+      e.preventDefault();
+      onAuthRequired();
+      return;
+    }
     router.push(prop.href);
   };
 
@@ -161,7 +162,9 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
           alt={displayTitle} 
           seed={seed}
           fill
-          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] ${isPlaceholder ? 'opacity-40 grayscale' : ''}`}
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out 
+            ${onAuthRequired ? 'blur-[8px] brightness-75 group-hover:blur-[4px] grayscale-[0.5]' : 'group-hover:scale-[1.04]'} 
+            ${isPlaceholder ? 'opacity-40 grayscale' : ''}`}
         />
 
         {isPlaceholder && (
@@ -202,7 +205,7 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
           {/* MLS Badge (Top-Right) — always visible */}
           <div className="flex flex-col items-end gap-1.5">
              <div className="rounded-md bg-[#111827] px-2 py-1 shadow-md">
-                <span className="text-[10px] font-bold tracking-widest text-white uppercase">MLS® Verified</span>
+                <span className="text-[9px] font-black tracking-[0.2em] text-white uppercase">Verified Listing</span>
              </div>
              {/* Status Badge */}
              <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm ${status.bg}`}>
@@ -210,6 +213,18 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
              </span>
           </div>
         </div>
+
+        {/* Auth-required hover overlay — subtle hint for unauthenticated users */}
+        {onAuthRequired && (
+          <div className="absolute inset-0 z-[4] flex items-center justify-center bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
+            <div className="flex items-center gap-2 rounded-full bg-black/70 backdrop-blur-md px-4 py-2 shadow-2xl border border-white/10">
+              <svg className="h-3.5 w-3.5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span className="text-[11px] font-black uppercase tracking-widest text-white">Sign in for details</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══════════════ CONTENT ══════════════ */}
@@ -263,16 +278,13 @@ export function UnifiedPropertyCard({ listing, index = 0 }: UnifiedPropertyCardP
             rel="noopener noreferrer"
             data-external-link
             className="flex items-center justify-between group/ext"
-            aria-label="View full listing on REALTOR.ca"
+            aria-label="View property details"
           >
-            {/* Left: logo + DDF badge */}
+            {/* Left: Info Indicator */}
             <div className="flex items-center gap-2">
-              <RealtorLogo />
-              <span className="flex items-center gap-1 rounded-full bg-[#cc0000]/10 px-2 py-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#cc0000] animate-pulse" />
-                <span className="text-[9px] font-bold uppercase tracking-widest text-[#cc0000]">
-                  DDF®
-                </span>
+              <div className="h-2 w-2 rounded-full bg-[#cc0000] animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800">
+                Property Source
               </span>
             </div>
 

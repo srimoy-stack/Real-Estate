@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export function EmptyState() {
+export function EmptyState({ onReset }: { onReset?: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center py-20 px-4">
             {/* Icon */}
@@ -21,6 +21,15 @@ export function EmptyState() {
             <p className="mb-6 max-w-sm text-center text-sm text-gray-500 leading-relaxed">
                 We couldn&apos;t find any properties matching your criteria. Try adjusting your filters or search for a different location.
             </p>
+
+            {onReset && (
+                <button
+                    onClick={onReset}
+                    className="mb-8 rounded-xl bg-brand-red px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-indigo-600 active:scale-95"
+                >
+                    Clear All Filters
+                </button>
+            )}
 
             {/* Suggestions */}
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -41,8 +50,8 @@ export function EmptyState() {
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-red-50">
-                <svg className="h-10 w-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-50">
+                <svg className="h-10 w-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
             </div>

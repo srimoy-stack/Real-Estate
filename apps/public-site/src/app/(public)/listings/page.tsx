@@ -15,7 +15,7 @@ const MapWithNoSSR = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: 'Search Real Estate Listings | Skyline Estates',
+  title: 'Search Real Estate Listings | SquareFT',
   description: 'Find your perfect home with our advanced property search. Filter by location, price, property type, and more.',
 };
 
@@ -73,7 +73,7 @@ export default async function ListingsPage({
                 Live MLS® Sync
               </div>
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter italic">
               Discover Your <span className="text-red-600">Domain</span>.
             </h1>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">

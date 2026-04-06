@@ -34,15 +34,13 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                 <SafeImage src={logoUrl} alt={brandName} fill className="object-contain" />
               </div>
             ) : (
-              <div className="flex items-center gap-2.5">
-                <div className="h-10 w-10 rounded-xl bg-brand-red shadow-lg shadow-brand-red/20 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                  <span className="text-white text-[10px] font-black tracking-tighter uppercase italic">RE</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-black tracking-tight text-slate-900 leading-none">
-                    {brandName.split(' ')[0]} <span className="text-brand-red">{brandName.split(' ').slice(1).join(' ')}</span>
-                  </span>
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">Exclusive Real Estate</span>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5">
+                    <div className="h-7 w-7 bg-[#4F46E5] flex-shrink-0 rounded-[2px]" />
+                    <div className="flex items-baseline leading-none">
+                        <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Square</span>
+                        <span className="text-2xl font-black text-[#4F46E5] tracking-tighter uppercase ml-0.5">FT</span>
+                    </div>
                 </div>
               </div>
             )}
@@ -142,7 +140,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                         <Link
                             href="/contact"
                             onClick={() => setMobileOpen(false)}
-                            className="flex items-center justify-center h-14 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20"
+                            className="flex items-center justify-center h-14 rounded-2xl bg-brand-red text-white font-black uppercase tracking-widest shadow-xl shadow-brand-red/20"
                         >
                             Contact Agent
                         </Link>

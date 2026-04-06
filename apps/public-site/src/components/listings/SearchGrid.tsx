@@ -67,7 +67,7 @@ export const SearchGrid = ({ initialListings, filters }: SearchGridProps) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
-                <h3 className="text-3xl font-black text-slate-900 italic mb-3">No properties found</h3>
+                <h3 className="text-xl font-black text-slate-900 italic mb-3">No properties found</h3>
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Try adjusting your filters for more results</p>
             </div>
         );
@@ -105,7 +105,7 @@ export const SearchGrid = ({ initialListings, filters }: SearchGridProps) => {
                                 </span>
                             ) : 'Explore More Results'}
                         </span>
-                        <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-[#4F46E5] translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                     </button>
                 </div>
             )}

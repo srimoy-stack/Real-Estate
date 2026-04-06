@@ -34,7 +34,7 @@ function formatMarkerPrice(price: number | null): string {
 const createMarkerIcon = (label: string, isHovered: boolean, isActive: boolean) => {
     if (typeof window === 'undefined') return undefined;
     
-    const bgColor = isActive ? 'bg-red-600' : isHovered ? 'bg-red-500' : 'bg-slate-900';
+    const bgColor = isActive ? 'bg-red-600' : isHovered ? 'bg-indigo-500' : 'bg-slate-900';
     const textColor = 'text-white';
     const scale = isActive || isHovered ? 'scale-110 shadow-xl' : 'scale-100 shadow-md';
     const zIndex = isActive ? 'z-[1000]' : isHovered ? 'z-[900]' : 'z-[100]';

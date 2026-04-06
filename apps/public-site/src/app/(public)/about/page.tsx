@@ -14,7 +14,7 @@ export default function AboutPage() {
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 via-rose-300 to-amber-300" />
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                             Redefining the <span className="text-emerald-600">Home Search</span> experience.
                         </h1>
                         <p className="mt-6 text-xl text-gray-500 leading-relaxed">
@@ -119,7 +119,7 @@ export default function AboutPage() {
             {/* Contact CTA */}
             <section className="py-24 bg-white">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-8 italic">Ready to find your <span className="text-emerald-600">next chapter?</span></h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-8 italic">Ready to find your <span className="text-emerald-600">next chapter?</span></h2>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a href="/listings" className="w-full sm:w-auto px-10 py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
                             Browse Listings

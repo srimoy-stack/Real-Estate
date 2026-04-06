@@ -31,7 +31,7 @@ export default function CareersPage() {
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 via-rose-300 to-amber-300" />
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="max-w-3xl">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                             Build the <span className="text-emerald-600">Future</span> of Real Estate.
                         </h1>
                         <p className="mt-6 text-xl text-gray-500 leading-relaxed">

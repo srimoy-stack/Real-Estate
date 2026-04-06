@@ -44,15 +44,19 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
         y: 1 - (((lat - bounds.minLat) / latRange) * (1 - 2 * padding) + padding),
     });
 
-    const price = (val: number) =>
-        new Intl.NumberFormat('en-CA', {
+    const price = (val: number) => {
+        if (!val || val <= 0) return 'Contact Us';
+        if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
+        if (val >= 1_000) return `$${(val / 1_000).toFixed(0)}k`;
+        return new Intl.NumberFormat('en-CA', {
             style: 'currency',
             currency: 'CAD',
             maximumFractionDigits: 0,
         }).format(val);
+    };
 
     return (
-        <div className="relative w-full h-full bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-50 rounded-3xl overflow-hidden border border-slate-200/60">
+        <div className="relative w-full h-full bg-gradient-to-br from-slate-100 via-sky-50 to-slate-50 rounded-3xl overflow-hidden border border-slate-200/60">
             {/* Map "Tiles" visual texture */}
             <div className="absolute inset-0 opacity-30">
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -106,8 +110,8 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                         <div className="relative">
                             <div
                                 className={`px-3 py-1.5 rounded-xl font-black text-xs tracking-tight shadow-xl transition-all duration-300 whitespace-nowrap ${isHighlighted || isSelected
-                                    ? 'bg-indigo-600 text-white shadow-indigo-300'
-                                    : 'bg-white text-slate-900 shadow-slate-300/50 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-300'
+                                    ? 'bg-[#E11B22] text-white shadow-red-200'
+                                    : 'bg-white text-slate-900 shadow-slate-300/50 hover:bg-[#E11B22] hover:text-white hover:shadow-red-200'
                                     }`}
                             >
                                 {price(listing.price)}
@@ -115,13 +119,13 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                             {/* Pin tail */}
                             <div
                                 className={`absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 rotate-45 shadow-lg transition-colors duration-300 ${isHighlighted || isSelected
-                                    ? 'bg-indigo-600'
+                                    ? 'bg-[#E11B22]'
                                     : 'bg-white'
                                     }`}
                             />
                             {/* Pulse ring for highlighted */}
                             {(isHighlighted || isSelected) && (
-                                <div className="absolute -inset-2 rounded-2xl border-2 border-indigo-400 animate-ping opacity-30" />
+                                <div className="absolute -inset-2 rounded-2xl border-2 border-[#E11B22]/60 animate-ping opacity-30" />
                             )}
                         </div>
                     </button>
@@ -157,13 +161,13 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                                 />
                             </div>
                             <div className="absolute top-2 left-2">
-                                <span className="bg-emerald-500 text-white px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                    {selectedListing.status === 'ACTIVE' ? 'For Sale' : selectedListing.status}
+                                <span className="bg-[#E11B22] text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow">
+                                    {selectedListing.status === 'ACTIVE' ? 'For Sale' : (selectedListing.status || 'Active')}
                                 </span>
                             </div>
                         </div>
                         <div className="p-4">
-                            <p className="text-lg font-black text-indigo-600 mb-1">
+                            <p className="text-lg font-black text-[#E11B22] mb-1">
                                 {price(selectedListing.price)}
                             </p>
                             <h4 className="text-sm font-bold text-slate-900 mb-0.5 line-clamp-1">
@@ -195,7 +199,7 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                                 </span>
                                 <Link
                                     href={`/listing/${selectedListing.mlsNumber}`}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors"
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#E11B22] transition-colors"
                                 >
                                     View Details
                                 </Link>
@@ -205,25 +209,17 @@ export const IDXMapPlaceholder: React.FC<IDXMapPlaceholderProps> = ({
                 </div>
             )}
 
-            {/* Map Legend */}
-            <div className="absolute top-4 left-4 bg-white/80 backdrop-blur-md rounded-xl px-4 py-3 shadow-lg border border-white/60">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 bg-indigo-600 rounded-md flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
-                        Interactive Map
-                    </span>
+            {/* Bottom-left attribution */}
+            {listingsWithCoords.length < listings.length && (
+                <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-md rounded-xl px-3 py-2 shadow border border-white/60 pointer-events-none">
+                    <p className="text-[10px] text-slate-400 font-semibold">
+                        {listings.length - listingsWithCoords.length} listing{listings.length - listingsWithCoords.length !== 1 ? 's' : ''} without coordinates hidden
+                    </p>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">
-                    {listingsWithCoords.length} of {listings.length} properties plotted
-                </p>
-            </div>
+            )}
 
-            {/* Zoom controls (decorative) */}
-            <div className="absolute top-4 right-4 flex flex-col gap-1">
+            {/* Zoom controls (decorative) — moved to bottom-right so they don't clash with parent badge */}
+            <div className="absolute bottom-4 right-4 flex flex-col gap-1">
                 <button className="w-9 h-9 bg-white/80 backdrop-blur-md rounded-lg shadow-lg border border-white/60 flex items-center justify-center text-slate-600 hover:bg-white transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />

@@ -52,7 +52,7 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                             <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{listing.agentName || (listing as any).AgentName || 'Contact our team'}</h3>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(listing as any).agentTitle || (listing as any).AgentTitle || 'Listing Expert'}</p>
                             {listing.brokerageName && (
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-indigo-600/60 mt-1">{listing.brokerageName}</p>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#4F46E5]/60 mt-1">{listing.brokerageName}</p>
                             )}
                         </div>
                     </div>
@@ -88,7 +88,7 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                 {/* Float Ads Badge */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl flex items-center justify-between group">
                     <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Premium Partner</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#4F46E5]">Premium Partner</p>
                         <p className="text-xs font-bold text-slate-900">32,000+ Active Buyers</p>
                     </div>
                     <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black group-hover:rotate-12 transition-transform">
@@ -104,7 +104,7 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                 </a>
                 <button
                     onClick={() => setIsFormOpen(true)}
-                    className="flex-1 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-600/20"
+                    className="flex-1 bg-[#4F46E5] text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-[#4F46E5]/20"
                 >
                     Inquire Now
                 </button>
@@ -171,21 +171,21 @@ const ScheduleTourForm = ({ listing }: { listing: Listing }) => {
                 </div>
                 <h3 className="text-base font-black text-slate-900">Thank you! Your inquiry has been sent.</h3>
                 <p className="text-sm text-slate-500">An agent will confirm your tour time shortly.</p>
-                <button onClick={() => setIsSuccess(false)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline">Book another</button>
+                <button onClick={() => setIsSuccess(false)} className="text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] transition-colors underline">Book another</button>
             </div>
         );
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-indigo-600 text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-center shadow-lg shadow-indigo-600/20">
+            <div className="bg-[#4F46E5] text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-center shadow-lg shadow-[#4F46E5]/20">
                 Book an Appointment
             </div>
             {error && <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium text-center">{error}</div>}
-            <input required type="text" placeholder="Your Name *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all" />
-            <input required type="email" placeholder="Email Address *" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all" />
-            <input required type="tel" placeholder="Phone Number *" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all" />
-            <select value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-indigo-500 transition-all appearance-none cursor-pointer">
+            <input required type="text" placeholder="Your Name *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-[#4F46E5]/70 transition-all" />
+            <input required type="email" placeholder="Email Address *" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-[#4F46E5]/70 transition-all" />
+            <input required type="tel" placeholder="Phone Number *" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-[#4F46E5]/70 transition-all" />
+            <select value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:bg-white focus:border-[#4F46E5]/70 transition-all appearance-none cursor-pointer">
                 <option value="">Please select a time</option>
                 <option>10:00 AM</option>
                 <option>11:00 AM</option>

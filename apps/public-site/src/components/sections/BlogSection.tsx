@@ -8,7 +8,7 @@ import { BlogPost } from '@repo/types';
 
 export const BlogSection = () => {
     const [posts, setPosts] = useState<BlogPost[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isBlogLoading, setIsBlogLoading] = useState(true);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -18,13 +18,13 @@ export const BlogSection = () => {
             } catch (error) {
                 console.error('Failed to fetch blog posts:', error);
             } finally {
-                setLoading(false);
+                setIsBlogLoading(false);
             }
         };
         fetchPosts();
     }, []);
 
-    if (loading) return null;
+    if (isBlogLoading) return null;
 
     return (
         <section className="py-24 bg-white overflow-hidden">
@@ -32,11 +32,11 @@ export const BlogSection = () => {
                 <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
                     <div className="max-w-xl space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Our Journal</span>
+                            <div className="h-1 w-8 bg-[#4F46E5] rounded-full" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4F46E5]">Our Journal</span>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                            Industry <span className="text-indigo-600 italic">Insights</span>
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
+                            Industry <span className="text-[#4F46E5] italic">Insights</span>
                         </h2>
                         <p className="text-slate-500 font-medium">
                             Stay informed with the latest market analysis, lifestyle trends, and expert real estate advice.
@@ -66,16 +66,16 @@ export const BlogSection = () => {
                             </Link>
 
                             <div className="space-y-4 px-2">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[#4F46E5]/80">
                                     {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
                                 </p>
-                                <h3 className="text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+                                <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#4F46E5] transition-colors leading-tight">
                                     <Link href={`/blog/${post.slug}`}>{post.title}</Link>
                                 </h3>
                                 <p className="text-slate-500 font-medium line-clamp-2">
                                     {post.excerpt}
                                 </p>
-                                <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-900 group-hover:text-[#4F46E5] transition-colors">
                                     Read Full Story
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                                 </Link>

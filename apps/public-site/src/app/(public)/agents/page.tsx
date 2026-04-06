@@ -28,12 +28,12 @@ export default function AgentsDirectoryPage() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 {/* Header Section */}
                 <div className="text-center max-w-3xl mx-auto mb-20">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 mb-6">
-                        <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-[#4F46E5] mb-6">
+                        <span className="w-2 h-2 rounded-full bg-[#4F46E5] animate-pulse" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Our Team</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter leading-[0.9] mb-8">
-                        Meet the Experts Behind <span className="text-indigo-600 italic">Your New Home</span>
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-6">
+                        Meet the Experts Behind <span className="text-[#4F46E5] italic">Your New Home</span>
                     </h1>
                     <p className="text-lg text-slate-500 font-medium leading-relaxed">
                         Our dedicated team of professionals is here to guide you through every step of your real estate journey.

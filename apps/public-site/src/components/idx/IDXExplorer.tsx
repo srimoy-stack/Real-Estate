@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, PropertyType, ListingStatus } from '@repo/types';
 import { UnifiedPropertyCard } from '@/components/ui';
+import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
+import { useAuth } from '@repo/auth';
 import { IDXMapPlaceholder } from './IDXMapPlaceholder';
 
 // ─── Filter State ──────────────────────────────────────
@@ -66,6 +68,8 @@ export const IDXExplorer: React.FC = () => {
     const [highlightedId, _setHighlightedId] = useState<string | null>(null);
     const [selectedMapListing, setSelectedMapListing] = useState<Listing | null>(null);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const { isAuthenticated, hasHydrated } = useAuth();
 
     // ─── Build Query ───────────────────────────────────
     const buildQuery = useCallback(
@@ -156,9 +160,9 @@ export const IDXExplorer: React.FC = () => {
 
     // ─── Select Styles ────────────────────────────────
     const selectClass =
-        'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 font-semibold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all appearance-none cursor-pointer';
+        'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 font-semibold focus:border-[#4F46E5]/70 focus:ring-4 focus:ring-[#4F46E5]/10 outline-none transition-all appearance-none cursor-pointer';
     const inputClass =
-        'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all';
+        'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 font-semibold placeholder:text-slate-400 focus:border-[#4F46E5]/70 focus:ring-4 focus:ring-[#4F46E5]/10 outline-none transition-all';
 
     // ─── Skeleton Cards ────────────────────────────────
     const SkeletonCard = () => (
@@ -183,13 +187,13 @@ export const IDXExplorer: React.FC = () => {
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 mb-8">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div>
-                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 mb-2">
-                            <span className="w-8 h-px bg-indigo-600" />
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#4F46E5] mb-2">
+                            <span className="w-8 h-px bg-[#4F46E5]" />
                             IDX Property Explorer
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
                             Find Your{' '}
-                            <span className="text-indigo-600 italic">Dream Home</span>
+                            <span className="text-[#4F46E5] italic">Dream Home</span>
                         </h1>
                         <p className="text-sm font-medium text-slate-400 mt-2">
                             {loading
@@ -204,8 +208,8 @@ export const IDXExplorer: React.FC = () => {
                         <button
                             onClick={() => setShowMap(!showMap)}
                             className={`hidden lg:flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${showMap
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                    : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-300'
+                                    ? 'bg-[#4F46E5] text-white shadow-lg shadow-indigo-200'
+                                    : 'bg-white text-slate-600 border border-slate-200 hover:border-[#4F46E5]/40'
                                 }`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,7 +222,7 @@ export const IDXExplorer: React.FC = () => {
                         <button
                             onClick={() => setMobileMapOpen(!mobileMapOpen)}
                             className={`lg:hidden flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${mobileMapOpen
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                    ? 'bg-[#4F46E5] text-white shadow-lg shadow-indigo-200'
                                     : 'bg-white text-slate-600 border border-slate-200'
                                 }`}
                         >
@@ -243,7 +247,7 @@ export const IDXExplorer: React.FC = () => {
                             </svg>
                             <input
                                 type="text"
-                                placeholder="Address, MLS®, Keyword..."
+                                placeholder="Address, MLS#, Keyword..."
                                 value={filters.keyword}
                                 onChange={(e) => updateFilter('keyword', e.target.value)}
                                 className={`${inputClass} pl-10`}
@@ -321,7 +325,7 @@ export const IDXExplorer: React.FC = () => {
                         {/* Toggle more filters */}
                         <button
                             onClick={() => setFiltersExpanded(!filtersExpanded)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                            className="flex items-center gap-1.5 text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] transition-colors"
                         >
                             <svg
                                 className={`w-4 h-4 transition-transform ${filtersExpanded ? 'rotate-180' : ''}`}
@@ -338,7 +342,7 @@ export const IDXExplorer: React.FC = () => {
                         <select
                             value={filters.status}
                             onChange={(e) => updateFilter('status', e.target.value)}
-                            className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:border-indigo-400 outline-none cursor-pointer"
+                            className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:border-[#4F46E5]/70 outline-none cursor-pointer"
                         >
                             <option value="">Any Status</option>
                             {Object.values(ListingStatus).map((s) => (
@@ -350,7 +354,7 @@ export const IDXExplorer: React.FC = () => {
                         <select
                             value={filters.sort}
                             onChange={(e) => updateFilter('sort', e.target.value)}
-                            className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:border-indigo-400 outline-none cursor-pointer"
+                            className="text-xs font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:border-[#4F46E5]/70 outline-none cursor-pointer"
                         >
                             <option value="newest">Newest First</option>
                             <option value="price_asc">Price: Low to High</option>
@@ -447,7 +451,7 @@ export const IDXExplorer: React.FC = () => {
                                 </p>
                                 <button
                                     onClick={clearFilters}
-                                    className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-colors"
+                                    className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#4F46E5] transition-colors"
                                 >
                                     Clear All Filters
                                 </button>
@@ -465,6 +469,7 @@ export const IDXExplorer: React.FC = () => {
                                             <UnifiedPropertyCard
                                                 listing={listing}
                                                 index={index}
+                                                onAuthRequired={(!isAuthenticated && hasHydrated) ? () => setIsLoginModalOpen(true) : undefined}
                                             />
                                         </div>
                                     ))}
@@ -496,7 +501,7 @@ export const IDXExplorer: React.FC = () => {
                                                     </>
                                                 )}
                                             </span>
-                                            <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                                            <div className="absolute inset-0 bg-[#4F46E5] translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                                         </button>
                                     </div>
                                 )}
@@ -527,6 +532,11 @@ export const IDXExplorer: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <LeadCaptureModal 
+                isOpen={isLoginModalOpen} 
+                onSuccess={() => setIsLoginModalOpen(false)} 
+            />
 
             {/* ─── Animations ─────────────────────────────── */}
             <style jsx>{`

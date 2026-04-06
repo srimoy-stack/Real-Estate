@@ -77,7 +77,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                            <p className="text-3xl font-black text-slate-900">
+                            <p className="text-2xl font-black text-slate-900">
                                 ${calculateMonthlyPayment.totalMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </p>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">per month</p>
@@ -86,7 +86,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
 
                     <div className="grid grid-cols-1 gap-4 w-full">
                         {[
-                            { label: 'Principal and Interest', color: 'bg-indigo-600', value: calculateMonthlyPayment.principalInterest },
+                            { label: 'Principal and Interest', color: 'bg-[#4F46E5]', value: calculateMonthlyPayment.principalInterest },
                             { label: 'Property Tax', color: 'bg-sky-400', value: calculateMonthlyPayment.propertyTax },
                             { label: 'HOA fee', color: 'bg-rose-400', value: calculateMonthlyPayment.hoa },
                             { label: 'Private Mortgage Insurance', color: 'bg-purple-400', value: calculateMonthlyPayment.pmi },
@@ -112,7 +112,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                     type="number"
                                     value={totalAmount}
                                     onChange={(e) => setTotalAmount(Number(e.target.value))}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                 />
                                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">$</span>
                             </div>
@@ -126,7 +126,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                         type="number"
                                         value={downPayment}
                                         onChange={(e) => handleDownPaymentChange(Number(e.target.value))}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">$</span>
                                 </div>
@@ -135,7 +135,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                         type="number"
                                         value={Math.round(downPaymentPercent)}
                                         onChange={(e) => handleDownPaymentPercentChange(Number(e.target.value))}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">%</span>
                                 </div>
@@ -151,7 +151,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                     type="number"
                                     value={loanTerms}
                                     onChange={(e) => setLoanTerms(Number(e.target.value))}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -162,7 +162,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                         step="0.001"
                                         value={interestRate}
                                         onChange={(e) => setInterestRate(Number(e.target.value))}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">%</span>
                                 </div>
@@ -177,7 +177,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                     step="0.0001"
                                     value={propertyTaxRate}
                                     onChange={(e) => setPropertyTaxRate(Number(e.target.value))}
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                 />
                             </div>
                             <div className="space-y-1.5">
@@ -187,7 +187,7 @@ export const MortgageCalculator = ({ price: initialPrice }: MortgageCalculatorPr
                                         type="number"
                                         value={pmi}
                                         onChange={(e) => setPmi(Number(e.target.value))}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-4 py-4 font-bold text-slate-900 focus:bg-white focus:border-[#4F46E5]/70 transition-all outline-none"
                                     />
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">$</span>
                                 </div>

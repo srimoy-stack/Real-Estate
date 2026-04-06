@@ -5,15 +5,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --brand-primary: #059669;
-  --brand-primary-hover: #047857;
-  --brand-accent: #D4736C;
+  /* ── Brand Colors ─────────────────────────────── */
+  --brand-primary:       #4F46E5;  /* SquareFT Indigo */
+  --brand-primary-hover: #4338CA;  /* Darker indigo for hover states */
+  --brand-primary-light: #EEF2FF;  /* Light indigo tint (indigo-50 equivalent) */
+  --brand-navy:          #0F172A;  /* Deep navy for dark elements */
+  --brand-charcoal:      #333333;  /* Softer dark for text */
+
+  /* ── Neutral Palette ──────────────────────────── */
+  --color-text-primary:   #111827; /* gray-900 */
+  --color-text-secondary: #6B7280; /* gray-500 */
+  --color-text-muted:     #9CA3AF; /* gray-400 */
+  --color-border:         #E5E7EB; /* gray-200 */
+  --color-surface:        #F9FAFB; /* gray-50 */
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text-primary);
 }
 
 /* Smooth scrolling */
@@ -21,10 +32,16 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Clean focus styles */
+/* Clean focus styles — brand red ring */
 *:focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
+}
+
+/* Text selection colors */
+::selection {
+  background-color: rgba(225, 27, 34, 0.12);
+  color: var(--brand-primary-hover);
 }
 
 /* Custom scrollbar — minimal */
@@ -61,3 +78,19 @@ html {
 .animate-in {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Custom scrollbar for results list in Map View */
+.custom-results-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-results-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-results-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+.custom-results-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+

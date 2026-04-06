@@ -92,7 +92,7 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
         <section id="statistics" className="bg-white p-8 sm:p-12 rounded-[48px] border border-slate-100 shadow-sm space-y-16">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">Market Insights</h2>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight italic">Market Insights</h2>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                         Helping you gauge property popularity and buyer interest relative to local market demand
                     </p>
@@ -103,7 +103,7 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                              <button
                                 key={range}
                                 onClick={() => setTimeRange(range as any)}
-                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${timeRange === range ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${timeRange === range ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                              >
                                  {range} Days
                              </button>
@@ -116,8 +116,8 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                 </div>
             </div>
 
-            <div className="rounded-3xl bg-indigo-50/50 border border-indigo-100/50 p-6">
-                <p className="text-xs font-semibold leading-relaxed text-indigo-700">
+            <div className="rounded-3xl bg-indigo-50/50 border border-red-100/50 p-6">
+                <p className="text-xs font-semibold leading-relaxed text-[#4338CA]">
                     <strong className="block mb-1 text-sm">How this helps you:</strong>
                     These performance metrics help buyers understand the level of competition for this property. A high number of saves and inquiries typically indicates a fast-moving listing, allowing you to prioritize your decision-making and showing requests.
                 </p>
@@ -129,7 +129,7 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                     <div key={i} className="group relative space-y-3 p-6 rounded-3xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 cursor-default">
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-500 transition-colors">{stat.label}</p>
                         <div className="flex items-end gap-3">
-                            <p className="text-3xl font-black text-slate-900">{stat.value}</p>
+                            <p className="text-2xl font-black text-slate-900">{stat.value}</p>
                             <span className={`text-[10px] font-black pb-1 ${stat.trend.startsWith('+') ? 'text-emerald-600' : 'text-amber-500'}`}>
                                 {stat.trend}
                             </span>
@@ -148,7 +148,7 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-indigo-600 rounded-sm" />
+                            <div className="w-4 h-4 bg-[#4F46E5] rounded-sm" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Views</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -157,9 +157,9 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                         </div>
                     </div>
                     {(selectedId !== null || true) && (
-                         <div className="animate-in fade-in slide-in-from-right-4 duration-500 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl flex items-center gap-4">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{data[selectedId ?? (data.length - 1)].date}</span>
-                            <span className="text-sm font-black text-indigo-600">{data[selectedId ?? (data.length - 1)].views}k Interactions</span>
+                         <div className="animate-in fade-in slide-in-from-right-4 duration-500 bg-indigo-50 border border-red-100 px-4 py-2 rounded-xl flex items-center gap-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#4F46E5]/60">{data[selectedId ?? (data.length - 1)].date}</span>
+                            <span className="text-sm font-black text-[#4F46E5]">{data[selectedId ?? (data.length - 1)].views}k Interactions</span>
                          </div>
                     )}
                 </div>
@@ -182,14 +182,14 @@ export const PropertyStats = ({ listing }: PropertyStatsProps) => {
                                 <div className="absolute inset-x-0 bottom-0 bg-slate-50/50 rounded-t-lg h-full -z-10 transition-colors group-hover:bg-slate-100/50" />
                                 
                                 <div
-                                    className={`w-full min-w-[6px] sm:min-w-[12px] transition-all duration-700 rounded-t-lg relative ${selectedId === i || (selectedId === null && i === data.length - 1) ? 'bg-indigo-600 shadow-lg shadow-indigo-600/20' : 'bg-slate-200 group-hover:bg-indigo-300'}`}
+                                    className={`w-full min-w-[6px] sm:min-w-[12px] transition-all duration-700 rounded-t-lg relative ${selectedId === i || (selectedId === null && i === data.length - 1) ? 'bg-[#4F46E5] shadow-lg shadow-[#4F46E5]/20' : 'bg-slate-200 group-hover:bg-[#4F46E5]/40'}`}
                                     style={{ 
                                         height: `${Math.max((item.views / maxViews) * 100, 4)}%`,
                                         transitionDelay: `${i * 10}ms`
                                     }}
                                 >
                                     {(selectedId === i || (selectedId === null && i === data.length - 1)) && (
-                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white border-2 border-indigo-600 shadow-xl scale-125 z-10" />
+                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#4F46E5] shadow-xl scale-125 z-10" />
                                     )}
                                 </div>
 

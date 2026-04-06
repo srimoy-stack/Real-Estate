@@ -32,9 +32,9 @@ export const TestimonialsSection = () => {
         <section className="py-24 bg-slate-50 relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Client Stories</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                        What Our <span className="text-indigo-600 italic">Clients Say</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4F46E5]">Client Stories</span>
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
+                        What Our <span className="text-[#4F46E5] italic">Clients Say</span>
                     </h2>
                     <p className="text-slate-500 font-medium">
                         Our reputation is built on the success of our clients and the enduring relationships we foster within our communities.
@@ -60,7 +60,7 @@ export const TestimonialsSection = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-extrabold text-slate-900 leading-none">{t.name}</h4>
-                                    <p className="text-xs font-black uppercase tracking-widest text-indigo-500 mt-1">{t.role}</p>
+                                    <p className="text-xs font-black uppercase tracking-widest text-[#4F46E5]/80 mt-1">{t.role}</p>
                                 </div>
                             </div>
                         </div>

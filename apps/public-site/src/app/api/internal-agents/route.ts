@@ -70,7 +70,7 @@ export async function GET() {
                                 email: m.MemberEmail || `${m.MemberFirstName?.toLowerCase()}.${m.MemberLastName?.toLowerCase()}@${(m.OfficeName || 'brokerage').toLowerCase().replace(/[^a-z0-9]+/g, '')}.ca`,
                                 phone: m.MemberDirectPhone || m.MemberOfficePhone || '(416) 555-0100',
                                 profilePhoto: photo,
-                                bio: `${fullName} is an expert advisor at ${m.OfficeName || 'Skyline Estates'}, committed to delivering luxury-grade service and strategic market insights.`,
+                                bio: `${fullName} is an expert advisor at ${m.OfficeName || 'SquareFT'}, committed to delivering luxury-grade service and strategic market insights.`,
                                 organizationId: 'org-1',
                                 socialLinks: { linkedin: 'https://linkedin.com', facebook: 'https://facebook.com', instagram: 'https://instagram.com' },
                                 createdAt: new Date().toISOString(),

@@ -22,8 +22,8 @@ export const CommunitiesSection = () => {
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Status: Optimal</span>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                            Explore <span className="text-indigo-600 italic">Communities</span>
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
+                            Explore <span className="text-[#4F46E5] italic">Communities</span>
                         </h2>
                         <p className="text-slate-500 font-medium">
                             Discover the unique character, local amenities, and market trends of Canada&apos;s most vibrant neighborhoods.

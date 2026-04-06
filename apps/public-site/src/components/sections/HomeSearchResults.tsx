@@ -9,6 +9,8 @@ import { ListingGridSkeleton } from '@/app/listings-demo/components/Skeletons';
 import { EmptyState, ErrorState } from '@/app/listings-demo/components/StateDisplays';
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
 import { resolveGeoBounds } from '@/app/listings-demo/utils';
+import { useAuth } from '@repo/auth';
+import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
 
 const PAGE_SIZE = 15;
 
@@ -25,6 +27,13 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
     const [hasSearched, setHasSearched] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+
+    const { isAuthenticated, hasHydrated } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const handleAuthRequired = () => {
+        setIsLoginModalOpen(true);
+    };
 
     const [filters, setFilters] = useState<FilterState>({
         ...DEFAULT_FILTERS,
@@ -111,7 +120,32 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
             hasAutoLoaded.current = true;
             executeSearch(filters, false);
         }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filters, executeSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ─── Scroll-based Gating Trigger ─────────────
+    useEffect(() => {
+        if (!isAuthenticated && hasHydrated && resultsRef.current) {
+            let timer: NodeJS.Timeout;
+
+            const observer = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting) {
+                    // Longer delay for search results as they are more "exploratory"
+                    timer = setTimeout(() => {
+                        setIsLoginModalOpen(true);
+                    }, 2000);
+                } else {
+                    clearTimeout(timer);
+                }
+            }, { threshold: 0.1 });
+
+            observer.observe(resultsRef.current);
+
+            return () => {
+                observer.disconnect();
+                clearTimeout(timer);
+            };
+        }
+    }, [isAuthenticated, hasHydrated]);
 
     // When hero search bar submits — update filters and re-search
     useEffect(() => {
@@ -156,12 +190,12 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
                             </p>
                         </div>
 
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[10px] font-black text-brand-red shadow-sm border border-red-100 uppercase tracking-widest">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[10px] font-black text-brand-red shadow-sm border border-indigo-100 uppercase tracking-widest">
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
                             </span>
-                            REALTOR.ca® · Live MLS® Data
+                            Live Platform Data · Verified Listings
                         </div>
                     </div>
                 )}
@@ -191,7 +225,12 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                             {listings.slice(0, PAGE_SIZE).map((l: MLSProperty, i: number) => (
-                                <UnifiedPropertyCard key={l.ListingKey || `l-${i}`} listing={l} index={i} />
+                                <UnifiedPropertyCard 
+                                    key={l.ListingKey || `l-${i}`} 
+                                    listing={l} 
+                                    index={i} 
+                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? handleAuthRequired : undefined}
+                                />
                             ))}
                         </div>
                     </div>
@@ -229,7 +268,7 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
                                             key={pageNum}
                                             onClick={() => goToPage(pageNum)}
                                             className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${currentPage === pageNum
-                                                    ? 'bg-brand-red text-white shadow-lg shadow-red-200'
+                                                    ? 'bg-brand-red text-white shadow-lg shadow-indigo-200'
                                                     : 'border border-slate-100 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
                                                 }`}
                                         >
@@ -265,6 +304,11 @@ export const HomeSearchResults = ({ searchParams }: HomeSearchResultsProps) => {
                 @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                 .animate-in { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
             `}</style>
+
+            <LeadCaptureModal 
+                isOpen={isLoginModalOpen} 
+                onSuccess={() => setIsLoginModalOpen(false)} 
+            />
         </section>
     );
 };

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SafeImage } from '@/components/ui';
+
 import type { FooterColumn, SocialLinksConfig } from '@repo/types';
 import { RealtorBadge } from '@/components/listings/RealtorBadge';
 
@@ -89,20 +89,8 @@ export function Footer({ brandName, columns, socialLinks, copyrightText }: Foote
           </div>
         </div>
 
-        {/* Industry Trust Section */}
-        <div className="mt-20 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-6 opacity-60">
-                <SafeImage src="https://www.realtor.ca/images/en-ca/realtor_ca_logo.svg" alt="REALTOR.ca" width={100} height={24} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
-                <div className="h-6 w-px bg-slate-200" />
-                <SafeImage src="https://www.crea.ca/wp-content/uploads/2019/07/CREA-Logo_EN.svg" alt="CREA" width={80} height={20} className="grayscale hover:grayscale-0 transition-all cursor-pointer opacity-70 hover:opacity-100" />
-            </div>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-                The trademarks REALTOR®, REALTORS® and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA) 
-                and identify real estate professionals who are members of CREA. The trademarks MLS®, Multiple Listing Service® and 
-                the associated logos are owned by CREA and identify the quality of services provided by real estate professionals who are members of CREA.
-            </p>
-          </div>
+        {/* Mandatory DDF Attribution Removed */}
+
           
           <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red leading-none italic">Verified MLS® Partner</span>
@@ -114,7 +102,6 @@ export function Footer({ brandName, columns, socialLinks, copyrightText }: Foote
             </Link>
           </div>
         </div>
-      </div>
 
       {/* Bottom Legal / Copyright */}
       <div className="bg-slate-50 py-10 border-t border-slate-100">

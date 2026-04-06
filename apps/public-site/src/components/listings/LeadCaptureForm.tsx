@@ -119,7 +119,7 @@ export const LeadCaptureForm = ({
                 </p>
                 <button
                     onClick={() => setSuccess(false)}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors underline"
+                    className="text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] transition-colors underline"
                 >
                     Send another message
                 </button>
@@ -142,7 +142,7 @@ export const LeadCaptureForm = ({
                     type="text"
                     id="lead-name"
                     placeholder="Full Name *"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all bg-slate-50/50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4F46E5]/70 focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all bg-slate-50/50"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -155,7 +155,7 @@ export const LeadCaptureForm = ({
                     type="email"
                     id="lead-email"
                     placeholder="Email Address *"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all bg-slate-50/50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4F46E5]/70 focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all bg-slate-50/50"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                 />
@@ -168,7 +168,7 @@ export const LeadCaptureForm = ({
                     type="tel"
                     id="lead-phone"
                     placeholder="Phone Number *"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all bg-slate-50/50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4F46E5]/70 focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all bg-slate-50/50"
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                 />
@@ -178,7 +178,7 @@ export const LeadCaptureForm = ({
             <textarea
                 rows={3}
                 id="lead-message"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none bg-slate-50/50"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#4F46E5]/70 focus:ring-2 focus:ring-[#4F46E5]/20 outline-none transition-all resize-none bg-slate-50/50"
                 value={formData.message}
                 onChange={e => setFormData({ ...formData, message: e.target.value })}
             />
@@ -193,7 +193,7 @@ export const LeadCaptureForm = ({
                 disabled={loading}
                 type="submit"
                 id="lead-submit-btn"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                className="w-full bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#4F46E5]/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
             >
                 {loading ? (
                     <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -204,9 +204,9 @@ export const LeadCaptureForm = ({
 
             <p className="text-[10px] text-slate-400 text-center leading-relaxed">
                 By submitting, you agree to our{' '}
-                <a href="/privacy" className="text-indigo-500 hover:underline">Privacy Policy</a>
+                <a href="/privacy" className="text-[#4F46E5]/80 hover:underline">Privacy Policy</a>
                 {' '}and{' '}
-                <a href="/terms" className="text-indigo-500 hover:underline">Terms of Service</a>.
+                <a href="/terms" className="text-[#4F46E5]/80 hover:underline">Terms of Service</a>.
             </p>
         </form>
     );

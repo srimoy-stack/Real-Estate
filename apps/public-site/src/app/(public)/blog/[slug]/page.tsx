@@ -45,9 +45,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     if (!post) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4">
-                <h1 className="text-4xl font-black text-slate-900 mb-4 text-center">Article Not Found</h1>
+                <h1 className="text-xl font-black text-slate-900 mb-4 text-center">Article Not Found</h1>
                 <p className="text-slate-500 mb-8 max-w-md text-center">The story you&apos;re looking for might have been moved or unpublished.</p>
-                <Link href="/blog" className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-900 transition-all">
+                <Link href="/blog" className="px-8 py-4 bg-[#4F46E5] text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-900 transition-all">
                     Back to Journal
                 </Link>
             </div>
@@ -62,10 +62,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <header className="pt-40 pb-20 overflow-hidden bg-slate-50 relative">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                     <div className="flex flex-col items-center gap-6 mb-8">
-                        <span className="bg-indigo-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                        <span className="bg-[#4F46E5] text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
                             {category}
                         </span>
-                        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9] max-w-3xl">
+                        <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight max-w-3xl">
                             {title}
                         </h1>
                     </div>
@@ -102,7 +102,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     className="prose prose-slate prose-lg max-w-none 
                         prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900
                         prose-p:text-slate-600 prose-p:leading-relaxed prose-p:font-medium
-                        prose-a:text-indigo-600 prose-a:font-black prose-a:no-underline hover:prose-a:underline
+                        prose-a:text-[#4F46E5] prose-a:font-black prose-a:no-underline hover:prose-a:underline
                         prose-img:rounded-[32px] prose-img:shadow-2xl
                         prose-ul:list-disc prose-li:font-medium prose-li:text-slate-600"
                     dangerouslySetInnerHTML={{ __html: content }}
@@ -114,14 +114,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Share this story</span>
                         <div className="flex gap-4">
                             {['Twitter', 'Facebook', 'LinkedIn'].map(p => (
-                                <button key={p} className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-indigo-600 transition-all">
+                                <button key={p} className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-[#4F46E5] transition-all">
                                     <span className="sr-only">{p}</span>
                                     <div className="w-4 h-4 bg-current rounded-sm" />
                                 </button>
                             ))}
                         </div>
                     </div>
-                    <Link href="/blog" className="text-sm font-black text-slate-900 hover:text-indigo-600 flex items-center gap-2 transition-colors uppercase tracking-widest">
+                    <Link href="/blog" className="text-sm font-black text-slate-900 hover:text-[#4F46E5] flex items-center gap-2 transition-colors uppercase tracking-widest">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>

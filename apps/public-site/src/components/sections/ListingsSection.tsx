@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, ListingSectionFilters, ListingSortOrder } from '@repo/types';
 import { UnifiedPropertyCard } from '@/components/ui';
+import { useAuth } from '@repo/auth';
+import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
 
 // ─── Types ─────────────────────────────────────────────
 export interface ListingsSectionConfig {
@@ -48,18 +50,52 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 }) => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [totalCount, setTotalCount] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [isListingsLoading, setIsListingsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const { isAuthenticated, hasHydrated } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    const handleAuthRequired = () => {
+        setIsLoginModalOpen(true);
+    };
+
+    const sectionRef = useRef<HTMLElement>(null);
 
     // Memoize filter key to avoid unnecessary refetches
     const filterKey = useMemo(() => JSON.stringify({ configName, filters, limit, sort }), [configName, filters, limit, sort]);
+
+    // ─── Scroll-based Gating Trigger ─────────────
+    useEffect(() => {
+        if (!isAuthenticated && hasHydrated && sectionRef.current) {
+            let timer: NodeJS.Timeout;
+
+            const observer = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting) {
+                    // Slight delay before popup
+                    timer = setTimeout(() => {
+                        setIsLoginModalOpen(true);
+                    }, 800);
+                } else {
+                    clearTimeout(timer);
+                }
+            }, { threshold: 0.2 });
+
+            observer.observe(sectionRef.current);
+
+            return () => {
+                observer.disconnect();
+                clearTimeout(timer);
+            };
+        }
+    }, [isAuthenticated, hasHydrated]);
 
     useEffect(() => {
         let cancelled = false;
 
         const fetchListings = async () => {
             try {
-                setLoading(true);
+                setIsListingsLoading(true);
                 setError(null);
 
                 let results: Listing[] = [];
@@ -75,6 +111,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     if (filters.maxPrice) params.set('maxPrice', String(filters.maxPrice));
                     if (filters.bedrooms) params.set('bedrooms', String(filters.bedrooms));
                     if (filters.bathrooms) params.set('bathrooms', String(filters.bathrooms));
+                    if (filters.province) params.set('province', String(filters.province));
                     if (limit) params.set('limit', String(limit));
                     if (sort) params.set('sort', String(sort));
 
@@ -105,7 +142,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 }
             } finally {
                 if (!cancelled) {
-                    setLoading(false);
+                    setIsListingsLoading(false);
                 }
             }
         };
@@ -118,7 +155,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ─── Loading State ─────────────────────────────────
-    if (loading) {
+    if (isListingsLoading) {
         return (
             <section className={`py-20 bg-white overflow-hidden ${className}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,17 +241,22 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     if (filters.maxPrice) activeFilters.push({ label: 'Max', value: `$${filters.maxPrice.toLocaleString()}` });
     if (filters.bedrooms) activeFilters.push({ label: 'Beds', value: `${filters.bedrooms}+` });
     if (filters.bathrooms) activeFilters.push({ label: 'Baths', value: `${filters.bathrooms}+` });
+    if (filters.province) activeFilters.push({ label: 'Province', value: filters.province });
 
     // ─── Main Render ───────────────────────────────────
     return (
-        <section className={`py-24 bg-white overflow-hidden ${className}`}>
+        <>
+            <section 
+                ref={sectionRef}
+                className={`py-24 bg-white overflow-hidden ${className}`}
+            >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* ─── Section Header ───────────────────────── */}
                 <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-16">
                     <div className="max-w-xl space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                            <div className="h-1 w-8 bg-[#4F46E5] rounded-full" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4F46E5]">
                                 Properties
                             </span>
                             {totalCount > 0 && (
@@ -223,16 +265,16 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                                 </span>
                             )}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+                        <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
                             {title.split(' ').length > 1 ? (
                                 <>
                                     {title.split(' ').slice(0, -1).join(' ')}{' '}
-                                    <span className="text-indigo-600 italic">
+                                    <span className="text-[#4F46E5] italic">
                                         {title.split(' ').slice(-1)}
                                     </span>
                                 </>
                             ) : (
-                                <span className="text-indigo-600 italic">{title}</span>
+                                <span className="text-[#4F46E5] italic">{title}</span>
                             )}
                         </h2>
                         <p className="text-slate-500 font-medium">{subtitle}</p>
@@ -243,9 +285,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                                 {activeFilters.map((f, i) => (
                                     <span
                                         key={i}
-                                        className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-bold"
+                                        className="inline-flex items-center gap-1.5 bg-indigo-50 text-[#4338CA] px-3 py-1.5 rounded-xl text-xs font-bold"
                                     >
-                                        <span className="text-indigo-400 text-[10px] uppercase tracking-wider">{f.label}:</span>
+                                        <span className="text-[#4F46E5]/60 text-[10px] uppercase tracking-wider">{f.label}:</span>
                                         {f.value}
                                     </span>
                                 ))}
@@ -255,7 +297,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
                     {showViewAll && (
                         <a href={viewAllHref}>
-                            <button className="h-14 px-10 bg-slate-900 hover:bg-indigo-600 text-white font-black uppercase tracking-widest rounded-2xl transition-all flex items-center gap-3 shadow-xl shadow-slate-200 whitespace-nowrap">
+                            <button className="h-14 px-10 bg-slate-900 hover:bg-[#4F46E5] text-white font-black uppercase tracking-widest rounded-2xl transition-all flex items-center gap-3 shadow-xl shadow-slate-200 whitespace-nowrap">
                                 View All Listings
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -273,7 +315,11 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                             className="opacity-0 animate-[fadeSlideUp_0.5s_ease-out_forwards]"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            <UnifiedPropertyCard listing={listing} index={index} />
+                            <UnifiedPropertyCard 
+                                listing={listing} 
+                                index={index} 
+                                onAuthRequired={(!isAuthenticated && hasHydrated) ? handleAuthRequired : undefined}
+                            />
                         </div>
                     ))}
                 </div>
@@ -293,6 +339,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 }
             `}</style>
         </section>
+
+            <LeadCaptureModal 
+                isOpen={isLoginModalOpen} 
+                onSuccess={() => setIsLoginModalOpen(false)} 
+            />
+        </>
     );
 };
 

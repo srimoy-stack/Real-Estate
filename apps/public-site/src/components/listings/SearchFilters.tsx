@@ -40,7 +40,7 @@ function FilterSelect({
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 pr-8 text-xs font-bold text-slate-900 outline-none transition-all hover:border-indigo-200 focus:border-indigo-500 focus:bg-white cursor-pointer"
+                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5 pr-8 text-xs font-bold text-slate-900 outline-none transition-all hover:border-red-200 focus:border-[#4F46E5]/70 focus:bg-white cursor-pointer"
                 >
                     {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -78,7 +78,7 @@ function RangeSelect({
                 <select
                     value={minValue}
                     onChange={(e) => onMinChange(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-2 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all hover:border-indigo-200 focus:border-indigo-500 focus:bg-white cursor-pointer"
+                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-2 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all hover:border-red-200 focus:border-[#4F46E5]/70 focus:bg-white cursor-pointer"
                 >
                     {minOptions.map((v) => <option key={v} value={v}>{formatLabel(v, 'Min')}</option>)}
                 </select>
@@ -86,7 +86,7 @@ function RangeSelect({
                 <select
                     value={maxValue}
                     onChange={(e) => onMaxChange(e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-2 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all hover:border-indigo-200 focus:border-indigo-500 focus:bg-white cursor-pointer"
+                    className="w-full appearance-none rounded-xl border border-slate-100 bg-slate-50/50 px-2 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all hover:border-red-200 focus:border-[#4F46E5]/70 focus:bg-white cursor-pointer"
                 >
                     {maxOptions.map((v) => <option key={v} value={v}>{formatLabel(v, 'Max')}</option>)}
                 </select>
@@ -154,7 +154,7 @@ export const SearchFilters = () => {
                                 <button
                                     key={type}
                                     onClick={() => updateFilter('listingType', type)}
-                                    className={`rounded-lg px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${filters.listingType === type ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    className={`rounded-lg px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${filters.listingType === type ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                         }`}
                                 >
                                     {type}
@@ -197,7 +197,7 @@ export const SearchFilters = () => {
                     <div className="flex items-center gap-3 ml-auto self-end pb-0.5">
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${isExpanded ? 'border-indigo-200 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                            className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${isExpanded ? 'border-red-200 bg-indigo-50 text-[#4338CA]' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                                 }`}
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -205,7 +205,7 @@ export const SearchFilters = () => {
                             </svg>
                             Filters
                             {activeCount > 0 && (
-                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[8px] font-black text-white ml-1 shadow-lg shadow-indigo-200">
+                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#4F46E5] text-[8px] font-black text-white ml-1 shadow-lg shadow-indigo-200">
                                     {activeCount}
                                 </span>
                             )}
@@ -268,7 +268,7 @@ export const SearchFilters = () => {
                                     value={filters.keyword}
                                     onChange={(e) => updateFilter('keyword', e.target.value)}
                                     placeholder="Pool, Waterfront, MLS® ID..."
-                                    className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-2 text-xs font-bold text-slate-900 outline-none transition-all hover:border-indigo-200 focus:border-indigo-500 focus:bg-white"
+                                    className="w-full rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-2 text-xs font-bold text-slate-900 outline-none transition-all hover:border-red-200 focus:border-[#4F46E5]/70 focus:bg-white"
                                 />
                                 <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                             </div>

@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from '@/app/listings-demo/components/StateDisp
 import { fetchAggregatedListings, fetchListings } from '@/app/listings-demo/api';
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
 import { resolveGeoBounds } from '@/app/listings-demo/utils';
+import { IDXMapPlaceholder } from '@/components/idx/IDXMapPlaceholder';
 
 const PAGE_SIZE = 90;
 
@@ -30,33 +31,31 @@ export default function SearchPage() {
         return () => { document.body.style.overflow = ''; };
     }, [isGated]);
 
+    const transaction = searchParams.get('transaction') || 'buy';
+    const isLeaseMode = transaction === 'lease';
+
     // ─── Search State ───────────────────────────────────────────
-    const [filters, setFilters] = useState<FilterState>(() => ({
-        ...DEFAULT_FILTERS,
-        searchQuery: searchParams.get('q') || '',
-        city: searchParams.get('city') || 'Toronto',
-        listingType: (searchParams.get('listingType') as 'Residential' | 'Commercial') || 'Residential',
-        propertyType: searchParams.get('propertyType') || 'Any',
-        minPrice: searchParams.get('minPrice') || '',
-        maxPrice: searchParams.get('maxPrice') || '',
-        sortBy: searchParams.get('sortBy') || 'newest',
-        order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
-    }));
+    const [filters, setFilters] = useState<FilterState>(() => {
+        const transType = isLeaseMode ? 'For Rent' : 'For Sale';
+        const propType = searchParams.get('propertyType') || 'Retail';
+        const listType = 'Commercial' as const;
 
-    // ─── Property Type Filter Handler ───────────────────────────────────
-    const PROPERTY_TYPE_OPTIONS = [
-        { label: 'All Types', value: 'Any', icon: '🏢' },
-        { label: 'Residential', value: 'Residential', icon: '🏠' },
-        { label: 'Commercial', value: 'Commercial', icon: '🏗️' },
-        { label: 'Lease', value: 'Lease', icon: '📝' },
-    ];
+        return {
+            ...DEFAULT_FILTERS,
+            searchQuery: searchParams.get('q') || '',
+            city: searchParams.get('city') || 'Toronto',
+            listingType: listType,
+            propertyType: propType,
+            transactionType: transType,
+            minPrice: searchParams.get('minPrice') || '',
+            maxPrice: searchParams.get('maxPrice') || '',
+            sortBy: searchParams.get('sortBy') || 'newest',
+            order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
+            province: searchParams.get('province') || '',
+        };
+    });
 
-    const handlePropertyTypeChange = (value: string) => {
-        const newFilters = { ...filters, propertyType: value };
-        setFilters(newFilters);
-        handleSearch(newFilters);
-    };
-
+    // ─── Component State ─────────────────────────────────────────
     const [listings, setListings] = useState<MLSProperty[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -65,9 +64,34 @@ export default function SearchPage() {
     const [hasSearched, setHasSearched] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+    const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+    const [selectedMapListing, setSelectedMapListing] = useState<any>(null);
 
     const searchIdRef = useRef<number>(0);
     const resultsRef = useRef<HTMLDivElement>(null);
+
+    // Enforce Commercial Lease rules when transaction param changes
+    useEffect(() => {
+        if (isLeaseMode) {
+            const leaseFilters = {
+                ...filters,
+                transactionType: 'For Rent',
+                propertyType: (filters.propertyType === 'Commercial' || filters.propertyType === 'Any') ? 'Retail' : filters.propertyType,
+                listingType: 'Commercial'
+            } as FilterState;
+            setFilters(leaseFilters);
+            handleSearch(leaseFilters);
+        } else if (transaction === 'buy') {
+            const buyFilters = {
+                ...filters,
+                transactionType: 'For Sale',
+                propertyType: (filters.propertyType === 'Commercial' || filters.propertyType === 'Any') ? 'Retail' : filters.propertyType,
+                listingType: 'Commercial',
+            } as FilterState;
+            setFilters(buyFilters);
+            handleSearch(buyFilters);
+        }
+    }, [transaction]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ─── Core Search ────────────────────────────────────────────
     const handleSearch = useCallback(async (customFilters?: FilterState) => {
@@ -107,6 +131,8 @@ export default function SearchPage() {
                 url.searchParams.delete('propertyType');
             }
             url.searchParams.set('listingType', activeFilters.listingType);
+            if (activeFilters.province) url.searchParams.set('province', activeFilters.province);
+            if (transaction) url.searchParams.set('transaction', transaction);
             router.replace(url.pathname + url.search, { scroll: false });
 
         } catch (err: any) {
@@ -118,7 +144,7 @@ export default function SearchPage() {
                 setIsLoading(false);
             }
         }
-    }, [filters, router]);
+    }, [filters, router, transaction]);
 
     // ─── Pagination ─────────────────────────────────────────────
     const goToPage = async (page: number) => {
@@ -145,322 +171,323 @@ export default function SearchPage() {
         }
     };
 
-    // ─── Auto-search on mount ───────────────────────────────────
+    // ─── Commercial Mode ───────────────────────────────────────────
+    // Both Buy and Lease are commercial-first — no residential toggle needed.
+    // Sub-type filtering (Office, Retail, etc.) is handled by the FilterBar.
+
+    // Auto-search on mount if not triggered by transaction effect
     useEffect(() => {
+        if (hasSearched) return;
         handleSearch();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // ─── Render View ───────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-slate-50/50 flex flex-col relative">
-            {/* ─── Auth Gate: Blocks entire page until login/register ─── */}
             {isGated && <LeadGate />}
 
-            {/* ─── Gated Content Wrapper ─── */}
-            <div className={isGated ? 'blur-sm brightness-75 pointer-events-none select-none transition-all duration-500' : 'transition-all duration-500'}>
-
-            {/* ─── Search Header ─────────────────────── */}
-            <div className="pt-20 bg-white border-b border-slate-100 relative overflow-hidden">
-
-                <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 pb-16">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-                        <div className="space-y-4">
-                            <div className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-brand-red">
-                                <span className="w-12 h-px bg-brand-red"></span>
-                                {filters.propertyType === 'Any' ? 'All Property' : filters.propertyType} Discovery
+            <div className={isGated ? 'blur-sm brightness-75 pointer-events-none select-none transition-all duration-500 flex-1' : 'transition-all duration-500 flex-1'}>
+                
+                {/* ─── Compact Search Header ─── */}
+                <div className="pt-20 pb-5 bg-white border-b border-slate-100">
+                    <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-brand-red mb-1.5">
+                                    <span className="w-8 h-px bg-brand-red" />
+                                    Commercial {isLeaseMode ? 'Lease' : 'Sale'}
+                                </div>
+                                <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                                    {isLeaseMode ? 'Commercial Lease' : 'Commercial Properties'}
+                                    <span className="text-slate-200 mx-2">·</span>
+                                    <span className="text-brand-red">{filters.city || 'Ontario'}</span>
+                                </h1>
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
-                                Properties For <span className="text-brand-red italic">Perspective</span>.
-                            </h1>
-                            <p className="text-slate-600 font-medium max-w-lg">
-                                Search thousands of verified MLS® listings with advanced filters. Updated in real-time from the CREA DDF® network.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 px-5 py-3 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold text-slate-900 uppercase tracking-widest whitespace-nowrap">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
-                                </span>
-                                <span className="text-brand-red font-black">{globalTotalCount.toLocaleString()}</span>
-                                <span className="text-slate-600">Properties</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ─── Hero Search Bar (Light Mode) ──── */}
-                    <div className="w-full max-w-4xl">
-                        <div className="bg-white border border-slate-200 rounded-[28px] p-2 shadow-xl shadow-slate-200/50">
-                            <div className="flex flex-col sm:flex-row items-stretch gap-2">
-                                {/* Location Input */}
-                                <div className="flex-1 flex items-center gap-3 bg-slate-50 rounded-[20px] px-5 py-4 border border-slate-100 hover:border-slate-200 transition-all group">
-                                    <svg className="w-5 h-5 text-brand-red shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                                    </svg>
-                                    <div className="flex-1">
-                                        <label className="block text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-0.5">Location</label>
-                                        <input
-                                            id="hero-search-city"
-                                            type="text"
-                                            placeholder="City, Address or Postal Code..."
-                                            value={filters.city}
-                                            onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                            className="w-full bg-transparent border-none outline-none text-slate-900 text-[15px] font-bold placeholder:text-slate-400 placeholder:font-medium"
-                                        />
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                                    <span className="w-2 h-2 rounded-full bg-brand-red animate-pulse" />
+                                    <div className="flex items-baseline gap-1.5">
+                                        <span className="text-xl font-black text-slate-900 tabular-nums">{globalTotalCount.toLocaleString()}</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Listings</span>
                                     </div>
                                 </div>
-
-                                {/* Keyword Input */}
-                                <div className="hidden sm:flex items-center gap-3 w-64 bg-slate-50 rounded-[20px] px-5 py-4 border border-slate-100 hover:border-slate-200 transition-all">
-                                    <svg className="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-                                    </svg>
-                                    <div className="flex-1">
-                                        <label className="block text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-0.5">Keyword</label>
-                                        <input
-                                            id="hero-search-keyword"
-                                            type="text"
-                                            placeholder="MLS® #, feature..."
-                                            value={filters.searchQuery}
-                                            onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
-                                            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                                            className="w-full bg-transparent border-none outline-none text-slate-900 text-[14px] font-bold placeholder:text-slate-400 placeholder:font-medium"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Search Button */}
-                                <button
-                                    id="hero-search-btn"
-                                    onClick={() => handleSearch()}
-                                    disabled={isLoading}
-                                    className="flex items-center justify-center gap-3 px-8 py-4 bg-brand-red hover:bg-red-600 disabled:bg-slate-700 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[20px] transition-all duration-300 active:scale-[0.97] whitespace-nowrap shadow-lg shadow-red-500/20 hover:shadow-red-600/40 hover:-translate-y-0.5"
-                                >
-                                    {isLoading ? (
-                                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                                    ) : (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                                    )}
-                                    Search
-                                </button>
+                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest hidden sm:block">MLS® Verified</p>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-4 mt-4">
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">
-                                Popular:
-                            </p>
-                            {['Toronto', 'Vancouver', 'Calgary', 'Ottawa', 'Montreal'].map((city) => (
-                                <button
-                                    key={city}
-                                    onClick={() => { setFilters(prev => ({ ...prev, city })); handleSearch({ ...filters, city }); }}
-                                    className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-red transition-colors px-2 py-1 rounded-lg hover:bg-slate-100"
-                                >
-                                    {city}
-                                </button>
-                            ))}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* ─── Property Type Selector ─────────────── */}
-            <div className="bg-white border-b border-slate-100">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
-                            Property Type
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {PROPERTY_TYPE_OPTIONS.map((opt) => (
+                {/* ─── Unified Sticky Control Bar ─── */}
+                <div className="sticky top-[72px] z-[40] bg-white border-b-2 border-slate-100 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.08)]">
+                    <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8">
+
+                        {/* Top row: mode badge + result count + view toggle */}
+                        <div className="flex items-center justify-between h-11 border-b border-slate-100">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em]">Commercial Mode</span>
+                                </div>
+                                <div className="w-px h-4 bg-slate-200" />
+                                <span className="hidden sm:inline text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    {isLeaseMode ? 'Leasing Opportunities' : 'Asset Disposition &amp; Sales'}
+                                </span>
+                                {filteredTotal > 0 && (
+                                    <>
+                                        <div className="w-px h-4 bg-slate-200" />
+                                        <span className="text-[10px] font-black text-brand-red uppercase tracking-wider tabular-nums">
+                                            {filteredTotal.toLocaleString()} Results
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* View Toggle */}
+                            <div className="flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl">
                                 <button
-                                    key={opt.value}
-                                    id={`filter-type-${opt.value.toLowerCase()}`}
-                                    onClick={() => handlePropertyTypeChange(opt.value)}
-                                    className={`group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                                        filters.propertyType === opt.value
-                                            ? 'bg-brand-red text-white scale-[1.02]'
-                                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
+                                    onClick={() => setViewMode('list')}
+                                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
+                                        viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-700'
                                     }`}
                                 >
-                                    <span className="text-sm">{opt.icon}</span>
-                                    {opt.label}
-                                    {filters.propertyType === opt.value && (
-                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-white/80 border border-brand-red"></span>
-                                        </span>
-                                    )}
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                                    List View
                                 </button>
-                            ))}
+                                <button
+                                    onClick={() => setViewMode('map')}
+                                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
+                                        viewMode === 'map' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-700'
+                                    }`}
+                                >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                                    Interactive Map
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Bottom row: filter bar (no longer self-sticky) */}
+                        <FilterBar
+                            filters={filters}
+                            onFiltersChange={setFilters}
+                            onSearch={() => handleSearch()}
+                            isLoading={isLoading}
+                            isLeaseMode={isLeaseMode}
+                            isCommercialMode={true}
+                        />
                     </div>
                 </div>
-            </div>
 
-            {/* ─── Filter Bar (Sticky) ───────────────── */}
-            <FilterBar
-                filters={filters}
-                onFiltersChange={setFilters}
-                onSearch={() => handleSearch()}
-                isLoading={isLoading}
-            />
+                {/* ─── Results Area ─── */}
+                <main ref={resultsRef} className={`mx-auto px-4 sm:px-6 lg:px-8 flex-1 ${viewMode === 'map' ? 'pt-4 pb-6 max-w-[1800px]' : 'pt-12 pb-24 max-w-7xl min-h-[700px]'}`}>
+                    {error && <ErrorState message={error} onRetry={() => handleSearch()} />}
 
-            {/* ─── Results Area ──────────────────────── */}
-            <main ref={resultsRef} className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full flex-1">
-                {/* Results Header */}
-                {hasSearched && !isLoading && !error && listings.length > 0 && (
-                    <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                                Showing results for {filters.city || 'All Cities'}
-                            </h2>
-                            <p className="text-sm text-slate-700 font-bold uppercase tracking-wider mt-1">
-                                {globalTotalCount.toLocaleString()} total platform properties · Found {filteredTotal.toLocaleString()} {filteredTotal === 1 ? 'match' : 'matches'} ·
-                                <span className="text-brand-red ml-1">{(filters.city || 'ALL CITIES').toUpperCase()}</span>
-                            </p>
-                        </div>
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[10px] font-black text-brand-red border border-red-100 uppercase tracking-widest">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
-                            </span>
-                            REALTOR.ca® · Live MLS® Data
-                        </div>
-                    </div>
-                )}
+                    {isLoading && <ListingGridSkeleton count={8} />}
+                    
+                    {!isLoading && !error && (
+                        <>
+                            {listings.length === 0 ? (
+                                <EmptyState onReset={() => setFilters(DEFAULT_FILTERS)} />
+                            ) : (
+                                <>
+                                    {viewMode === 'map' ? (
+                                        /* Production split-screen: 60% listings | 40% map */
+                                        <div className="flex h-[calc(100vh-210px)] rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
 
-                {/* Loading */}
-                {isLoading && <ListingGridSkeleton count={8} />}
+                                            {/* LEFT: Listings Panel — 60% with 2-col grid + independent scroll */}
+                                            <div className="w-[60%] flex flex-col bg-white border-r border-slate-100 min-h-0">
 
-                {/* Error */}
-                {error && !isLoading && (
-                    <ErrorState message={error} onRetry={() => handleSearch()} />
-                )}
+                                                {/* Panel header */}
+                                                <div className="flex items-center justify-between px-5 py-3 bg-slate-50/60 border-b border-slate-100 flex-shrink-0">
+                                                    <div>
+                                                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-wider">
+                                                            {listings.length.toLocaleString()} Properties
+                                                        </p>
+                                                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                                                            {filters.city || 'All Cities'} · Commercial
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-red/5 rounded-full border border-brand-red/10">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
+                                                        <span className="text-[9px] font-black text-brand-red uppercase tracking-widest">Live MLS®</span>
+                                                    </div>
+                                                </div>
 
-                {/* Empty */}
-                {!isLoading && !error && hasSearched && listings.length === 0 && (
-                    <EmptyState />
-                )}
+                                                {/* 2-col scrollable grid */}
+                                                <div className="flex-1 overflow-y-auto custom-results-scrollbar p-4 min-h-0">
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {listings.map((l, i) => (
+                                                            <div key={l.ListingId || l.ListingKey} className="transform transition-transform hover:scale-[1.01]">
+                                                                <UnifiedPropertyCard
+                                                                    listing={l}
+                                                                    index={i}
+                                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? () => {} : undefined}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
 
-                {/* Results Grid */}
-                {!isLoading && listings.length > 0 && (
-                    <div className="flex flex-col gap-12">
-                        <section>
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="h-px flex-1 bg-slate-200" />
-                                <div className="px-5 py-2 rounded-full bg-brand-red text-[10px] font-black text-white uppercase tracking-[0.2em]">
-                                    {(filters.city || 'Results').toUpperCase()} · {filteredTotal.toLocaleString()} MATCHES
+                                                {/* Pagination footer — always visible, never scrolls */}
+                                                {totalPages > 1 && (
+                                                    <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-2.5 flex items-center justify-between">
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider tabular-nums">
+                                                            Page {currentPage} / {totalPages}
+                                                            <span className="text-slate-300 mx-1.5">·</span>
+                                                            {filteredTotal.toLocaleString()} total
+                                                        </p>
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                disabled={currentPage === 1}
+                                                                onClick={() => goToPage(currentPage - 1)}
+                                                                className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-colors text-slate-600 text-sm"
+                                                            >←</button>
+                                                            {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
+                                                                const pg = currentPage <= 3 ? idx + 1 : currentPage + idx - 2;
+                                                                if (pg < 1 || pg > totalPages) return null;
+                                                                return (
+                                                                    <button key={pg} onClick={() => goToPage(pg)}
+                                                                        className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${currentPage === pg ? 'bg-brand-red text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:border-brand-red hover:text-brand-red'}`}
+                                                                    >{pg}</button>
+                                                                );
+                                                            })}
+                                                            <button
+                                                                disabled={currentPage === totalPages}
+                                                                onClick={() => goToPage(currentPage + 1)}
+                                                                className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-colors text-slate-600 text-sm"
+                                                            >→</button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* RIGHT: Map — 40% */}
+                                            <div className="relative w-[40%] flex-shrink-0">
+                                                <div className="absolute top-3 right-3 z-[2] pointer-events-none">
+                                                    <div className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-2 shadow-lg border border-white/60 flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
+                                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider">{listings.length} Plotted</span>
+                                                    </div>
+                                                </div>
+                                                <IDXMapPlaceholder
+                                                    listings={listings.map(l => ({
+                                                        id: l.ListingId || l.ListingKey,
+                                                        title: l.UnparsedAddress || 'Property',
+                                                        address: l.UnparsedAddress || '',
+                                                        city: l.City || '',
+                                                        price: l.ListPrice || 0,
+                                                        bedrooms: l.BedroomsTotal || 0,
+                                                        bathrooms: l.BathroomsTotalInteger || 0,
+                                                        squareFootage: l.LivingArea || 0,
+                                                        mlsNumber: l.ListingId || '',
+                                                        location: { lat: l.Latitude, lng: l.Longitude },
+                                                        mainImage: l.Media?.[0]?.MediaURL || '',
+                                                        status: l.StandardStatus || 'ACTIVE'
+                                                    } as any))}
+                                                    highlightedListingId={null}
+                                                    onMarkerClick={(l) => setSelectedMapListing(l)}
+                                                    onMarkerClose={() => setSelectedMapListing(null)}
+                                                    selectedListing={selectedMapListing}
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                            {listings.map((l, i) => (
+                                                <UnifiedPropertyCard key={l.ListingId || l.ListingKey} listing={l} index={i} />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Pagination (List mode only) */}
+                                    {viewMode === 'list' && totalPages > 1 && (() => {
+                                        // Build page numbers with ellipsis
+                                        const pages: (number | '...')[] = [];
+                                        const delta = 2; // pages around current
+                                        const left = Math.max(2, currentPage - delta);
+                                        const right = Math.min(totalPages - 1, currentPage + delta);
+
+                                        pages.push(1);
+                                        if (left > 2) pages.push('...');
+                                        for (let i = left; i <= right; i++) pages.push(i);
+                                        if (right < totalPages - 1) pages.push('...');
+                                        if (totalPages > 1) pages.push(totalPages);
+
+                                        return (
+                                            <div className="mt-20 flex flex-col items-center gap-5">
+                                                <div className="flex items-center gap-1.5">
+                                                    {/* Prev */}
+                                                    <button
+                                                        disabled={currentPage === 1}
+                                                        onClick={() => goToPage(currentPage - 1)}
+                                                        className="h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1 disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-all"
+                                                    >
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                                                        Prev
+                                                    </button>
+
+                                                    {/* Page Numbers */}
+                                                    {pages.map((p, i) =>
+                                                        p === '...' ? (
+                                                            <span key={`ellipsis-${i}`} className="w-10 h-10 flex items-center justify-center text-slate-400 text-xs font-bold">
+                                                                ···
+                                                            </span>
+                                                        ) : (
+                                                            <button
+                                                                key={p}
+                                                                onClick={() => goToPage(p)}
+                                                                disabled={currentPage === p}
+                                                                className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${
+                                                                    currentPage === p
+                                                                        ? 'bg-brand-red text-white shadow-lg shadow-brand-red/25'
+                                                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-red hover:text-brand-red'
+                                                                }`}
+                                                            >
+                                                                {p}
+                                                            </button>
+                                                        )
+                                                    )}
+
+                                                    {/* Next */}
+                                                    <button
+                                                        disabled={currentPage === totalPages}
+                                                        onClick={() => goToPage(currentPage + 1)}
+                                                        className="h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1 disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-all"
+                                                    >
+                                                        Next
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                                                    </button>
+                                                </div>
+
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                                    Page {currentPage} of {totalPages} · {filteredTotal.toLocaleString()} Results
+                                                </p>
+                                            </div>
+                                        );
+                                    })()}
+                                </>
+                            )}
+                        </>
+                    )}
+                </main>
+
+                <footer className="mt-20 border-t border-slate-100 bg-white py-12">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                                <div className="h-4 w-4 bg-[#4F46E5] flex-shrink-0 rounded-[1px]" />
+                                <div className="flex items-baseline leading-none">
+                                    <span className="text-lg font-black text-slate-900 tracking-tighter uppercase">Square</span>
+                                    <span className="text-lg font-black text-[#4F46E5] tracking-tighter uppercase ml-0.5">FT</span>
                                 </div>
-                                <div className="h-px flex-1 bg-slate-200" />
                             </div>
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {listings.map((l: MLSProperty, i: number) => (
-                                    <UnifiedPropertyCard key={l.ListingKey || `l-${i}`} listing={l} index={i} />
-                                ))}
-                            </div>
-                        </section>
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {!isLoading && listings.length > 0 && totalPages > 1 && (
-                    <div className="mt-16 flex flex-col items-center gap-8 border-t border-slate-100 pt-12">
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => goToPage(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-
-                            <div className="hidden sm:flex items-center gap-2">
-                                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                                    let pageNum: number;
-                                    if (totalPages <= 5) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage <= 3) {
-                                        pageNum = i + 1;
-                                    } else if (currentPage >= totalPages - 2) {
-                                        pageNum = totalPages - 4 + i;
-                                    } else {
-                                        pageNum = currentPage - 2 + i;
-                                    }
-
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => goToPage(pageNum)}
-                                            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${currentPage === pageNum
-                                                ? 'bg-brand-red text-white shadow-lg shadow-red-200'
-                                                : 'border border-slate-100 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="sm:hidden px-4 text-sm font-bold text-slate-600">
-                                Page {currentPage} of {totalPages}
-                            </div>
-
-                            <button
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
+                            <span className="font-black text-slate-900 tracking-tight ml-2">SquareFT Realty</span>
                         </div>
-
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
-                            Page {currentPage} of {totalPages} • {filteredTotal.toLocaleString()} total matching results
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">
+                            © 2026 SquareFT · MLS® Verified Data · All Rights Reserved
                         </p>
                     </div>
-                )}
-            </main>
-
-            {/* Footer */}
-            <footer className="mt-20 border-t border-gray-100 bg-white/80 backdrop-blur-sm">
-                <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                    <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-red shadow-lg shadow-brand-red/20 text-sm font-bold text-white">
-                                RE
-                            </div>
-                            <div>
-                                <span className="block text-sm font-bold text-gray-900 tracking-tight">Skyline Estates Realty</span>
-                                <span className="block text-[10px] text-gray-400 font-medium">MLS® VERIFIED DATA · REALTOR.ca® PARTNER</span>
-                            </div>
-                        </div>
-                        <div className="text-center sm:text-right">
-                            <p className="text-[8px] text-slate-400 max-w-sm leading-relaxed">
-                                The trademarks REALTOR®, REALTORS®, and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA).
-                            </p>
-                            <p className="mt-2 text-xs font-bold text-gray-900">
-                                © {new Date().getFullYear()} Skyline Estates. All rights reserved.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
-
-            </div>{/* End Gated Content Wrapper */}
-
-            <style jsx global>{`
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                .animate-in { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-                .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-            `}</style>
+                </footer>
+            </div>
         </div>
     );
 }

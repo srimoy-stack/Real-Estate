@@ -23,13 +23,13 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
                     <span className="px-3 py-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-[9px] font-black uppercase tracking-widest text-white">
                         {community.listingCount} Listings
                     </span>
-                    <span className="px-3 py-1 bg-indigo-600/80 backdrop-blur-xl rounded-full text-[9px] font-black uppercase tracking-widest text-white">
+                    <span className="px-3 py-1 bg-[#4F46E5]/80 backdrop-blur-xl rounded-full text-[9px] font-black uppercase tracking-widest text-white">
                         Avg. ${(community.avgPrice / 1000000).toFixed(1)}M
                     </span>
                 </div>
 
                 <div className="space-y-1">
-                    <h3 className="text-3xl font-black text-white tracking-tighter leading-none">{community.name}</h3>
+                    <h3 className="text-xl font-black text-white tracking-tighter leading-none">{community.name}</h3>
                     <p className="text-sm text-slate-200 font-medium line-clamp-2 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                         {community.description}
                     </p>

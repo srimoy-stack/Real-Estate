@@ -133,6 +133,7 @@ export async function GET(request: NextRequest) {
         searchParams.get('maxTax') && !isNaN(parseFloat(searchParams.get('maxTax')!))
           ? parseFloat(searchParams.get('maxTax')!)
           : undefined,
+      province: searchParams.get('province'),
     };
 
     // ── 2. Execute Search (engine handles expansion + total) ────────────

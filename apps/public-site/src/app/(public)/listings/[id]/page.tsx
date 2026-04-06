@@ -174,7 +174,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                   <span className="text-slate-900">{listing.title}</span>
                 </nav>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-4xl font-extrabold text-slate-900 tracking-tighter">{listing.title}</h1>
+                  <h1 className="text-2xl font-extrabold text-slate-900 tracking-tighter">{listing.title}</h1>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200 ${listing.status === ListingStatus.ACTIVE ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                     }`}>
                     {listing.status === ListingStatus.ACTIVE ? 'For Sale' : listing.status}
@@ -189,7 +189,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
               </div>
 
               <div className="text-right">
-                <div className="text-5xl font-black text-slate-900 tracking-tighter">
+                <div className="text-2xl font-black text-slate-900 tracking-tighter">
                   {new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(listing.price)}
                 </div>
                 <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-2">Estimated Payment: ${monthlyPayment.toLocaleString()}/mo</p>
@@ -327,10 +327,10 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                   <div className="space-y-6">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Afford Score™</p>
-                      <div className="text-4xl font-black italic">Excellent <span className="text-emerald-500">8.4</span></div>
+                      <div className="text-2xl font-black italic">Excellent <span className="text-emerald-500">8.4</span></div>
                     </div>
                     <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
-                      <div className="h-full bg-red-500 w-[10%]" />
+                      <div className="h-full bg-indigo-500 w-[10%]" />
                       <div className="h-full bg-orange-500 w-[20%]" />
                       <div className="h-full bg-yellow-500 w-[30%]" />
                       <div className="h-full bg-emerald-500 w-[40%]" />
@@ -419,7 +419,7 @@ export default async function ListingDetailPage({ params }: ListingDetailProps) 
                       <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Available Now</span>
                     </div>
-                    <h3 className="text-3xl font-black text-white italic mb-2">Private <span className="text-amber-600">Viewing</span></h3>
+                    <h3 className="text-xl font-black text-white italic mb-2">Private <span className="text-amber-600">Viewing</span></h3>
                     <p className="text-slate-400 text-sm font-medium leading-relaxed">Book a tailored walk-through of this architectural masterpiece with our elite concierge team.</p>
                   </div>
                   <LeadCaptureForm

@@ -60,8 +60,8 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
 
     return (
         <div className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-2xl shadow-slate-200/50">
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2 italic">
-                Get in <span className="text-indigo-600">Touch</span>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 italic">
+                Get in <span className="text-[#4F46E5]">Touch</span>
             </h3>
             <p className="text-slate-500 font-medium mb-8">
                 Fill out the form below and {agentName.split(' ')[0]} will get back to you shortly.
@@ -103,7 +103,7 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                                 placeholder="John Doe"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-[#4F46E5]/20 transition-all outline-none"
                             />
                         </div>
                         <div className="space-y-2">
@@ -115,7 +115,7 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                                 placeholder="(555) 000-0000"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-[#4F46E5]/20 transition-all outline-none"
                             />
                         </div>
                     </div>
@@ -129,7 +129,7 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                             placeholder="john@example.com"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                            className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-[#4F46E5]/20 transition-all outline-none"
                         />
                     </div>
 
@@ -140,7 +140,7 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                             id="agent-lead-message"
                             value={formData.message}
                             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                            className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none resize-none"
+                            className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-2 focus:ring-[#4F46E5]/20 transition-all outline-none resize-none"
                         />
                     </div>
 
@@ -148,7 +148,7 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                         disabled={isSubmitting}
                         type="submit"
                         id="agent-lead-submit"
-                        className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-200 transition-all disabled:opacity-50 disabled:translate-y-0 active:scale-95 group overflow-hidden relative"
+                        className="w-full py-5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-indigo-200 transition-all disabled:opacity-50 disabled:translate-y-0 active:scale-95 group overflow-hidden relative"
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2">
                             {isSubmitting ? (
@@ -160,14 +160,14 @@ export const AgentContactForm: React.FC<AgentContactFormProps> = ({ agentName, a
                                 'Send Message Now'
                             )}
                         </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-800 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#4F46E5] to-[#a01318] opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
 
                     <p className="text-[10px] text-center text-slate-400 font-medium">
                         By submitting, you agree to our{' '}
-                        <a href="/privacy" className="text-indigo-500 hover:underline">Privacy Policy</a>
+                        <a href="/privacy" className="text-[#4F46E5]/80 hover:underline">Privacy Policy</a>
                         {' '}and{' '}
-                        <a href="/terms" className="text-indigo-500 hover:underline">Terms of Service</a>.
+                        <a href="/terms" className="text-[#4F46E5]/80 hover:underline">Terms of Service</a>.
                     </p>
                 </form>
             )}

@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const seo = page?.seo || website.seo;
 
-  const title = seo?.metaTitle || website.seo?.defaultTitle || 'Skyline Estates';
+  const title = seo?.metaTitle || website.seo?.defaultTitle || 'SquareFT';
   const description = seo?.metaDescription || website.seo?.defaultDescription;
   const domain = website.domain || 'skyline-estates.com';
 

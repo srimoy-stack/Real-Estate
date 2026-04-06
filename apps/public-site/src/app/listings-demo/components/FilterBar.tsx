@@ -18,6 +18,8 @@ import {
     YEAR_BUILT_RANGES,
     SORT_OPTIONS,
     CANADIAN_CITIES,
+    COMMERCIAL_SUBTYPE_OPTIONS,
+    COMMERCIAL_SORT_OPTIONS,
 } from '../types';
 import { formatMLSNumber } from '../utils';
 
@@ -26,23 +28,27 @@ interface FilterBarProps {
     onFiltersChange: (filters: FilterState) => void;
     onSearch: () => void;
     isLoading: boolean;
+    isLeaseMode?: boolean;
+    isCommercialMode?: boolean;
 }
 
 /* ─── Reusable Select ──────────────────────────────────────────────────────── */
 function FilterSelect({
-    id, label, value, options, onChange, className = '',
+    id, label, value, options, onChange, className = '', disabled = false,
 }: {
     id: string; label: string; value: string;
     options: { label: string; value: string }[];
     onChange: (v: string) => void;
     className?: string;
+    disabled?: boolean;
 }) {
     return (
         <div className={`flex flex-col gap-1 min-w-0 ${className}`}>
             <label htmlFor={id} className="text-[10px] font-bold uppercase tracking-wider text-slate-600">{label}</label>
             <div className="relative">
                 <select id={id} value={value} onChange={(e) => onChange(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2 pr-7 text-xs font-medium text-slate-900 outline-none transition-all hover:border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 cursor-pointer"
+                    disabled={disabled}
+                    className={`w-full appearance-none rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2 pr-7 text-xs font-medium text-slate-900 outline-none transition-all focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-brand-red'}`}
                 >
                     {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -90,7 +96,7 @@ function RangeSelect({
 }
 
 /* ─── Main FilterBar ───────────────────────────────────────────────────────── */
-export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: FilterBarProps) {
+export function FilterBar({ filters, onFiltersChange, onSearch, isLoading, isLeaseMode, isCommercialMode }: FilterBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const update = (key: keyof FilterState, value: string) => {
@@ -114,42 +120,50 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
     }).length;
 
     return (
-        <div className="sticky top-0 z-[60] border-b border-gray-100 bg-white shadow-sm shadow-slate-200/50">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-full">
+            <div>
 
-                {/* ── Primary Row ────────────────────────────────────────────── */}
-                <div className="flex items-end gap-3 py-3 flex-wrap">
+                {/* ── Primary Row: evenly distributed ────────────────────────── */}
+                <div className="flex items-end gap-3 py-3">
 
                     {/* Property Type */}
                     <FilterSelect id="f-proptype" label="Property Type" value={filters.propertyType}
-                        options={PROPERTY_TYPES.map((t) => ({ label: t, value: t }))}
-                        onChange={(v) => update('propertyType', v)} />
+                        options={isCommercialMode || isLeaseMode
+                            ? COMMERCIAL_SUBTYPE_OPTIONS
+                            : PROPERTY_TYPES.map((t) => ({ label: t, value: t }))}
+                        onChange={(v) => update('propertyType', v)} className="flex-1 min-w-[120px]" />
 
                     {/* City */}
                     <FilterSelect id="f-city" label="City" value={filters.city}
                         options={[{ label: 'All Cities', value: '' }, ...CANADIAN_CITIES.map((c) => ({ label: c, value: c }))]}
-                        onChange={(v) => update('city', v)} />
+                        onChange={(v) => update('city', v)} className="flex-1 min-w-[120px]" />
 
                     {/* Price */}
-                    <RangeSelect id="f-price" label="Price" prefix="$"
-                        minValue={filters.minPrice} maxValue={filters.maxPrice}
-                        minOptions={PRICE_RANGES.min} maxOptions={PRICE_RANGES.max}
-                        onMinChange={(v) => update('minPrice', v)} onMaxChange={(v) => update('maxPrice', v)} />
+                    <div className="flex-1 min-w-[160px]">
+                        <RangeSelect id="f-price" label="Price" prefix="$"
+                            minValue={filters.minPrice} maxValue={filters.maxPrice}
+                            minOptions={PRICE_RANGES.min} maxOptions={PRICE_RANGES.max}
+                            onMinChange={(v) => update('minPrice', v)} onMaxChange={(v) => update('maxPrice', v)} />
+                    </div>
 
-                    {/* Beds */}
-                    <FilterSelect id="f-beds" label="Beds" value={filters.beds}
-                        options={BED_OPTIONS.map((b) => ({ label: b, value: b }))}
-                        onChange={(v) => update('beds', v)} />
+                    {/* Beds — hidden in commercial mode */}
+                    {!isCommercialMode && !isLeaseMode && (
+                        <FilterSelect id="f-beds" label="Beds" value={filters.beds}
+                            options={BED_OPTIONS.map((b) => ({ label: b, value: b }))}
+                            onChange={(v) => update('beds', v)} />
+                    )}
 
-                    {/* Baths */}
-                    <FilterSelect id="f-baths" label="Baths" value={filters.baths}
-                        options={BATH_OPTIONS.map((b) => ({ label: b, value: b }))}
-                        onChange={(v) => update('baths', v)} />
+                    {/* Baths — hidden in commercial mode */}
+                    {!isCommercialMode && !isLeaseMode && (
+                        <FilterSelect id="f-baths" label="Baths" value={filters.baths}
+                            options={BATH_OPTIONS.map((b) => ({ label: b, value: b }))}
+                            onChange={(v) => update('baths', v)} />
+                    )}
 
                     {/* Sorting */}
-                    <FilterSelect id="f-sort" label="Sort By" 
+                    <FilterSelect id="f-sort" label="Sort By"
                         value={`${filters.sortBy}${filters.sortBy === 'price' ? `_${filters.order}` : ''}`}
-                        options={SORT_OPTIONS}
+                        options={isCommercialMode || isLeaseMode ? COMMERCIAL_SORT_OPTIONS : SORT_OPTIONS}
                         onChange={(v) => {
                             if (v.includes('_')) {
                                 const [by, ord] = v.split('_');
@@ -157,12 +171,12 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
                             } else {
                                 onFiltersChange({ ...filters, sortBy: v, order: 'desc' });
                             }
-                        }} />
+                        }} className="flex-1 min-w-[120px]" />
 
-                    {/* Advanced Toggle + Actions */}
-                    <div className="flex items-center gap-2 self-end ml-auto">
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 self-end flex-shrink-0">
                         <button onClick={() => setIsExpanded(!isExpanded)}
-                            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-semibold transition-all ${isExpanded ? 'border-brand-red bg-red-50 text-brand-red' : 'border-gray-200 bg-gray-50 text-slate-600 hover:border-gray-300'}`}
+                            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-semibold transition-all ${isExpanded ? 'border-brand-red bg-indigo-50 text-brand-red' : 'border-gray-200 bg-gray-50 text-slate-600 hover:border-gray-300'}`}
                         >
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -267,7 +281,7 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading }: Fil
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Status</span>
                                 <button
                                     onClick={() => onFiltersChange({ ...filters, featured: !filters.featured })}
-                                    className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${filters.featured ? 'border-brand-red bg-red-50 text-brand-red' : 'border-gray-200 bg-gray-50 text-slate-600 hover:border-gray-300'}`}
+                                    className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ${filters.featured ? 'border-brand-red bg-indigo-50 text-brand-red' : 'border-gray-200 bg-gray-50 text-slate-600 hover:border-gray-300'}`}
                                 >
                                     <svg className="h-3.5 w-3.5" fill={filters.featured ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />

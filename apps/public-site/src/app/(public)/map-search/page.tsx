@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UnifiedPropertyCard } from '@/components/ui';
+import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
+import { useAuth } from '@repo/auth';
 import { FilterBar } from '@/app/listings-demo/components/FilterBar';
 import { fetchListings } from '@/app/listings-demo/api';
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
@@ -43,6 +45,8 @@ export default function MapBasedSearchPage() {
     const [activeListingId, setActiveListingId] = useState<string | null>(null);
     const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
     const [page, setPage] = useState(1);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const { isAuthenticated, hasHydrated } = useAuth();
 
     const [isDrawActive, setIsDrawActive] = useState(false);
     const [drawnBounds, setDrawnBounds] = useState<DrawBounds | null>(() => {
@@ -231,7 +235,7 @@ export default function MapBasedSearchPage() {
                                     onClick={() => { const nf = { ...filters, propertyType: opt.value }; setFilters(nf); debouncedSearch(nf, drawnBounds); }}
                                     className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
                                         filters.propertyType === opt.value
-                                            ? 'bg-red-50 text-red-600 border-red-200'
+                                            ? 'bg-indigo-50 text-red-600 border-red-200'
                                             : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
                                     }`}
                                 >
@@ -271,7 +275,10 @@ export default function MapBasedSearchPage() {
                                                         : ''
                                                 }`}
                                             >
-                                                <UnifiedPropertyCard listing={listing} />
+                                                <UnifiedPropertyCard 
+                                                    listing={listing} 
+                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? () => setIsLoginModalOpen(true) : undefined}
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -308,7 +315,7 @@ export default function MapBasedSearchPage() {
 
                         {/* Pagination or Load More Footer would go here */}
                         <footer className="mt-12 p-8 border-t border-slate-100 text-center">
-                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">Skyline Estates • MLS® Data Integration</p>
+                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">SquareFT • MLS® Data Integration</p>
                         </footer>
                     </div>
                 </aside>
@@ -331,6 +338,11 @@ export default function MapBasedSearchPage() {
                     </section>
                 )}
             </div>
+
+            <LeadCaptureModal 
+                isOpen={isLoginModalOpen} 
+                onSuccess={() => setIsLoginModalOpen(false)} 
+            />
 
             <style jsx global>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 3px; }

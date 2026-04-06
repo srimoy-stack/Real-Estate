@@ -68,12 +68,12 @@ export default function SavedListingsPage() {
         <main className="min-h-screen bg-white pt-32 pb-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-16 space-y-4">
-                    <div className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">
-                        <span className="w-12 h-px bg-indigo-600"></span>
+                    <div className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-[#4F46E5]">
+                        <span className="w-12 h-px bg-[#4F46E5]"></span>
                         Personal Collection
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none italic">
-                        Your Saved <span className="text-indigo-600">Listings</span>.
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight italic">
+                        Your Saved <span className="text-[#4F46E5]">Listings</span>.
                     </h1>
                 </div>
 
@@ -95,13 +95,13 @@ export default function SavedListingsPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
                         </div>
-                        <h3 className="text-3xl font-black text-slate-900 italic mb-3">You have no saved listings yet.</h3>
+                        <h3 className="text-xl font-black text-slate-900 italic mb-3">You have no saved listings yet.</h3>
                         <p className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-10 max-w-md">
                             Start exploring our exclusive portfolio to curate your favorites.
                         </p>
                         <button 
                             onClick={() => router.push('/search')}
-                            className="px-12 py-5 bg-slate-900 text-white rounded-[24px] font-black uppercase text-xs tracking-[0.3em] hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-100"
+                            className="px-12 py-5 bg-slate-900 text-white rounded-[24px] font-black uppercase text-xs tracking-[0.3em] hover:bg-[#4F46E5] transition-all shadow-xl shadow-red-100"
                         >
                             Browse Listings
                         </button>

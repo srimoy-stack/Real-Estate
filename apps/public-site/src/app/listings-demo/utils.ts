@@ -38,7 +38,7 @@ export function formatMLSNumber(num: number | null | undefined): string {
  */
 export const GEO_BOUNDS: Record<string, { latitudeMin: number; latitudeMax: number; longitudeMin: number; longitudeMax: number }> = {
     'Toronto': {
-        latitudeMin: 43.67,
+        latitudeMin: 43.60,
         latitudeMax: 44.00,
         longitudeMin: -80.07,
         longitudeMax: -79.00,

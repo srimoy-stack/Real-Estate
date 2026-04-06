@@ -225,7 +225,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-indigo-600"
+                className="whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-[#4F46E5]"
               >
                 {item.label}
               </a>
@@ -240,7 +240,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
           id="listing-breadcrumb"
           className="flex items-center gap-2 overflow-hidden whitespace-nowrap text-xs font-bold uppercase tracking-widest text-slate-400"
         >
-          <Link href="/" className="transition-colors hover:text-indigo-600">
+          <Link href="/" className="transition-colors hover:text-[#4F46E5]">
             Home
           </Link>
           <svg
@@ -252,7 +252,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
-          <Link href="/search" className="transition-colors hover:text-indigo-600">
+          <Link href="/search" className="transition-colors hover:text-[#4F46E5]">
             Search
           </Link>
           <svg
@@ -291,7 +291,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                           Price Improved
                         </span>
                       )}
-                    <span className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                    <span className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#4F46E5]">
                       <svg
                         className="h-3 w-3"
                         fill="none"
@@ -314,7 +314,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                       {Math.floor(Math.random() * 40) + 12} people viewed this recently
                     </span>
                   </div>
-                  <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-5xl">
+                  <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
                     {displayTitle}
                   </h1>
                   <p className="text-xl font-bold italic text-slate-400">
@@ -324,7 +324,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                 <div className="flex flex-col items-center gap-4 text-left md:items-end md:text-right">
                   <div>
                     <p
-                      className={`text-4xl font-black tracking-tighter sm:text-5xl ${(prop.price ?? 0) > 0 ? 'text-indigo-600' : 'text-slate-400'}`}
+                      className={`text-2xl font-black tracking-tighter sm:text-3xl ${(prop.price ?? 0) > 0 ? 'text-[#4F46E5]' : 'text-slate-400'}`}
                     >
                       {priceDisplay.text}
                     </p>
@@ -360,13 +360,13 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                         />
                       </svg>
                     </div>
-                    <h2 className="mb-2 text-3xl font-black text-white">No photos available yet</h2>
+                    <h2 className="mb-2 text-xl font-black text-white">No photos available yet</h2>
                     <p className="max-w-md font-bold text-slate-400">
                       We&apos;re currently preparing the media for this listing. Contact us for a private showing.
                     </p>
                     
                     <div className="mt-8 flex items-center gap-3">
-                      <div className="rounded-full bg-indigo-600 px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                      <div className="rounded-full bg-[#4F46E5] px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
                         Live MLS® Listing
                       </div>
                       <div className="rounded-full bg-white/10 backdrop-blur-md px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
@@ -388,7 +388,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     {bedrooms > 0 && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <span className="text-indigo-500">
+                          <span className="text-[#4F46E5]/80">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
@@ -401,7 +401,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     {bathrooms > 0 && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <span className="text-indigo-500">
+                          <span className="text-[#4F46E5]/80">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 12h16v4a4 4 0 01-4 4H8a4 4 0 01-4-4v-4zM6 12V6a3 3 0 013-3h1" />
                             </svg>
@@ -414,7 +414,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     {sqft > 0 && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <span className="text-indigo-500">
+                          <span className="text-[#4F46E5]/80">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                             </svg>
@@ -427,7 +427,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     {(listing as any).yearBuilt && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          <span className="text-indigo-500">
+                          <span className="text-[#4F46E5]/80">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
@@ -444,7 +444,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
             {/* Description */}
             {(listing as any).description && (
               <section id="property-description" className="space-y-8">
-                <h2 className="text-3xl font-black italic tracking-tight text-slate-900">
+                <h2 className="text-xl font-black italic tracking-tight text-slate-900">
                   Description
                 </h2>
                 <div className="prose prose-slate prose-lg max-w-none font-medium leading-relaxed text-slate-500">
@@ -484,7 +484,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
             <section id="property-map" className="space-y-8">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-black italic tracking-tight text-slate-900">Location</h2>
+                  <h2 className="text-xl font-black italic tracking-tight text-slate-900">Location</h2>
                   <p className="max-w-md text-sm font-bold text-slate-400">
                     {city}
                     {province ? `, ${province}` : ''}
@@ -535,7 +535,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               </div>
               <div className="flex-1 space-y-8">
                 <div>
-                  <h3 className="text-3xl font-black text-slate-900">{agentName}</h3>
+                  <h3 className="text-xl font-black text-slate-900">{agentName}</h3>
                   <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">
                     Professional Real Estate Advisor
                   </p>
@@ -586,10 +586,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
           <div className="space-y-8 lg:col-span-4" id="listing-inquiry">
             <StickyInquirySidebar listing={listing as any} />
 
-            {/* DDF Compliance Badge */}
-            <div className="rounded-[32px] border border-slate-100 bg-slate-50/50 p-8">
-              <RealtorBadge moreInformationLink={moreInfoLink} variant="full" />
-            </div>
+
           </div>
         </div>
 

@@ -129,6 +129,7 @@ export interface FilterState {
     featured: boolean;
     sortBy: string;
     order: 'asc' | 'desc';
+    province?: string;
     // Geo Bounds
     latitudeMin?: number;
     latitudeMax?: number;
@@ -165,6 +166,7 @@ export const DEFAULT_FILTERS: FilterState = {
     featured: false,
     sortBy: 'newest',
     order: 'desc',
+    province: '',
 };
 
 // ─── Constants (all verified against live CREA DDF OData API) ───────────────
@@ -205,6 +207,26 @@ export const SORT_OPTIONS = [
     { label: 'Price (Low to High)', value: 'price_asc' },
     { label: 'Price (High to Low)', value: 'price_desc' },
     { label: 'Bedrooms', value: 'beds' },
+    { label: 'Square Footage', value: 'sqft' },
+    { label: 'Built Year', value: 'year' },
+];
+
+// ─── Commercial-First Options ────────────────────────────────────────────────
+// Maps to verified CLASSIFICATION_MAP.commercial.subTypes in listings-utils.ts
+
+export const COMMERCIAL_SUBTYPE_OPTIONS = [
+    { label: 'All Commercial', value: 'Commercial' },
+    { label: 'Office', value: 'Office' },
+    { label: 'Retail', value: 'Retail' },
+    { label: 'Industrial', value: 'Industrial' },
+    { label: 'Business', value: 'Business' },
+    { label: 'Land', value: 'Land' },
+];
+
+export const COMMERCIAL_SORT_OPTIONS = [
+    { label: 'Newest', value: 'newest' },
+    { label: 'Price (Low to High)', value: 'price_asc' },
+    { label: 'Price (High to Low)', value: 'price_desc' },
     { label: 'Square Footage', value: 'sqft' },
     { label: 'Built Year', value: 'year' },
 ];

@@ -13,7 +13,7 @@ function Section({ id, title, icon, children }: { id?: string; title: string; ic
   return (
     <section id={id} className="space-y-5">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-[#4F46E5]">
           {icon}
         </span>
         <h2 className="text-2xl font-black tracking-tight text-slate-900">{title}</h2>
@@ -71,37 +71,11 @@ const icons = {
 };
 
 /* ─── Realtor Compliance Badge ───────────────────────────────────── */
-export function RealtorBadge({ 
-  moreInformationLink, 
-  variant = 'default' 
-}: { 
+export function RealtorBadge(_props: { 
   moreInformationLink?: string;
   variant?: 'default' | 'full';
 }) {
-  const className = variant === 'full'
-    ? "flex flex-col items-center gap-4"
-    : "mt-12 flex flex-col items-center gap-4 border-t border-slate-100 pt-12 pb-8";
-
-  return (
-    <div className={className}>
-      <a 
-        href={moreInformationLink || "https://www.realtor.ca/en"} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="transition-opacity hover:opacity-80"
-      >
-        <img 
-          width="150" 
-          src="https://www.realtor.ca/images/en-ca/powered_by_realtor.svg" 
-          alt="Powered by: REALTOR.ca" 
-          className="h-auto grayscale"
-        />
-      </a>
-      <p className="max-w-md text-center text-[10px] font-medium leading-relaxed text-slate-400">
-        The trademarks REALTOR®, REALTORS® and the REALTOR® logo are controlled by The Canadian Real Estate Association (CREA) and identify real estate professionals who are members of CREA. The trademarks MLS®, Multiple Listing Service® and the associated logos are owned by The Canadian Real Estate Association (CREA) and identify the quality of services provided by real estate professionals who are members of CREA.
-      </p>
-    </div>
-  );
+  return null;
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */

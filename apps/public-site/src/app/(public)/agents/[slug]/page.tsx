@@ -62,8 +62,8 @@ export default function AgentProfilePage({ params }: AgentProfilePageProps) {
                     <div className="flex-1 space-y-20">
                         {/* Bio / About */}
                         <section className="bg-white rounded-[2.5rem] p-8 lg:p-12 border border-slate-100 shadow-xl shadow-slate-200/50">
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-6 italic">
-                                About <span className="text-indigo-600">{agent.name.split(' ')[0]}</span>
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight mb-6 italic">
+                                About <span className="text-[#4F46E5]">{agent.name.split(' ')[0]}</span>
                             </h2>
                             <div className="prose prose-slate max-w-none">
                                 <p className="text-slate-600 font-medium leading-relaxed text-lg whitespace-pre-line">
@@ -76,15 +76,15 @@ export default function AgentProfilePage({ params }: AgentProfilePageProps) {
                         <section>
                             <div className="flex items-center justify-between mb-10">
                                 <div>
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight italic">
-                                        Recent <span className="text-indigo-600">Listings</span>
+                                    <h2 className="text-xl font-black text-slate-900 tracking-tight italic">
+                                        Recent <span className="text-[#4F46E5]">Listings</span>
                                     </h2>
                                     <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">
                                         Hand-picked properties by {agent.name.split(' ')[0]}
                                     </p>
                                 </div>
                                 <div className="h-px flex-1 bg-slate-200 mx-8 hidden md:block" />
-                                <button className="text-xs font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors">
+                                <button className="text-xs font-black text-[#4F46E5] uppercase tracking-widest hover:text-[#4338CA] transition-colors">
                                     View All
                                 </button>
                             </div>

@@ -27,7 +27,7 @@ export default function PreviewPage({ params }: { params: { agentId: string } })
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 font-inter">
                 <div className="text-center space-y-4">
-                    <div className="h-12 w-12 mx-auto border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+                    <div className="h-12 w-12 mx-auto border-4 border-slate-200 border-t-[#4F46E5] rounded-full animate-spin" />
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest italic animate-pulse">Entering Signature Environment...</p>
                 </div>
             </div>

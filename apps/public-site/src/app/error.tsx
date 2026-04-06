@@ -21,14 +21,14 @@ export default function Error({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                 </div>
-                <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter italic">Experience <span className="text-indigo-600">Interrupted</span>.</h1>
+                <h1 className="text-2xl font-black text-slate-900 mb-4 tracking-tighter italic">Experience <span className="text-[#4F46E5]">Interrupted</span>.</h1>
                 <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed mb-12">
                     We encountered a minor turbulence. Our systems are working to restore the perfect browsing experience.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                     <button
                         onClick={() => reset()}
-                        className="px-10 py-5 bg-indigo-600 text-white rounded-full font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20"
+                        className="px-10 py-5 bg-[#4F46E5] text-white rounded-full font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#4338CA] transition-all shadow-xl shadow-[#4F46E5]/20"
                     >
                         Try Again
                     </button>

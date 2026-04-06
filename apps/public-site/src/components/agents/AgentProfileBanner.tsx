@@ -31,11 +31,11 @@ export const AgentProfileBanner: React.FC<AgentProfileBannerProps> = ({ agent })
 
                     {/* Content */}
                     <div className="flex-1 text-center lg:text-left">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 text-indigo-400 mb-6 border border-indigo-500/20">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 text-[#4F46E5]/60 mb-6 border border-[#4F46E5]/70/20">
                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Verified Agent</span>
                         </div>
 
-                        <h1 className="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none mb-4">
+                        <h1 className="text-3xl lg:text-4xl font-black text-white tracking-tighter leading-tight mb-4">
                             {agent.name}
                         </h1>
                         <p className="text-xl lg:text-2xl font-bold text-slate-400 tracking-tight mb-8 italic">
@@ -45,7 +45,7 @@ export const AgentProfileBanner: React.FC<AgentProfileBannerProps> = ({ agent })
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10 max-w-2xl">
                             <div className="flex items-center gap-4 text-slate-300">
                                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-5 h-5 text-[#4F46E5]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
                                 </div>
@@ -56,7 +56,7 @@ export const AgentProfileBanner: React.FC<AgentProfileBannerProps> = ({ agent })
                             </div>
                             <div className="flex items-center gap-4 text-slate-300">
                                 <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-5 h-5 text-[#4F46E5]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
                                 </div>

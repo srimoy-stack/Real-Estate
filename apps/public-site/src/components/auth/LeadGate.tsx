@@ -59,7 +59,7 @@ export const LeadGate = () => {
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[20px] animate-in fade-in duration-1000" />
 
             {/* Animated Background Elements */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#4F46E5]/20 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/20 rounded-full blur-[120px] animate-pulse delay-700" />
 
             {/* The Gate Card */}
@@ -76,11 +76,11 @@ export const LeadGate = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
 
                     <div className="relative z-10 text-center space-y-3">
-                        <div className="h-20 w-20 rounded-3xl bg-indigo-600 mx-auto flex items-center justify-center shadow-2xl shadow-indigo-500/40 transform -rotate-6">
+                        <div className="h-20 w-20 rounded-3xl bg-[#4F46E5] mx-auto flex items-center justify-center shadow-2xl shadow-[#4F46E5]/40 transform -rotate-6">
                             <span className="text-white font-black text-3xl italic leading-none">A</span>
                         </div>
                         <h2 className="text-2xl font-black text-white tracking-tight uppercase px-4">
-                            Unlock <span className="text-indigo-400">Exclusive</span> Access
+                            Unlock <span className="text-[#4F46E5]/60">Exclusive</span> Access
                         </h2>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ export const LeadGate = () => {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your name"
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all placeholder:text-slate-300"
                                 />
                             </div>
                         )}
@@ -138,7 +138,7 @@ export const LeadGate = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all placeholder:text-slate-300"
                             />
                         </div>
 
@@ -150,14 +150,14 @@ export const LeadGate = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all placeholder:text-slate-300"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-2xl shadow-slate-900/20 hover:bg-indigo-600 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
+                            className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-2xl shadow-slate-900/20 hover:bg-[#4F46E5] transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
                         >
                             {isLoading ? 'Verifying...' : mode === 'register' ? 'Gain Access' : 'Authorize'}
                         </button>

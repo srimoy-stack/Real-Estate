@@ -23,7 +23,7 @@ export default async function CommunitiesPage() {
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Neighborhood Guides</span>
                         <div className="h-1 w-8 bg-emerald-500 rounded-full" />
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none">
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight">
                         Elite <span className="text-emerald-500 italic">Communities</span>
                     </h1>
                     <p className="max-w-2xl mx-auto text-slate-500 text-lg font-medium leading-relaxed">
@@ -48,7 +48,7 @@ export default async function CommunitiesPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="bg-slate-900 rounded-[3rem] overflow-hidden flex flex-col lg:flex-row items-center">
                         <div className="p-12 lg:p-20 space-y-8 flex-1">
-                            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none italic">
+                            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter leading-tight italic">
                                 Visualize <br /> Your Next <span className="text-emerald-400">Move</span>
                             </h2>
                             <p className="text-slate-400 font-medium text-lg leading-relaxed">

@@ -32,11 +32,11 @@ export default function RegisterPage() {
         <div className="min-h-[80vh] flex items-center justify-center px-4 py-20 bg-slate-50">
             <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-[40px] shadow-2xl shadow-slate-200 border border-slate-100">
                 <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-3xl bg-indigo-600 text-white text-2xl mb-4">
+                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-3xl bg-[#4F46E5] text-white text-2xl mb-4">
                         ✨
                     </div>
                     <h2 className="text-3xl font-black tracking-tight text-slate-900">
-                        Create <span className="text-indigo-600">Account</span>
+                        Create <span className="text-[#4F46E5]">Account</span>
                     </h2>
                     <p className="text-slate-500 font-medium italic">
                         Join us to start saving properties and getting alerts.
@@ -58,7 +58,7 @@ export default function RegisterPage() {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all"
                             placeholder="John Doe"
                         />
                     </div>
@@ -70,7 +70,7 @@ export default function RegisterPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all"
                             placeholder="you@example.com"
                         />
                     </div>
@@ -82,7 +82,7 @@ export default function RegisterPage() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 font-bold focus:bg-white focus:border-[#4F46E5]/70 outline-none transition-all"
                             placeholder="••••••••"
                         />
                     </div>
@@ -90,7 +90,7 @@ export default function RegisterPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 hover:bg-indigo-600 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
+                        className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 hover:bg-[#4F46E5] transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
                     >
                         {isLoading ? 'Creating Account...' : 'Get Started'}
                     </button>
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                 <div className="pt-6 text-center">
                     <p className="text-sm font-medium text-slate-500">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-indigo-600 font-black uppercase tracking-widest text-xs hover:underline">
+                        <Link href="/login" className="text-[#4F46E5] font-black uppercase tracking-widest text-xs hover:underline">
                             Login instead
                         </Link>
                     </p>

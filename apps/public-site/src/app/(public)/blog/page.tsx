@@ -45,15 +45,15 @@ export default function BlogListingPage() {
         <div className="min-h-screen bg-white">
             {/* Header */}
             <header className="pt-32 pb-20 bg-slate-50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-indigo-600/[0.02] -skew-x-12 translate-x-1/2" />
+                <div className="absolute top-0 right-0 w-1/3 h-full bg-[#4F46E5]/[0.02] -skew-x-12 translate-x-1/2" />
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                     <div className="max-w-3xl">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="h-1 w-8 bg-indigo-600 rounded-full" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">Company Journal</span>
+                            <div className="h-1 w-8 bg-[#4F46E5] rounded-full" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#4F46E5]">Company Journal</span>
                         </div>
-                        <h1 className="text-6xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9] mb-8">
-                            Modern <span className="text-indigo-600 italic">Insights</span> <br />
+                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter leading-tight mb-8">
+                            Modern <span className="text-[#4F46E5] italic">Insights</span> <br />
                             & Market Analysis.
                         </h1>
                         <p className="text-xl text-slate-500 font-medium leading-relaxed">

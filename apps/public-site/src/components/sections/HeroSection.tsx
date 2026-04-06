@@ -30,13 +30,13 @@ export const HeroSection = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
                             </span>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Powered by Live MLS® Data</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Powered by Live Verified Data</span>
                         </div>
-                        <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black text-white tracking-tighter leading-[0.85]">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9]">
                             Find Your Next<br /> <span className="text-brand-red drop-shadow-none">Space</span>.
                         </h1>
                         <p className="text-lg md:text-xl text-white font-semibold max-w-2xl leading-relaxed tracking-wide">
-                            Access thousands of verified commercial properties and lease opportunities across Canada&apos;s top markets. Real-time MLS® listings, updated every minute.
+                            Access thousands of verified commercial properties and lease opportunities across Canada&apos;s top markets. Real-time listings, updated every minute.
                         </p>
                     </div>
 

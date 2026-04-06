@@ -42,7 +42,7 @@ export default function TermsPage() {
             <main className="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
                 <div className="space-y-12">
                     <header className="space-y-4">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                             Terms of <span className="text-emerald-600 italic">Service.</span>
                         </h1>
                         <p className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Last Updated: March 2024</p>

@@ -36,7 +36,7 @@ export default function RootLayout({
         ))}
       </head>
       <body
-        className="min-h-screen bg-white antialiased selection:bg-indigo-100 selection:text-indigo-900"
+        className="min-h-screen bg-white antialiased selection:bg-red-100 selection:text-[#4338CA]"
         style={{
           fontFamily: `var(--brand-font-body)`,
           ...cssVars,

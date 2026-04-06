@@ -81,7 +81,7 @@ export default function UserDashboard() {
                             <div className="h-1.5 w-12 bg-emerald-600 rounded-full" />
                             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-emerald-600">User Dashboard</span>
                         </div>
-                        <h1 className="text-5xl font-black tracking-tight text-slate-900">
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">
                             Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">Real Estate</span> Hub
                         </h1>
                         <p className="text-xl text-slate-500 font-medium max-w-2xl leading-relaxed">
@@ -251,7 +251,7 @@ export default function UserDashboard() {
                 <div className="p-12 bg-slate-900 rounded-[60px] text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden shadow-2xl">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full -mr-48 -mt-48 blur-3xl" />
                     <div className="space-y-4 relative">
-                        <h2 className="text-4xl font-black tracking-tight">Account <span className="text-emerald-400 italic">Security</span></h2>
+                        <h2 className="text-2xl font-black tracking-tight">Account <span className="text-emerald-400 italic">Security</span></h2>
                         <p className="text-slate-400 font-medium max-w-md">Update your password, manage linked social accounts, and configure global notification settings.</p>
                     </div>
                     <div className="flex gap-4 relative">

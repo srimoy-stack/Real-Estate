@@ -179,19 +179,30 @@ export async function fetchListings(
             if (filters.listedSince) setParam('listedSince', filters.listedSince);
 
             // Types — skip "Any"
-            // CRITICAL: Only send ONE of propertyType or listingType, never both.
-            // They both map to the same filter processor on the backend, so sending both
-            // creates conflicting AND conditions (e.g., Commercial AND Residential = 0 results).
             if (filters.propertyType && filters.propertyType !== 'Any') {
                 setParam('propertyType', filters.propertyType);
-                // Do NOT send listingType when propertyType is explicitly set
+                // Also send as category for broader backend matching
+                setParam('category', filters.propertyType.toLowerCase());
+                
+                // If it's a major category, also ensure listingType is synced
+                if (filters.propertyType === 'Commercial' || filters.propertyType === 'Residential') {
+                    setParam('listingType', filters.propertyType);
+                }
             } else if (filters.listingType && filters.listingType !== 'Residential') {
-                // Only send listingType as a fallback when no specific propertyType is chosen
-                // and listingType is something meaningful (not the default 'Residential')
                 setParam('listingType', filters.listingType);
+                setParam('category', filters.listingType.toLowerCase());
             }
+            
+            // Transaction Mode
+            if (filters.transactionType) {
+                setParam('transactionType', filters.transactionType);
+                // Internal API often uses 'transaction' shorthand
+                setParam('transaction', filters.transactionType === 'For Rent' ? 'lease' : 'buy');
+            }
+
             if (filters.featured) internalParams.set('featured', 'true');
             setParam('keywords', filters.keywords);
+            setParam('province', filters.province);
 
             // Sorting
             setParam('sort_by', filters.sortBy);
@@ -238,6 +249,7 @@ export async function fetchListings(
     if (filters.city) params.set('city', filters.city);
     if (filters.minPrice) params.set('minPrice', filters.minPrice);
     if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+    if (filters.province) params.set('province', filters.province);
 
     // Geo Bounds
     if (filters.latitudeMin != null) params.set('latMin', filters.latitudeMin.toString());

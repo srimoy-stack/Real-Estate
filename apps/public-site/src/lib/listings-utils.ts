@@ -41,6 +41,7 @@ export interface ListingQuery {
     minMaintFee?: number | null;
     maxMaintFee?: number | null;
     minTax?: number | null;
+    province?: string | null;
     maxTax?: number | null;
 }
 
@@ -310,7 +311,7 @@ export function buildOrderByClause(query: ListingQuery): Prisma.ListingOrderByWi
         case 'newest':
         case 'date':
         case 'updated':
-            primarySort = { modificationTimestamp: sortOrder }; break;
+            primarySort = { listingDate: sortOrder }; break;
         case 'createdAt':
             primarySort = { createdAt: sortOrder }; break;
         default:
@@ -323,8 +324,8 @@ export function buildOrderByClause(query: ListingQuery): Prisma.ListingOrderByWi
     // Primary goal: Newest First
     if (sortBy === 'newest' || sortBy === 'date' || sortBy === 'updated' || !sortBy) {
         return [
-            primarySort, // modificationTimestamp
-            { listingDate: 'desc' },
+            primarySort, // listingDate
+            { modificationTimestamp: 'desc' },
             { primaryPhotoUrl: { sort: 'desc', nulls: 'last' } as any },
             fallbackSort
         ];
@@ -383,6 +384,12 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
         const city = String(v).trim();
         if (!city) return null;
         return { city: { startsWith: city, mode: 'insensitive' } };
+    },
+    // 2.5 Province
+    province: (v) => {
+        const s = String(v).trim();
+        if (!s || s === 'Any') return null;
+        return { province: { startsWith: s, mode: 'insensitive' } };
     },
 
     // 3. Price — guarded against NaN

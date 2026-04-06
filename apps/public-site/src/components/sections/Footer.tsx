@@ -18,7 +18,7 @@ export const Footer = () => {
                     {/* Column 1: About */}
                     <div className="space-y-8">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+                            <div className="h-8 w-8 rounded-lg bg-[#4F46E5] flex items-center justify-center">
                                 <span className="text-white font-black text-base italic leading-none">A</span>
                             </div>
                             <span className="text-xl font-black tracking-tighter text-slate-900 uppercase">
@@ -30,7 +30,7 @@ export const Footer = () => {
                         </p>
                         <div className="flex items-center gap-4">
                             {['fb', 'tw', 'ig', 'ln'].map(s => (
-                                <a key={s} href="#" className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-500 transition-all">
+                                <a key={s} href="#" className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#4F46E5] hover:text-white hover:border-[#4F46E5]/70 transition-all">
                                     <span className="text-[10px] font-black uppercase">{s}</span>
                                 </a>
                             ))}
@@ -48,7 +48,7 @@ export const Footer = () => {
                                 { name: 'Muskoka', slug: 'muskoka' }
                             ].map(item => (
                                 <li key={item.slug}>
-                                    <Link href={`/communities/${item.slug}`} className="text-slate-500 hover:text-indigo-600 font-medium transition-colors uppercase text-xs tracking-wider">{item.name}</Link>
+                                    <Link href={`/communities/${item.slug}`} className="text-slate-500 hover:text-[#4F46E5] font-medium transition-colors uppercase text-xs tracking-wider">{item.name}</Link>
                                 </li>
                             ))}
                         </ul>
@@ -60,7 +60,7 @@ export const Footer = () => {
                         <ul className="space-y-4">
                             {footerLinks.filter(l => l.isVisible).sort((a, b) => a.order - b.order).map(item => (
                                 <li key={item.id}>
-                                    <Link href={item.href} className="text-slate-500 hover:text-indigo-600 font-medium transition-colors uppercase text-xs tracking-wider">{item.label}</Link>
+                                    <Link href={item.href} className="text-slate-500 hover:text-[#4F46E5] font-medium transition-colors uppercase text-xs tracking-wider">{item.label}</Link>
                                 </li>
                             ))}
                         </ul>
@@ -72,7 +72,7 @@ export const Footer = () => {
                         <div className="space-y-6">
                             <div className="flex items-start gap-4">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    <svg className="w-5 h-5 text-[#4F46E5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                 </div>
                                 <p className="font-bold text-slate-700">1-800-555-0199</p>
                             </div>
@@ -87,8 +87,8 @@ export const Footer = () => {
                             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Subscribe to Insider</p>
                                 <div className="flex gap-2">
-                                    <input type="email" placeholder="Your Email" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-indigo-500 transition-all" />
-                                    <button className="bg-slate-900 text-white p-2 rounded-lg hover:bg-indigo-600 transition-colors">
+                                    <input type="email" placeholder="Your Email" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none focus:border-[#4F46E5]/70 transition-all" />
+                                    <button className="bg-slate-900 text-white p-2 rounded-lg hover:bg-[#4F46E5] transition-colors">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                                     </button>
                                 </div>
