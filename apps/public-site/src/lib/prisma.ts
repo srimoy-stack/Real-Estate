@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 const isLocalDB = process.env.USE_LOCAL_DB === "true";
-const dbUrl = isLocalDB ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL;
+const dbUrl = (isLocalDB ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL) || "postgresql://unknown:unknown@unknown:5432/unknown";
 
 console.log("--------------------------------------------------");
 console.log(`Connected DB: ${isLocalDB ? "LOCAL (PostgreSQL)" : "CLOUD (Neon)"}`);

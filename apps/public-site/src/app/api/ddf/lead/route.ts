@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { submitDDFLead } from '../../../../lib/ddf-compliance';
 import { prisma } from '../../../../lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * API Route to bridge locally submitted leads to the CREA DDF Lead API.
  * 
