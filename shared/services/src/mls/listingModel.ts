@@ -73,6 +73,7 @@ export type MLSListingCard = Pick<
 export interface MLSListingFilters {
     ids?: string[];             // Fetch specific listings by MLS numbers
     city?: string;
+    province?: string | string[];
     propertyType?: string | string[];
     listingType?: 'Residential' | 'Commercial';
     status?: MLSStatus | MLSStatus[];

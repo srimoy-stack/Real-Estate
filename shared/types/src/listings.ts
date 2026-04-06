@@ -84,6 +84,7 @@ export interface ListingFilters {
     minYearBuilt?: number;
     maxYearBuilt?: number;
     city?: string;
+    province?: string;
     postalCode?: string;
     keyword?: string;
     status?: ListingStatus;

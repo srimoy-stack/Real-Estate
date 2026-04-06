@@ -123,6 +123,7 @@ export const listingService = {
   ): Promise<Listing[]> => {
     const { listings } = await mlsListingService.getListings({
       city: filters.city,
+      province: filters.province,
       propertyType: filters.propertyType as any,
       status: filters.status as any,
       minPrice: filters.minPrice,

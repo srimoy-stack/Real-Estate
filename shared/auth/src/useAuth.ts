@@ -39,6 +39,9 @@ export const useAuth = () => {
     const logout = useCallback(async () => {
         try {
             await apiClient.post('/auth/logout');
+        } catch (error) {
+            // Log but don't rethrow -- user should still be logged out locally
+            console.warn('[Auth] Logout request failed (backend unreachable), clearing local session anyway.', error);
         } finally {
             clearStore();
         }

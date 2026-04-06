@@ -10,6 +10,7 @@ export interface ListingSectionFilters {
     maxPrice?: number;
     bedrooms?: number;
     bathrooms?: number;
+    province?: string;
     featured?: boolean;
 }
 

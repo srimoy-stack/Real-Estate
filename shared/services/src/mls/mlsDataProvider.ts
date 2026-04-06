@@ -42,6 +42,10 @@ export class ApiMlsProvider implements IMlsDataProvider {
     try {
       const params = new URLSearchParams();
       if (filters.city) params.set('city', filters.city);
+      if (filters.province) {
+        const prov = Array.isArray(filters.province) ? filters.province.join(',') : filters.province;
+        params.set('province', prov);
+      }
       if (filters.minPrice !== undefined) params.set('minPrice', filters.minPrice.toString());
       if (filters.maxPrice !== undefined) params.set('maxPrice', filters.maxPrice.toString());
       if (filters.bedrooms !== undefined) params.set('beds', filters.bedrooms.toString());
