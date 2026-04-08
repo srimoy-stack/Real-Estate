@@ -73,13 +73,13 @@ export const GEO_BOUNDS: Record<string, { latitudeMin: number; latitudeMax: numb
  * Resolve a city name to its latitude/longitude bounding box.
  * Uses GEO_BOUNDS for mapped cities, defaulting to Toronto for demo stability.
  */
-export function resolveGeoBounds(city: string): GeoBounds {
+export function resolveGeoBounds(city: string): GeoBounds | null {
+    if (!city) return null;
     const bounds = GEO_BOUNDS[city];
     if (bounds) return bounds;
 
-    // Fallback/Default for other cities or empty search (Toronto as safe demo default)
-    console.warn(`[Geo] No predefined bounds for "${city}". Falling back to Toronto.`);
-    return GEO_BOUNDS['Toronto'];
+    // No default fallback — let backend use name-based search
+    return null;
 }
 
 /** Shared type for geo bounding box */

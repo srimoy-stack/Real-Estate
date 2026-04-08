@@ -43,6 +43,7 @@ export interface ListingQuery {
     minTax?: number | null;
     province?: string | null;
     maxTax?: number | null;
+    transaction?: string | null; // 'buy' | 'lease' — controls priority ordering
 }
 
 /**
@@ -110,6 +111,7 @@ const LISTING_SELECT_FIELDS = {
     mediaJson: true,
     rawData: true, // Necessary if the API response expects these fields (per route.ts mapping)
     listingDate: true,
+    normalized_property_type: true,
 };
 
 /**
@@ -120,135 +122,90 @@ export async function fetchRankedListings(
     query: ListingQuery, 
     limit: number, 
     skip: number,
-    options?: { shortcodeMode?: boolean }
+    _options?: { shortcodeMode?: boolean }
 ) {
     try {
-        // ── 1. Helper: Execute Single Search Action ──────────────────────────
-        const runSearch = async (q: ListingQuery, limit: number, skip: number, extraFilter: any = {}) => {
-            const searchStr = (q.q || q.search || q.keywords || '').trim();
-            const baseWhere = buildWhereClause(q);
-            const where = { AND: [baseWhere, extraFilter] };
-            
-            if (!searchStr) {
-                const orderBy = buildOrderByClause(q);
-                return await prisma.listing.findMany({
-                    where: withActive(where),
-                    take: limit,
-                    skip,
+        // ── 1. Determine priority mode from transaction ──────────────────────
+        const txn = (query.transaction || '').toLowerCase();
+        const isLeaseMode = txn === 'lease';
+
+        // Priority type: which normalized_property_type should appear first
+        const priorityType = isLeaseMode ? 'lease' : 'commercial';
+
+        // ── 2. Build WHERE clause (handles all filters) ─────────────────────
+        const baseWhere = withActive(buildWhereClause(query));
+
+        // ── 3. Count total matching listings ────────────────────────────────
+        console.log('[Search Engine] baseWhere:', JSON.stringify(baseWhere, null, 2));
+        const total = await prisma.listing.count({ where: baseWhere });
+
+        // ── 4. Fetch with priority ordering ─────────────────────────────────
+        // Strategy: Two-batch fetch for correct priority across pagination.
+        //   Batch 1: Priority listings (commercial for buy, lease for lease)
+        //   Batch 2: Remaining listings (everything else)
+        // This ensures priority listings always appear first, even across pages.
+
+        const orderBy = buildOrderByClause(query);
+        let listings: any[];
+
+        // Priority WHERE: same base filters + normalized_property_type match
+        const baseConditions = Array.isArray(baseWhere.AND) ? baseWhere.AND : [baseWhere];
+        const priorityWhere: any = {
+            AND: [
+                ...baseConditions,
+                { normalized_property_type: priorityType },
+                { isActive: true }
+            ]
+        };
+
+        // Count priority listings to handle pagination correctly
+        console.log('[Search Engine] priorityWhere:', JSON.stringify(priorityWhere, null, 2));
+        const priorityCount = await prisma.listing.count({ where: priorityWhere });
+        console.log('[Search Engine] priorityCount:', priorityCount);
+
+        if (skip < priorityCount) {
+            // Current page overlaps priority listings
+            const priorityListings = await prisma.listing.findMany({
+                where: priorityWhere,
+                take: limit,
+                skip,
+                orderBy,
+                select: LISTING_SELECT_FIELDS
+            });
+
+            if (priorityListings.length < limit) {
+                // Fill remaining slots with non-priority listings
+                const remainder = limit - priorityListings.length;
+                const otherListings = await prisma.listing.findMany({
+                    where: {
+                        ...baseWhere,
+                        NOT: { normalized_property_type: priorityType }
+                    },
+                    take: remainder,
+                    skip: 0,
                     orderBy,
                     select: LISTING_SELECT_FIELDS
                 });
-            }
-
-            // Keyword Search with Scoring (Optimized SQL)
-            if (Object.keys(extraFilter).length > 0) {
-                return await prisma.listing.findMany({
-                    where: withActive(where),
-                    take: limit,
-                    skip,
-                    orderBy: { modificationTimestamp: 'desc' },
-                    select: LISTING_SELECT_FIELDS
-                });
-            }
-
-            const term = `%${searchStr}%`;
-            const cityFilter = q.city ? q.city : null;
-            const cityPrefix = cityFilter ? `${cityFilter}%` : null;
-            const minPrice = q.minPrice || q.min_price || 0;
-            const maxPrice = q.maxPrice || q.max_price || 999999999;
-            const beds = q.beds || 0;
-            const baths = q.baths || 0;
-            const propType = q.propertyType && q.propertyType !== 'Any' ? `%${q.propertyType}%` : null;
-
-            // Map Prisma camelCase field names → actual PostgreSQL column names
-            // Fields with @map() in schema have different DB column names
-            const PRISMA_TO_DB_COLUMN: Record<string, string> = {
-                primaryPhotoUrl: 'primary_photo_url',
-                photosChangeTimestamp: 'photos_change_timestamp',
-                mediaJson: 'media_json',
-            };
-
-            const fields = Object.keys(LISTING_SELECT_FIELDS)
-                .map(f => {
-                    const dbCol = PRISMA_TO_DB_COLUMN[f];
-                    // If mapped, SELECT "db_col" AS "prismaName" to keep result keys consistent
-                    return dbCol ? `"${dbCol}" AS "${f}"` : `"${f}"`;
-                })
-                .join(', ');
-
-            return await prisma.$queryRawUnsafe(`
-                SELECT ${fields}, 
-                    (
-                        CASE WHEN "address" ILIKE $1 THEN 10 ELSE 0 END +
-                        CASE WHEN "city" ILIKE $1 THEN 5 ELSE 0 END +
-                        CASE WHEN "publicRemarks" ILIKE $1 THEN 2 ELSE 0 END
-                    ) as relevance
-                FROM "Listing"
-                WHERE "isActive" = true
-                  AND ($2::text IS NULL OR "city" ILIKE $2)
-                  AND (COALESCE("listPrice", 0) >= $3 AND COALESCE("listPrice", 999999999) <= $4)
-                  AND (COALESCE("bedroomsTotal", 0) >= $5)
-                  AND (COALESCE("bathroomsTotal", 0) >= $6)
-                  AND ($7::text IS NULL OR "propertyType" ILIKE $7 OR "propertySubType" ILIKE $7)
-                  AND (
-                      "address" ILIKE $1 OR 
-                      "city" ILIKE $1 OR 
-                      "publicRemarks" ILIKE $1 OR
-                      "listingId" ILIKE $1
-                  )
-                ORDER BY relevance DESC, "listingDate" DESC, "modificationTimestamp" DESC
-                LIMIT ${limit} OFFSET ${skip}
-            `, term, cityPrefix, minPrice, maxPrice, beds, baths, propType);
-        };
-
-        // ── 2. Count + Paginated Fetch ────────────────────────────────────────
-        const strictWhere = withActive(buildWhereClause(query));
-        const strictCount = await prisma.listing.count({ where: strictWhere });
-
-        let total = strictCount;
-        let expanded = false;
-        let listings: any[];
-
-        const hasGeo = queryHasGeoBounds(query);
-        const shouldExpand = !options?.shortcodeMode && hasGeo && (query.city == null);
-
-        if (strictCount < 20 && shouldExpand) {
-            // Geo was limiting results — remove geo bounds, keep city + all other filters
-            const fallbackQuery = { ...query, latMin: null, latMax: null, lngMin: null, lngMax: null };
-            const fallbackWhere = withActive(buildWhereClause(fallbackQuery));
-            const fallbackCount = await prisma.listing.count({ where: fallbackWhere });
-
-            if (fallbackCount > strictCount) {
-                // Use expanded results: strict first, then remaining
-                total = fallbackCount;
-                expanded = true;
-
-                if (skip < strictCount) {
-                    // Page overlaps strict results
-                    const strictResults = await runSearch(query, limit, skip);
-                    if (strictResults.length < limit) {
-                        // Need to fill remainder from fallback (excluding strict)
-                        const remainder = limit - strictResults.length;
-                        const extra = await runSearch(fallbackQuery, remainder, 0, { NOT: strictWhere });
-                        listings = [...strictResults, ...extra];
-                    } else {
-                        listings = strictResults;
-                    }
-                } else {
-                    // Past strict results — fetch from fallback only (excluding strict)
-                    const expandedSkip = skip - strictCount;
-                    listings = await runSearch(fallbackQuery, limit, expandedSkip, { NOT: strictWhere });
-                }
+                listings = [...priorityListings, ...otherListings];
             } else {
-                // Fallback didn't help — use strict as-is
-                listings = await runSearch(query, limit, skip);
+                listings = priorityListings;
             }
         } else {
-            // Enough strict results — standard paginated fetch
-            listings = await runSearch(query, limit, skip);
+            // Past all priority listings — fetch from non-priority pool
+            const otherSkip = skip - priorityCount;
+            listings = await prisma.listing.findMany({
+                where: {
+                    ...baseWhere,
+                    NOT: { normalized_property_type: priorityType }
+                },
+                take: limit,
+                skip: otherSkip,
+                orderBy,
+                select: LISTING_SELECT_FIELDS
+            });
         }
 
-        const relaxationLevel = expanded ? 'GeoExpanded' : 'None';
+        const relaxationLevel = 'None';
 
         return { listings, total, relaxationLevel };
 
@@ -486,7 +443,12 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
         };
     },
     type: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
-    listingType: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
+    listingType: (v, q) => {
+        // If we also have propertyType, we don't want a strict listingType filter (which would hide other commercial properties)
+        // because we want "priority then other".
+        if (q.propertyType && q.propertyType !== 'Any') return null;
+        return FILTER_MAP.propertyType(v, q);
+    },
     featured: (v) => (v === true || v === 'true') ? { isFeatured: true } : null,
     standardStatus: (v) => {
         const s = String(v).trim();

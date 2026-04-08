@@ -67,6 +67,9 @@ export interface NormalizedProperty {
   modifiedAt: string | null;
   createdAt: string | null;
 
+  // Description
+  publicRemarks?: string | null;
+
   // Compliance
   moreInformationLink?: string | null;
   brokerageName?: string | null;
@@ -241,6 +244,7 @@ export function normalizeListing(listing: any): NormalizedProperty {
     modifiedAt: listing.listingDate || listing.modificationTimestamp || listing.updatedAt || null,
     createdAt: listing.createdAt || null,
 
+    publicRemarks: listing.publicRemarks || listing.PublicRemarks || null,
     moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.brokerageName || null,
   };
@@ -305,6 +309,7 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
     modifiedAt: listing.ListingDate || listing.ModificationTimestamp || null,
     createdAt: listing.CreatedAt || listing.OriginalEntryTimestamp || null,
 
+    publicRemarks: listing.PublicRemarks || listing.publicRemarks || null,
     moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.officeName || null,
   };

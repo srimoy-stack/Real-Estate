@@ -23,7 +23,7 @@ function buildModernBrokerage(): WebsiteConfig {
     ...config.branding,
     mode: 'modern-realty',
     primaryColor: '#0F172A',
-    accentColor: '#2563EB',
+    accentColor: '#4F46E5',
     fontHeading: 'Inter',
     fontBody: 'Inter',
   };

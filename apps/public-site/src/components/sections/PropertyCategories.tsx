@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { SafeImage } from '@/components/ui';
 
 const CATEGORIES = [
-    { title: 'Commercial', count: '5,086', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial' },
-    { title: 'Lease', count: '2,840', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?type=lease' },
-    { title: 'Office Space', count: '1,035', image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800', href: '/search?type=office' },
-    { title: 'Industrial', count: 917, image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&q=80&w=800', href: '/search?type=industrial' },
-    { title: 'Retail', count: '1,444', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', href: '/search?type=retail' },
-    { title: 'Mixed Use', count: 591, image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial&q=mixed' },
+    { title: 'Commercial', count: '5,086', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial&province=Ontario' },
+    { title: 'Lease', count: '2,840', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?type=lease&province=Ontario' },
+    { title: 'Office Space', count: '1,035', image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&q=80&w=800', href: '/search?type=office&province=Ontario' },
+    { title: 'Industrial', count: 917, image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&q=80&w=800', href: '/search?type=industrial&province=Ontario' },
+    { title: 'Retail', count: '1,444', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', href: '/search?type=retail&province=Ontario' },
+    { title: 'Mixed Use', count: 591, image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&q=80&w=800', href: '/search?type=commercial&q=mixed&province=Ontario' },
 ];
 
 export const PropertyCategories = () => {
@@ -21,7 +21,7 @@ export const PropertyCategories = () => {
                         Browse By <span className="text-brand-red italic">Category</span>
                     </h2>
                     <p className="text-slate-500 font-medium">
-                        Discover premium commercial spaces and high-value lease opportunities across Canada&apos;s most sought-after markets.
+                        Discover premium commercial spaces and high-value lease opportunities across Ontario&apos;s most sought-after markets.
                     </p>
                 </div>
 

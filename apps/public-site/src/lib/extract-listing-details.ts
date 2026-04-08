@@ -21,6 +21,16 @@ export interface PropertySummary {
   status: string | null;
   view: string[] | null;
   inclusions: string | null;
+  leaseType: string | null;
+  crossStreets: string | null;
+  directions: string | null;
+  // Location
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  // Dates
+  listedDate: string | null;
+  updatedDate: string | null;
 }
 
 export interface BuildingInfo {
@@ -155,6 +165,24 @@ export function extractListingDetails(listing: any): ListingDetails {
     status: safeStr(raw.StandardStatus) ?? safeStr(l.standardStatus) ?? safeStr(l.status),
     view: safeArray(raw.View),
     inclusions: safeStr(raw.Inclusions),
+    leaseType: safeStr(raw.LeaseType),
+    crossStreets: safeStr(raw.CrossStreet),
+    directions: safeStr(raw.Directions),
+    // Location
+    city: safeStr(l.city) ?? safeStr(raw.City),
+    province: safeStr(l.province) ?? safeStr(raw.StateOrProvince),
+    postalCode: safeStr(l.postalCode) ?? safeStr(raw.PostalCode),
+    // Dates — format as human-readable if present
+    listedDate: (() => {
+      const d = l.createdAt || raw.ListingDate || raw.OriginalEntryTimestamp;
+      if (!d) return null;
+      try { return new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return null; }
+    })(),
+    updatedDate: (() => {
+      const d = l.updatedAt || raw.ModificationTimestamp;
+      if (!d) return null;
+      try { return new Date(d).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); } catch { return null; }
+    })(),
   };
 
   const building: BuildingInfo = {

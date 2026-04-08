@@ -4,12 +4,11 @@ import { SafeImage } from '@/components/ui';
 
 const CITIES = [
     { name: 'Toronto', count: 432, image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Vancouver', count: 215, image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Montreal', count: 184, 
-        image: 'https://images.unsplash.com/photo-1585863810141-f628043c7df4?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Calgary', count: 96, image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800' },
     { name: 'Ottawa', count: 72, image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800' },
     { name: 'Mississauga', count: 54, image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Hamilton', count: 48, image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Brampton', count: 41, image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=80&w=800' },
+    { name: 'London', count: 38, image: 'https://images.unsplash.com/photo-1585863810141-f628043c7df4?auto=format&fit=crop&q=80&w=800' },
 ];
 
 export const CommunitiesSection = () => {
@@ -26,7 +25,7 @@ export const CommunitiesSection = () => {
                             Explore <span className="text-[#4F46E5] italic">Communities</span>
                         </h2>
                         <p className="text-slate-500 font-medium">
-                            Discover the unique character, local amenities, and market trends of Canada&apos;s most vibrant neighborhoods.
+                            Discover the unique character, local amenities, and market trends of Ontario&apos;s most vibrant neighborhoods.
                         </p>
                     </div>
                 </div>

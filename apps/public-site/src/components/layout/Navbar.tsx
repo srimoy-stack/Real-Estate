@@ -34,15 +34,11 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                 <SafeImage src={logoUrl} alt={brandName} fill className="object-contain" />
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5">
-                    <div className="h-7 w-7 bg-[#4F46E5] flex-shrink-0 rounded-[2px]" />
-                    <div className="flex items-baseline leading-none">
-                        <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Square</span>
-                        <span className="text-2xl font-black text-[#4F46E5] tracking-tighter uppercase ml-0.5">FT</span>
-                    </div>
-                </div>
-              </div>
+                <img
+                    src="/logo.png"
+                    alt="SquareFT"
+                    className="h-48 w-auto object-contain -my-16 transition-all duration-300 group-hover:scale-105"
+                />
             )}
           </Link>
           {/* Search Bar — Professional & Integrated */}

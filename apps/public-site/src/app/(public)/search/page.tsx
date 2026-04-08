@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { LeadGate } from '@/components/auth/LeadGate';
@@ -11,7 +11,9 @@ import { EmptyState, ErrorState } from '@/app/listings-demo/components/StateDisp
 import { fetchAggregatedListings, fetchListings } from '@/app/listings-demo/api';
 import { MLSProperty, FilterState, DEFAULT_FILTERS } from '@/app/listings-demo/types';
 import { resolveGeoBounds } from '@/app/listings-demo/utils';
-import { IDXMapPlaceholder } from '@/components/idx/IDXMapPlaceholder';
+import type { DrawBounds } from '@/components/listings/MapView';
+
+const MapView = lazy(() => import('@/components/listings/MapView').then(m => ({ default: m.MapView })));
 
 const PAGE_SIZE = 90;
 
@@ -37,13 +39,24 @@ export default function SearchPage() {
     // ─── Search State ───────────────────────────────────────────
     const [filters, setFilters] = useState<FilterState>(() => {
         const transType = isLeaseMode ? 'For Rent' : 'For Sale';
-        const propType = searchParams.get('propertyType') || 'Retail';
-        const listType = 'Commercial' as const;
+        const searchQuery = searchParams.get('q') || '';
+        let cityValue = ''; // Default to All Cities on load as requested
+        let provinceValue = searchParams.get('province') || '';
+
+        // Smart detect: if user typed "ontario" in city field, treat it as province
+        if (cityValue?.toLowerCase() === 'ontario' || cityValue?.toLowerCase() === 'on') {
+            provinceValue = 'Ontario';
+            cityValue = '';
+        }
+
+        const propType = searchParams.get('propertyType') || 'Any';
+        const listType = 'Any' as const;
 
         return {
             ...DEFAULT_FILTERS,
-            searchQuery: searchParams.get('q') || '',
-            city: searchParams.get('city') || 'Toronto',
+            searchQuery: searchQuery,
+            city: cityValue,
+            province: provinceValue,
             listingType: listType,
             propertyType: propType,
             transactionType: transType,
@@ -51,7 +64,6 @@ export default function SearchPage() {
             maxPrice: searchParams.get('maxPrice') || '',
             sortBy: searchParams.get('sortBy') || 'newest',
             order: (searchParams.get('order') as 'asc' | 'desc') || 'desc',
-            province: searchParams.get('province') || '',
         };
     });
 
@@ -65,32 +77,22 @@ export default function SearchPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-    const [selectedMapListing, setSelectedMapListing] = useState<any>(null);
+    const [selectedMapListing, setSelectedMapListing] = useState<string | null>(null);
+    const [isDrawActive, setIsDrawActive] = useState(false);
+    const [drawBounds, setDrawBounds] = useState<DrawBounds | null>(null);
 
     const searchIdRef = useRef<number>(0);
     const resultsRef = useRef<HTMLDivElement>(null);
 
-    // Enforce Commercial Lease rules when transaction param changes
+    // Set transaction type and trigger search — backend handles prioritization
     useEffect(() => {
-        if (isLeaseMode) {
-            const leaseFilters = {
-                ...filters,
-                transactionType: 'For Rent',
-                propertyType: (filters.propertyType === 'Commercial' || filters.propertyType === 'Any') ? 'Retail' : filters.propertyType,
-                listingType: 'Commercial'
-            } as FilterState;
-            setFilters(leaseFilters);
-            handleSearch(leaseFilters);
-        } else if (transaction === 'buy') {
-            const buyFilters = {
-                ...filters,
-                transactionType: 'For Sale',
-                propertyType: (filters.propertyType === 'Commercial' || filters.propertyType === 'Any') ? 'Retail' : filters.propertyType,
-                listingType: 'Commercial',
-            } as FilterState;
-            setFilters(buyFilters);
-            handleSearch(buyFilters);
-        }
+        const transType = isLeaseMode ? 'For Rent' : 'For Sale';
+        const updatedFilters = {
+            ...filters,
+            transactionType: transType,
+        } as FilterState;
+        setFilters(updatedFilters);
+        handleSearch(updatedFilters);
     }, [transaction]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ─── Core Search ────────────────────────────────────────────
@@ -108,8 +110,8 @@ export default function SearchPage() {
             setTotalPages(0);
 
             const activeFilters = customFilters || filters;
-            const baseBounds = resolveGeoBounds(activeFilters.city);
-            const enrichedFilters = { ...activeFilters, ...baseBounds };
+            const bounds = resolveGeoBounds(activeFilters.city);
+            const enrichedFilters = { ...activeFilters, ...(bounds || {}) };
 
             const data = await fetchAggregatedListings(enrichedFilters, PAGE_SIZE);
 
@@ -144,7 +146,7 @@ export default function SearchPage() {
                 setIsLoading(false);
             }
         }
-    }, [filters, router, transaction]);
+    }, [filters, router, transaction, resolveGeoBounds]);
 
     // ─── Pagination ─────────────────────────────────────────────
     const goToPage = async (page: number) => {
@@ -155,7 +157,7 @@ export default function SearchPage() {
             setError(null);
 
             const bounds = resolveGeoBounds(filters.city);
-            const enrichedFilters = { ...filters, ...bounds };
+            const enrichedFilters = { ...filters, ...(bounds || {}) };
             const res = await fetchListings(enrichedFilters, page, PAGE_SIZE);
 
             setListings(res.listings);
@@ -193,19 +195,19 @@ export default function SearchPage() {
                     <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-brand-red mb-1.5">
-                                    <span className="w-8 h-px bg-brand-red" />
+                                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#4F46E5] mb-1.5">
+                                    <span className="w-8 h-px bg-[#4F46E5]" />
                                     Commercial {isLeaseMode ? 'Lease' : 'Sale'}
                                 </div>
                                 <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
                                     {isLeaseMode ? 'Commercial Lease' : 'Commercial Properties'}
                                     <span className="text-slate-200 mx-2">·</span>
-                                    <span className="text-brand-red">{filters.city || 'Ontario'}</span>
+                                    <span className="text-[#4F46E5]">{filters.city || filters.province || 'All Cities'}</span>
                                 </h1>
                             </div>
                             <div className="flex items-center gap-3 flex-shrink-0">
                                 <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                                    <span className="w-2 h-2 rounded-full bg-brand-red animate-pulse" />
+                                    <span className="w-2 h-2 rounded-full bg-[#4F46E5] animate-pulse" />
                                     <div className="flex items-baseline gap-1.5">
                                         <span className="text-xl font-black text-slate-900 tabular-nums">{globalTotalCount.toLocaleString()}</span>
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Listings</span>
@@ -235,7 +237,7 @@ export default function SearchPage() {
                                 {filteredTotal > 0 && (
                                     <>
                                         <div className="w-px h-4 bg-slate-200" />
-                                        <span className="text-[10px] font-black text-brand-red uppercase tracking-wider tabular-nums">
+                                        <span className="text-[10px] font-black text-[#4F46E5] uppercase tracking-wider tabular-nums">
                                             {filteredTotal.toLocaleString()} Results
                                         </span>
                                     </>
@@ -278,45 +280,99 @@ export default function SearchPage() {
                 </div>
 
                 {/* ─── Results Area ─── */}
-                <main ref={resultsRef} className={`mx-auto px-4 sm:px-6 lg:px-8 flex-1 ${viewMode === 'map' ? 'pt-4 pb-6 max-w-[1800px]' : 'pt-12 pb-24 max-w-7xl min-h-[700px]'}`}>
+                <main ref={resultsRef} className={`flex-1 ${viewMode === 'map' ? '' : 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-24 min-h-[700px]'}`}>
                     {error && <ErrorState message={error} onRetry={() => handleSearch()} />}
 
-                    {isLoading && <ListingGridSkeleton count={8} />}
+                    {isLoading && <div className={viewMode === 'map' ? 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8' : ''}><ListingGridSkeleton count={8} /></div>}
                     
                     {!isLoading && !error && (
                         <>
                             {listings.length === 0 ? (
-                                <EmptyState onReset={() => setFilters(DEFAULT_FILTERS)} />
+                                <div className={viewMode === 'map' ? 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8' : ''}>
+                                    <EmptyState onReset={() => setFilters(DEFAULT_FILTERS)} />
+                                </div>
                             ) : (
                                 <>
                                     {viewMode === 'map' ? (
-                                        /* Production split-screen: 60% listings | 40% map */
-                                        <div className="flex h-[calc(100vh-210px)] rounded-2xl overflow-hidden border border-slate-200 shadow-xl">
+                                        /* ═══════════════════════════════════════════════════════════
+                                           PRODUCTION SPLIT-SCREEN: listings panel | interactive map
+                                           Fill remaining viewport below the sticky control bar
+                                           ═══════════════════════════════════════════════════════════ */
+                                        <div className="flex" style={{ height: 'calc(100vh - 180px)' }}>
 
-                                            {/* LEFT: Listings Panel — 60% with 2-col grid + independent scroll */}
-                                            <div className="w-[60%] flex flex-col bg-white border-r border-slate-100 min-h-0">
+                                            {/* ── LEFT: Listings Panel (50%) ── */}
+                                            <div className="w-1/2 flex flex-col bg-white border-r border-slate-200 min-h-0">
 
-                                                {/* Panel header */}
-                                                <div className="flex items-center justify-between px-5 py-3 bg-slate-50/60 border-b border-slate-100 flex-shrink-0">
-                                                    <div>
-                                                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-wider">
-                                                            {listings.length.toLocaleString()} Properties
-                                                        </p>
-                                                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                                            {filters.city || 'All Cities'} · Commercial
-                                                        </p>
+                                                {/* Panel toolbar */}
+                                                <div className="flex items-center justify-between px-5 py-2.5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 flex-shrink-0">
+                                                    <div className="flex items-center gap-3">
+                                                        <div>
+                                                            <p className="text-[11px] font-black text-slate-900 uppercase tracking-wider leading-none">
+                                                                {filteredTotal.toLocaleString()} Properties
+                                                                {drawBounds && <span className="text-[#4F46E5] ml-1.5">· Map Area</span>}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                                                                {filters.city || 'All Cities'} · {filters.propertyType !== 'Any' ? filters.propertyType : 'Commercial'}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-red/5 rounded-full border border-brand-red/10">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
-                                                        <span className="text-[9px] font-black text-brand-red uppercase tracking-widest">Live MLS®</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setIsDrawActive(!isDrawActive)}
+                                                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
+                                                                isDrawActive
+                                                                    ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-lg shadow-[#4F46E5]/30'
+                                                                    : drawBounds
+                                                                        ? 'bg-[#4F46E5]/10 text-[#4F46E5] border-[#4F46E5]/30 hover:bg-[#4F46E5]/20'
+                                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-[#4F46E5] hover:text-[#4F46E5]'
+                                                            }`}
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                            </svg>
+                                                            {isDrawActive ? 'Drawing...' : drawBounds ? 'Redraw' : 'Draw Area'}
+                                                        </button>
+                                                        {drawBounds && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDrawBounds(null);
+                                                                    const clearedFilters: FilterState = {
+                                                                        ...filters,
+                                                                        latitudeMin: undefined,
+                                                                        latitudeMax: undefined,
+                                                                        longitudeMin: undefined,
+                                                                        longitudeMax: undefined,
+                                                                    };
+                                                                    setFilters(clearedFilters);
+                                                                    handleSearch(clearedFilters);
+                                                                }}
+                                                                className="flex items-center gap-1 px-3 py-2 rounded-xl border border-red-200 bg-red-50 text-red-500 text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-all"
+                                                            >
+                                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                Clear
+                                                            </button>
+                                                        )}
+                                                        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#4F46E5]/8 rounded-xl border border-[#4F46E5]/15">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] animate-pulse" />
+                                                            <span className="text-[9px] font-black text-[#4F46E5] uppercase tracking-widest">Live</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                {/* 2-col scrollable grid */}
-                                                <div className="flex-1 overflow-y-auto custom-results-scrollbar p-4 min-h-0">
-                                                    <div className="grid grid-cols-2 gap-3">
+                                                {/* Scrollable listings grid */}
+                                                <div className="flex-1 overflow-y-auto p-3 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+                                                    <div className="grid grid-cols-2 gap-2.5">
                                                         {listings.map((l, i) => (
-                                                            <div key={l.ListingId || l.ListingKey} className="transform transition-transform hover:scale-[1.01]">
+                                                            <div
+                                                                key={l.ListingId || l.ListingKey}
+                                                                className={`rounded-xl transition-all duration-200 cursor-pointer ${
+                                                                    selectedMapListing === (l.ListingId || l.ListingKey)
+                                                                        ? 'ring-2 ring-[#4F46E5] shadow-lg shadow-[#4F46E5]/10 scale-[1.01]'
+                                                                        : 'hover:shadow-md'
+                                                                }`}
+                                                                onMouseEnter={() => setSelectedMapListing(l.ListingId || l.ListingKey)}
+                                                                onMouseLeave={() => setSelectedMapListing(null)}
+                                                            >
                                                                 <UnifiedPropertyCard
                                                                     listing={l}
                                                                     index={i}
@@ -327,108 +383,141 @@ export default function SearchPage() {
                                                     </div>
                                                 </div>
 
-                                                {/* Pagination footer — always visible, never scrolls */}
+                                                {/* Compact pagination footer */}
                                                 {totalPages > 1 && (
-                                                    <div className="flex-shrink-0 border-t border-slate-100 bg-white px-5 py-2.5 flex items-center justify-between">
-                                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider tabular-nums">
-                                                            Page {currentPage} / {totalPages}
-                                                            <span className="text-slate-300 mx-1.5">·</span>
-                                                            {filteredTotal.toLocaleString()} total
-                                                        </p>
-                                                        <div className="flex items-center gap-1">
-                                                            <button
-                                                                disabled={currentPage === 1}
-                                                                onClick={() => goToPage(currentPage - 1)}
-                                                                className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-colors text-slate-600 text-sm"
-                                                            >←</button>
-                                                            {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
-                                                                const pg = currentPage <= 3 ? idx + 1 : currentPage + idx - 2;
-                                                                if (pg < 1 || pg > totalPages) return null;
-                                                                return (
-                                                                    <button key={pg} onClick={() => goToPage(pg)}
-                                                                        className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${currentPage === pg ? 'bg-brand-red text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:border-brand-red hover:text-brand-red'}`}
-                                                                    >{pg}</button>
+                                                    <div className="flex-shrink-0 border-t border-slate-100 bg-white px-4 py-2 flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-slate-400 tabular-nums">
+                                                            {filteredTotal.toLocaleString()} results
+                                                        </span>
+                                                        <div className="flex items-center gap-0.5">
+                                                            <button disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}
+                                                                className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-20 hover:bg-slate-100 transition-colors text-slate-500 text-xs">
+                                                                ‹
+                                                            </button>
+                                                            {(() => {
+                                                                const pages: (number | '...')[] = [];
+                                                                if (totalPages <= 7) {
+                                                                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                                                } else {
+                                                                    pages.push(1);
+                                                                    if (currentPage > 3) pages.push('...');
+                                                                    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+                                                                    if (currentPage < totalPages - 2) pages.push('...');
+                                                                    pages.push(totalPages);
+                                                                }
+                                                                return pages.map((p, idx) =>
+                                                                    p === '...' ? (
+                                                                        <span key={`e${idx}`} className="w-7 h-7 flex items-center justify-center text-slate-300 text-[10px]">···</span>
+                                                                    ) : (
+                                                                        <button key={p} onClick={() => goToPage(p)}
+                                                                            className={`w-7 h-7 rounded-lg text-[10px] font-black transition-all ${
+                                                                                currentPage === p
+                                                                                    ? 'bg-[#0F172A] text-white'
+                                                                                    : 'text-slate-500 hover:bg-slate-100'
+                                                                            }`}
+                                                                        >{p}</button>
+                                                                    )
                                                                 );
-                                                            })}
-                                                            <button
-                                                                disabled={currentPage === totalPages}
-                                                                onClick={() => goToPage(currentPage + 1)}
-                                                                className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-colors text-slate-600 text-sm"
-                                                            >→</button>
+                                                            })()}
+                                                            <button disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)}
+                                                                className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-20 hover:bg-slate-100 transition-colors text-slate-500 text-xs">
+                                                                ›
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* RIGHT: Map — 40% */}
-                                            <div className="relative w-[40%] flex-shrink-0">
-                                                <div className="absolute top-3 right-3 z-[2] pointer-events-none">
-                                                    <div className="bg-white/95 backdrop-blur-xl rounded-xl px-3 py-2 shadow-lg border border-white/60 flex items-center gap-2">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
-                                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider">{listings.length} Plotted</span>
+                                            {/* ── RIGHT: Interactive Map (50%) ── */}
+                                            <div className="w-1/2 relative">
+                                                <Suspense fallback={
+                                                    <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <div className="w-10 h-10 border-2 border-[#4F46E5] border-t-transparent rounded-full animate-spin" />
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading Interactive Map...</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <IDXMapPlaceholder
-                                                    listings={listings.map(l => ({
-                                                        id: l.ListingId || l.ListingKey,
-                                                        title: l.UnparsedAddress || 'Property',
-                                                        address: l.UnparsedAddress || '',
-                                                        city: l.City || '',
-                                                        price: l.ListPrice || 0,
-                                                        bedrooms: l.BedroomsTotal || 0,
-                                                        bathrooms: l.BathroomsTotalInteger || 0,
-                                                        squareFootage: l.LivingArea || 0,
-                                                        mlsNumber: l.ListingId || '',
-                                                        location: { lat: l.Latitude, lng: l.Longitude },
-                                                        mainImage: l.Media?.[0]?.MediaURL || '',
-                                                        status: l.StandardStatus || 'ACTIVE'
-                                                    } as any))}
-                                                    highlightedListingId={null}
-                                                    onMarkerClick={(l) => setSelectedMapListing(l)}
-                                                    onMarkerClose={() => setSelectedMapListing(null)}
-                                                    selectedListing={selectedMapListing}
-                                                />
+                                                }>
+                                                    <MapView
+                                                        listings={listings}
+                                                        activeListingId={selectedMapListing}
+                                                        hoveredListingId={selectedMapListing}
+                                                        enableDraw={true}
+                                                        isDrawActive={isDrawActive}
+                                                        onDrawComplete={(bounds) => {
+                                                            setDrawBounds(bounds);
+                                                            setIsDrawActive(false);
+                                                            const geoFilters: FilterState = {
+                                                                ...filters,
+                                                                latitudeMin: bounds.latMin,
+                                                                latitudeMax: bounds.latMax,
+                                                                longitudeMin: bounds.lngMin,
+                                                                longitudeMax: bounds.lngMax,
+                                                            };
+                                                            setFilters(geoFilters);
+                                                            handleSearch(geoFilters);
+                                                        }}
+                                                        onDrawClear={() => {
+                                                            setDrawBounds(null);
+                                                            const clearedFilters: FilterState = {
+                                                                ...filters,
+                                                                latitudeMin: undefined,
+                                                                latitudeMax: undefined,
+                                                                longitudeMin: undefined,
+                                                                longitudeMax: undefined,
+                                                            };
+                                                            setFilters(clearedFilters);
+                                                            handleSearch(clearedFilters);
+                                                        }}
+                                                        onMarkerClick={(id) => setSelectedMapListing(id)}
+                                                    />
+                                                </Suspense>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                        /* ═══════════════════════════════════════════
+                                           LIST VIEW: Standard responsive grid
+                                           ═══════════════════════════════════════════ */
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                             {listings.map((l, i) => (
                                                 <UnifiedPropertyCard key={l.ListingId || l.ListingKey} listing={l} index={i} />
                                             ))}
                                         </div>
                                     )}
 
-                                    {/* Pagination (List mode only) */}
+                                    {/* ═══════════════════════════════════════════
+                                        PAGINATION (List mode only)
+                                        Production-grade: 1 2 3 ... N with ellipsis
+                                       ═══════════════════════════════════════════ */}
                                     {viewMode === 'list' && totalPages > 1 && (() => {
-                                        // Build page numbers with ellipsis
                                         const pages: (number | '...')[] = [];
-                                        const delta = 2; // pages around current
-                                        const left = Math.max(2, currentPage - delta);
-                                        const right = Math.min(totalPages - 1, currentPage + delta);
-
-                                        pages.push(1);
-                                        if (left > 2) pages.push('...');
-                                        for (let i = left; i <= right; i++) pages.push(i);
-                                        if (right < totalPages - 1) pages.push('...');
-                                        if (totalPages > 1) pages.push(totalPages);
+                                        if (totalPages <= 7) {
+                                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                        } else {
+                                            pages.push(1);
+                                            if (currentPage > 3) pages.push('...');
+                                            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+                                            if (currentPage < totalPages - 2) pages.push('...');
+                                            pages.push(totalPages);
+                                        }
 
                                         return (
-                                            <div className="mt-20 flex flex-col items-center gap-5">
-                                                <div className="flex items-center gap-1.5">
+                                            <div className="mt-16 flex flex-col items-center gap-6">
+                                                <div className="flex items-center gap-2">
                                                     {/* Prev */}
                                                     <button
                                                         disabled={currentPage === 1}
                                                         onClick={() => goToPage(currentPage - 1)}
-                                                        className="h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1 disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-all"
+                                                        className="h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-all"
                                                     >
                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-                                                        Prev
+                                                        Previous
                                                     </button>
 
                                                     {/* Page Numbers */}
                                                     {pages.map((p, i) =>
                                                         p === '...' ? (
-                                                            <span key={`ellipsis-${i}`} className="w-10 h-10 flex items-center justify-center text-slate-400 text-xs font-bold">
+                                                            <span key={`ellipsis-${i}`} className="w-11 h-11 flex items-center justify-center text-slate-400 text-xs font-bold select-none">
                                                                 ···
                                                             </span>
                                                         ) : (
@@ -436,10 +525,10 @@ export default function SearchPage() {
                                                                 key={p}
                                                                 onClick={() => goToPage(p)}
                                                                 disabled={currentPage === p}
-                                                                className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${
+                                                                className={`w-11 h-11 rounded-xl text-sm font-black transition-all ${
                                                                     currentPage === p
-                                                                        ? 'bg-brand-red text-white shadow-lg shadow-brand-red/25'
-                                                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-red hover:text-brand-red'
+                                                                        ? 'bg-[#0F172A] text-white shadow-lg shadow-[#0F172A]/20'
+                                                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-[#4F46E5] hover:text-[#4F46E5]'
                                                                 }`}
                                                             >
                                                                 {p}
@@ -451,14 +540,14 @@ export default function SearchPage() {
                                                     <button
                                                         disabled={currentPage === totalPages}
                                                         onClick={() => goToPage(currentPage + 1)}
-                                                        className="h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1 disabled:opacity-30 hover:border-brand-red hover:text-brand-red transition-all"
+                                                        className="h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-all"
                                                     >
                                                         Next
                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                                                     </button>
                                                 </div>
 
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
                                                     Page {currentPage} of {totalPages} · {filteredTotal.toLocaleString()} Results
                                                 </p>
                                             </div>
@@ -469,24 +558,6 @@ export default function SearchPage() {
                         </>
                     )}
                 </main>
-
-                <footer className="mt-20 border-t border-slate-100 bg-white py-12">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                                <div className="h-4 w-4 bg-[#4F46E5] flex-shrink-0 rounded-[1px]" />
-                                <div className="flex items-baseline leading-none">
-                                    <span className="text-lg font-black text-slate-900 tracking-tighter uppercase">Square</span>
-                                    <span className="text-lg font-black text-[#4F46E5] tracking-tighter uppercase ml-0.5">FT</span>
-                                </div>
-                            </div>
-                            <span className="font-black text-slate-900 tracking-tight ml-2">SquareFT Realty</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">
-                            © 2026 SquareFT · MLS® Verified Data · All Rights Reserved
-                        </p>
-                    </div>
-                </footer>
             </div>
         </div>
     );

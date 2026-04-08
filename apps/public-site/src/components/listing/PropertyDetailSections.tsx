@@ -81,8 +81,65 @@ export function RealtorBadge(_props: {
 /* ═══════════════════════════════════════════════════════════════════ */
 export function PropertySummarySection({ data }: { data: PropertySummary }) {
   if (!hasAnyValue(data)) return null;
+
+  // Build location string
+  const locationLine = [data.city, data.province].filter(Boolean).join(', ');
+
   return (
     <Section id="property-summary" title="Property Summary" icon={icons.summary}>
+
+      {/* ── Location + Dates info bar ── */}
+      {(locationLine || data.postalCode || data.listedDate || data.updatedDate) && (
+        <div className="mb-6 flex flex-wrap gap-4 rounded-2xl bg-white border border-slate-100 px-5 py-4 shadow-sm">
+          {/* Location */}
+          {(locationLine || data.postalCode) && (
+            <div className="flex items-start gap-2 min-w-[180px]">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[#4F46E5]">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </span>
+              <div>
+                {locationLine && <p className="text-[13px] font-bold text-slate-700 leading-tight">{locationLine}</p>}
+                {data.postalCode && <p className="text-[12px] font-black text-[#4F46E5] tracking-widest mt-0.5">{data.postalCode}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Listed date */}
+          {data.listedDate && (
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Listed</p>
+                <p className="text-[13px] font-bold text-slate-700 leading-tight">{data.listedDate}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Last updated date */}
+          {data.updatedDate && (
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Last Updated</p>
+                <p className="text-[13px] font-bold text-slate-700 leading-tight">{data.updatedDate}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Standard detail rows ── */}
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-x-12">
         <Row label="Property Type" value={data.propertyType} />
         <Row label="Building Type" value={data.buildingType} />
@@ -97,6 +154,9 @@ export function PropertySummarySection({ data }: { data: PropertySummary }) {
         <Row label="Annual Tax" value={data.tax} />
         <Row label="Ownership" value={data.ownershipType} />
         <Row label="Zoning" value={data.zoning} />
+        <Row label="Lease Type" value={data.leaseType} />
+        <Row label="Cross Streets" value={data.crossStreets} />
+        <Row label="Directions" value={data.directions} />
         <Row label="Inclusions" value={data.inclusions} />
       </div>
       <TagList label="View" items={data.view} />
@@ -135,11 +195,13 @@ export function InteriorFeaturesSection({ data }: { data: InteriorInfo }) {
   if (!hasAnyValue(data)) return null;
   return (
     <Section id="interior-features" title="Interior Features" icon={icons.interior}>
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-x-12">
+        <Row label="Heating" value={data.heating?.join(', ')} />
+        <Row label="Cooling" value={data.cooling?.join(', ')} />
+      </div>
+      <TagList label="Basement" items={data.basement} />
       <TagList label="Appliances" items={data.appliances} />
       <TagList label="Flooring" items={data.flooring} />
-      <TagList label="Basement" items={data.basement} />
-      <TagList label="Heating" items={data.heating} />
-      <TagList label="Cooling" items={data.cooling} />
       <TagList label="Security" items={data.securityFeatures} />
     </Section>
   );
@@ -149,8 +211,10 @@ export function ExteriorFeaturesSection({ data }: { data: ExteriorInfo }) {
   if (!hasAnyValue(data)) return null;
   return (
     <Section id="exterior-features" title="Exterior & Condition" icon={icons.exterior}>
-      <TagList label="Exterior" items={data.exteriorFeatures} />
-      <TagList label="Roof" items={data.roofType} />
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-x-12">
+        <Row label="Roof" value={data.roofType?.join(', ')} />
+      </div>
+      <TagList label="Exterior Details" items={data.exteriorFeatures} />
       <TagList label="Pool" items={data.poolFeatures} />
       <TagList label="Fencing" items={data.fencing} />
       <TagList label="Road Surface" items={data.roadSurface} />
@@ -163,10 +227,12 @@ export function UtilitiesSection({ data }: { data: UtilitiesInfo }) {
   if (!hasAnyValue(data)) return null;
   return (
     <Section id="utilities" title="Utilities & Services" icon={icons.utilities}>
-      <TagList label="Water" items={data.water} />
-      <TagList label="Sewer" items={data.sewer} />
-      <TagList label="Electric" items={data.electric} />
-      <TagList label="Utilities" items={data.utilities} />
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-2 md:gap-x-12">
+        <Row label="Water" value={data.water?.join(', ')} />
+        <Row label="Sewer" value={data.sewer?.join(', ')} />
+        <Row label="Electric" value={data.electric?.join(', ')} />
+      </div>
+      <TagList label="All Utilities" items={data.utilities} />
     </Section>
   );
 }

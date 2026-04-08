@@ -5,6 +5,9 @@ const dbUrl = (isLocalDB ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE
 
 console.log("--------------------------------------------------");
 console.log(`Connected DB: ${isLocalDB ? "LOCAL (PostgreSQL)" : "CLOUD (Neon)"}`);
+if (!isLocalDB && !process.env.DATABASE_URL) {
+  console.warn("⚠️ [Prisma] DATABASE_URL is missing! Using build-time dummy fallback. Runtime DB operations will fail.");
+}
 if (isLocalDB && !process.env.DATABASE_URL_LOCAL) {
   console.error("❌ ERROR: USE_LOCAL_DB is true but DATABASE_URL_LOCAL is not defined in .env");
 }

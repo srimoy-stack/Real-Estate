@@ -3,7 +3,6 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  resolveStatus,
   resolvePrice,
   formatNumber,
   getFreshnessBadge,
@@ -12,7 +11,7 @@ import {
 } from './design-tokens';
 import { NormalizedProperty, autoNormalize } from './normalize-property';
 import { SafeImage } from './SafeImage';
-import { resolveListingUrl } from '@/lib/resolve-listing-url';
+
 
 
 // ─── Props ───────────────────────────────────────────────────────
@@ -38,15 +37,14 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
   // ─── Normalize data ──
   const prop: NormalizedProperty = listing._normalized ? listing : autoNormalize(listing);
 
-  // Failsafe: resolve URL from both normalized and raw data
-  const externalUrl = prop.moreInformationLink || resolveListingUrl(listing);
+
 
   // ─── Derived values ──
   const seed = prop.mlsNumber || prop.id || index;
   const isPlaceholder = !prop.imageUrl || prop.imageUrl === PLACEHOLDER_IMAGE || (typeof prop.imageUrl === 'string' && prop.imageUrl.includes('placeholder'));
   const imageUrl = isPlaceholder ? PLACEHOLDER_IMAGE : prop.imageUrl;
   const priceDisplay = resolvePrice(prop.price, prop.leaseAmount, prop.leaseRatePerSqft, prop.category);
-  const status = resolveStatus(prop.status);
+  // status badge removed — resolveStatus no longer needed here
   const freshnessBadge = getFreshnessBadge(prop.modifiedAt, prop.createdAt);
   
   const displayTitle = prop.title && !prop.title.toLowerCase().startsWith('null')
@@ -54,8 +52,15 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
     : `${prop.city || 'Property'} Listing`;
 
   // ─── Location display — never empty ──
-  const locationParts = [prop.city, prop.province].filter(Boolean);
+  const locationParts = [prop.city, prop.province, prop.postalCode].filter(Boolean);
   const locationDisplay = locationParts.length > 0 ? locationParts.join(', ') : 'Location not available';
+
+  // ─── Short description snippet ──
+  const snippet = prop.publicRemarks
+    ? prop.publicRemarks.length > 120
+      ? prop.publicRemarks.slice(0, 120).trimEnd() + '…'
+      : prop.publicRemarks
+    : null;
 
   // ─── Metadata Logic — hide missing, never show N/A ──
   const renderMetadata = () => {
@@ -202,15 +207,42 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
             )}
           </div>
 
-          {/* MLS Badge (Top-Right) — always visible */}
+          {/* Top-right: number, status badge, photo count */}
           <div className="flex flex-col items-end gap-1.5">
-             <div className="rounded-md bg-[#111827] px-2 py-1 shadow-md">
-                <span className="text-[9px] font-black tracking-[0.2em] text-white uppercase">Verified Listing</span>
-             </div>
-             {/* Status Badge */}
-             <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm ${status.bg}`}>
-                {status.label}
-             </span>
+            {/* Active / Inactive status pill */}
+            {(() => {
+              const s = (prop.status || '').toLowerCase();
+              const isActive = s === 'active' || s === 'active_under_contract' || s === 'coming_soon';
+              return (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-md ${
+                    isActive
+                      ? 'bg-emerald-500/90 text-white'
+                      : 'bg-slate-600/80 text-white/80'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-white animate-pulse' : 'bg-white/50'}`} />
+                  {isActive ? 'Active' : 'Inactive'}
+                </span>
+              );
+            })()}
+            {/* Listing number only */}
+            {prop.mlsNumber && (
+              <div className="rounded-md bg-black/55 backdrop-blur-sm px-2 py-1 shadow-md">
+                <span className="text-[9px] font-black tracking-[0.15em] text-white/80 tabular-nums">
+                  #{prop.mlsNumber}
+                </span>
+              </div>
+            )}
+            {/* Photo count */}
+            {prop.imageCount > 1 && (
+              <div className="flex items-center gap-1 rounded-md bg-black/50 backdrop-blur-sm px-2 py-1 shadow-md">
+                <svg className="w-3 h-3 text-white/75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-[9px] font-bold text-white/80">{prop.imageCount}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -249,9 +281,16 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
 
         {/* Metadata Row — only show if we have data */}
         {metadata && (
-          <div className="mb-3">
+          <div className="mb-2">
             {metadata}
           </div>
+        )}
+
+        {/* Description Snippet */}
+        {snippet && (
+          <p className="mb-3 text-[12px] leading-relaxed text-[#6B7280] line-clamp-2">
+            {snippet}
+          </p>
         )}
 
         {/* Location Section — always has content */}
@@ -265,39 +304,7 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
         </div>
       </div>
 
-      {/* ══════════════ REALTOR.ca More Info Strip ══════════════ */}
-      {externalUrl && (
-        <div
-          data-external-link
-          className="border-t border-[#E5E7EB] bg-[#FFF8F8] px-4 py-2.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <a
-            href={externalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-external-link
-            className="flex items-center justify-between group/ext"
-            aria-label="View property details"
-          >
-            {/* Left: Info Indicator */}
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[#cc0000] animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800">
-                Property Source
-              </span>
-            </div>
 
-            {/* Right: CTA */}
-            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#cc0000] group-hover/ext:underline underline-offset-2 transition-all">
-              More Info
-              <svg className="h-3 w-3 transition-transform group-hover/ext:translate-x-0.5 group-hover/ext:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </span>
-          </a>
-        </div>
-      )}
 
       {/* Footer / Brokerage (Subtle) */}
       {prop.brokerageName && (

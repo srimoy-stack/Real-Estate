@@ -18,12 +18,11 @@ export const Footer = () => {
                     {/* Column 1: About */}
                     <div className="space-y-8">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-[#4F46E5] flex items-center justify-center">
-                                <span className="text-white font-black text-base italic leading-none">A</span>
-                            </div>
-                            <span className="text-xl font-black tracking-tighter text-slate-900 uppercase">
-                                {website.brandName || 'Antigravity'}
-                            </span>
+                            <img
+                                src="/logo.png"
+                                alt="SquareFT"
+                                className="h-32 w-auto object-contain -my-8 transition-all duration-300 hover:scale-105"
+                            />
                         </Link>
                         <p className="text-slate-500 font-medium leading-relaxed">
                             Redefining the real estate experience through innovation, integrity, and unparalleled service across Canada&apos;s most desirable markets.

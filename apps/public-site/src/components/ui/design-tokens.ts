@@ -16,10 +16,10 @@ export const PLACEHOLDER_IMAGE = '/images/property-placeholder.svg';
 // ─── Color Tokens ────────────────────────────────────────────────
 export const colors = {
   brand: {
-    primary: '#d0021b', // Brand Red — Realtor-aligned
-    primaryHover: '#b8011a',
-    primaryLight: 'rgba(208, 2, 27, 0.08)',
-    primaryShadow: 'rgba(208, 2, 27, 0.20)',
+    primary: '#4F46E5', // Brand Indigo — Logo-aligned
+    primaryHover: '#4338CA',
+    primaryLight: 'rgba(79, 70, 229, 0.08)',
+    primaryShadow: 'rgba(79, 70, 229, 0.20)',
   },
   text: {
     primary: '#111827', // High-contrast primary (WCAG AAA on white)
