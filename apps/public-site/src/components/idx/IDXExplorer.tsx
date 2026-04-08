@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { listingService } from '@repo/services';
 import { Listing, PropertyType, ListingStatus } from '@repo/types';
-import { UnifiedPropertyCard } from '@/components/ui';
+import { UnifiedPropertyCard, SearchInput } from '@/components/ui';
 import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
 import { useAuth } from '@repo/auth';
 import { IDXMapPlaceholder } from './IDXMapPlaceholder';
@@ -58,6 +58,7 @@ function parsePriceRange(range: string): { min?: number; max?: number } {
 export const IDXExplorer: React.FC = () => {
     // State
     const [filters, setFilters] = useState<FilterState>(initialFilters);
+    const [cityQuery, setCityQuery] = useState(filters.city || '');
     const [listings, setListings] = useState<Listing[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(1);
@@ -144,6 +145,7 @@ export const IDXExplorer: React.FC = () => {
 
     const clearFilters = () => {
         setFilters(initialFilters);
+        setCityQuery('');
     };
 
     const activeFilterCount = useMemo(() => {
@@ -254,7 +256,8 @@ export const IDXExplorer: React.FC = () => {
                             />
                         </div>
 
-                        {/* City */}
+                        {/* City — Replaced with Predictive Search */}
+                        {/* 
                         <select
                             value={filters.city}
                             onChange={(e) => updateFilter('city', e.target.value)}
@@ -267,6 +270,20 @@ export const IDXExplorer: React.FC = () => {
                             <option value="Muskoka">Muskoka</option>
                             <option value="Calgary">Calgary</option>
                         </select>
+                        */}
+                        <SearchInput
+                            value={cityQuery}
+                            onChange={setCityQuery}
+                            onSelect={(val) => {
+                                setCityQuery(val);
+                                updateFilter('city', val);
+                            }}
+                            onEnter={() => updateFilter('city', cityQuery)}
+                            placeholder="Area / City"
+                            inputClassName={selectClass}
+                            showAddresses={false}
+                            showTypes={false}
+                        />
 
                         {/* Property Type */}
                         <select

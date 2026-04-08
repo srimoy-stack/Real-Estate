@@ -8,6 +8,7 @@
 // Shared components
 export { UnifiedPropertyCard } from './UnifiedPropertyCard';
 export { SafeImage } from './SafeImage';
+export { SearchInput } from './SearchInput';
 export type { default as UnifiedPropertyCardDefault } from './UnifiedPropertyCard';
 
 // Data normalization

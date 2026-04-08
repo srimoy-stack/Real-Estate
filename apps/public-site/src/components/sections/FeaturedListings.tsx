@@ -13,11 +13,11 @@ export const FeaturedListings: React.FC = () => {
         <ListingsSection
             limit={50}
             sort="latest"
-            title="Featured Commercial & Lease Properties"
-            subtitle="Explore premium commercial opportunities and high-value lease listings curated for professional investors and businesses."
+            title="Ontario Featured Properties"
+            subtitle="Explore high-value commercial and lease opportunities across Ontario's premier business districts and growing urban centers."
             showViewAll={true}
-            viewAllHref="/search?propertyType=Commercial,Lease&province=Ontario"
-            filters={{ propertyType: "Commercial,Lease", province: "Ontario" }}
+            viewAllHref="/search?propertyType=Commercial,Lease&city=Ontario"
+            filters={{ propertyType: "Commercial,Lease", city: "Ontario" }}
         />
     );
 };

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { SearchInput } from '@/components/ui';
 import {
     FilterState,
     DEFAULT_FILTERS,
@@ -17,7 +18,6 @@ import {
     TAX_RANGES,
     YEAR_BUILT_RANGES,
     SORT_OPTIONS,
-    CANADIAN_CITIES,
     COMMERCIAL_SUBTYPE_OPTIONS,
     COMMERCIAL_SORT_OPTIONS,
 } from '../types';
@@ -98,6 +98,12 @@ function RangeSelect({
 /* ─── Main FilterBar ───────────────────────────────────────────────────────── */
 export function FilterBar({ filters, onFiltersChange, onSearch, isLoading, isLeaseMode, isCommercialMode }: FilterBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [cityQuery, setCityQuery] = useState(filters.city || '');
+
+    // Sync local state if filters change from outside (e.g. URL change)
+    useEffect(() => {
+        setCityQuery(filters.city || '');
+    }, [filters.city]);
 
     const update = (key: keyof FilterState, value: string) => {
         onFiltersChange({ ...filters, [key]: value });
@@ -133,7 +139,8 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading, isLea
                             : PROPERTY_TYPES.map((t) => ({ label: t, value: t }))}
                         onChange={(v) => update('propertyType', v)} className="flex-1 min-w-[120px]" />
 
-                    {/* City */}
+                    {/* City — Replaced Dropdown with Predictive Search */}
+                    {/* 
                     <FilterSelect id="f-city" label="City" value={filters.city}
                         options={[
                             { label: 'All Cities', value: '' },
@@ -143,7 +150,25 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading, isLea
                                 : []),
                             ...CANADIAN_CITIES.map((c) => ({ label: c, value: c }))
                         ]}
-                        onChange={(v) => update('city', v)} className="flex-1 min-w-[120px]" />
+                        onChange={(v) => update('city', v)} className="flex-1 min-w-[120px]" /> 
+                    */}
+
+                    <div className="flex-1 min-w-[180px] flex flex-col gap-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Location Search</label>
+                        <SearchInput
+                            value={cityQuery}
+                            onChange={setCityQuery}
+                            onSelect={(val) => {
+                                setCityQuery(val);
+                                onFiltersChange({ ...filters, city: val });
+                                // User said: trigger search refresh
+                                setTimeout(() => onSearch(), 10);
+                            }}
+                            onEnter={onSearch}
+                            placeholder="Search City or Area..."
+                            inputClassName="w-full appearance-none rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-2 pr-7 text-xs font-medium text-slate-900 outline-none transition-all hover:border-brand-red focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 cursor-pointer"
+                        />
+                    </div>
 
                     {/* Price */}
                     <div className="flex-1 min-w-[160px]">
