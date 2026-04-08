@@ -135,7 +135,14 @@ export function FilterBar({ filters, onFiltersChange, onSearch, isLoading, isLea
 
                     {/* City */}
                     <FilterSelect id="f-city" label="City" value={filters.city}
-                        options={[{ label: 'All Cities', value: '' }, ...CANADIAN_CITIES.map((c) => ({ label: c, value: c }))]}
+                        options={[
+                            { label: 'All Cities', value: '' },
+                            // Ensure the current city value is an option if it's not in the predefined list
+                            ...(filters.city && !CANADIAN_CITIES.includes(filters.city) 
+                                ? [{ label: filters.city, value: filters.city }]
+                                : []),
+                            ...CANADIAN_CITIES.map((c) => ({ label: c, value: c }))
+                        ]}
                         onChange={(v) => update('city', v)} className="flex-1 min-w-[120px]" />
 
                     {/* Price */}

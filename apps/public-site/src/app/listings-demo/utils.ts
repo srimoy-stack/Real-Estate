@@ -75,10 +75,28 @@ export const GEO_BOUNDS: Record<string, { latitudeMin: number; latitudeMax: numb
  */
 export function resolveGeoBounds(city: string): GeoBounds | null {
     if (!city) return null;
+
+    // Direct lookup
     const bounds = GEO_BOUNDS[city];
     if (bounds) return bounds;
 
-    // No default fallback — let backend use name-based search
+    // Normalize: strip parenthetical neighborhood  
+    // "Toronto (East End-Danforth)" → "Toronto"
+    const baseCity = city.replace(/\s*\(.*\)\s*$/, '').trim();
+    if (baseCity && baseCity !== city) {
+        const baseBounds = GEO_BOUNDS[baseCity];
+        if (baseBounds) return baseBounds;
+    }
+
+    // Normalize: strip after comma/dash
+    // "Toronto, ON" → "Toronto"
+    const commaCity = city.split(/[,\-–—]/)[0].trim();
+    if (commaCity && commaCity !== city && commaCity !== baseCity) {
+        const commaBounds = GEO_BOUNDS[commaCity];
+        if (commaBounds) return commaBounds;
+    }
+
+    // No match — let backend use name-based search
     return null;
 }
 

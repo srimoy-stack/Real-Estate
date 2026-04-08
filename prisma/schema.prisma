@@ -58,6 +58,7 @@ model Listing {
 
   @@index([modificationTimestamp])
   @@index([city])
+  @@index([address])
   @@index([listPrice])
   @@index([listingDate])
   @@index([createdAt])

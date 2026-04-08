@@ -40,7 +40,7 @@ export default function SearchPage() {
     const [filters, setFilters] = useState<FilterState>(() => {
         const transType = isLeaseMode ? 'For Rent' : 'For Sale';
         const searchQuery = searchParams.get('q') || '';
-        let cityValue = ''; // Default to All Cities on load as requested
+        let cityValue = searchParams.get('city') || '';
         let provinceValue = searchParams.get('province') || '';
 
         // Smart detect: if user typed "ontario" in city field, treat it as province
@@ -49,8 +49,8 @@ export default function SearchPage() {
             cityValue = '';
         }
 
-        const propType = searchParams.get('propertyType') || 'Any';
-        const listType = 'Any' as const;
+        const propType = searchParams.get('propertyType') || searchParams.get('property_type') || 'Any';
+        const listType = (searchParams.get('listingType') || searchParams.get('listing_type') || 'Any') as any;
 
         return {
             ...DEFAULT_FILTERS,
@@ -112,6 +112,9 @@ export default function SearchPage() {
             const activeFilters = customFilters || filters;
             const bounds = resolveGeoBounds(activeFilters.city);
             const enrichedFilters = { ...activeFilters, ...(bounds || {}) };
+            
+            console.log('[SearchPage] Searching with filters:', JSON.stringify(activeFilters, null, 2));
+            if (bounds) console.log('[SearchPage] Geo bounds applied:', JSON.stringify(bounds, null, 2));
 
             const data = await fetchAggregatedListings(enrichedFilters, PAGE_SIZE);
 
@@ -146,7 +149,7 @@ export default function SearchPage() {
                 setIsLoading(false);
             }
         }
-    }, [filters, router, transaction, resolveGeoBounds]);
+    }, [filters, router, transaction]);
 
     // ─── Pagination ─────────────────────────────────────────────
     const goToPage = async (page: number) => {

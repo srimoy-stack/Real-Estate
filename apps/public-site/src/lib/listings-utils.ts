@@ -53,9 +53,9 @@ export interface ListingQuery {
  */
 export const CLASSIFICATION_MAP = {
     commercial: {
-        subTypes: ['Industrial', 'Office', 'Retail', 'Business', 'Investment', 'Warehouse', 'Agriculture', 'Acreage', 'Land', 'Hospitality', 'Commercial'],
-        excludeSubTypes: ['Single Family', 'Condo', 'Townhouse', 'Modular Home', 'Multi-family', 'Apartment'],
-        excludeTypes: ['Residential']
+        subTypes: ['Industrial', 'Office', 'Retail', 'Business', 'Investment', 'Warehouse', 'Agriculture', 'Acreage', 'Land', 'Hospitality', 'Commercial', 'Multi-family', 'Apartment'],
+        excludeSubTypes: ['Single Family', 'Condo', 'Townhouse', 'Modular Home'],
+        excludeTypes: []
     },
     lease: {
         keywords: ['Lease', 'Rent'],
@@ -339,8 +339,29 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
     //    CREA DDF stores cities as "CityName (Neighbourhood)" — startsWith matches Realtor.ca behavior
     city: (v) => {
         const city = String(v).trim();
-        if (!city) return null;
-        return { city: { startsWith: city, mode: 'insensitive' } };
+        if (!city || city === 'Any') return null;
+
+        // Extract base city: "Toronto (East End-Danforth)" → "Toronto"
+        const baseCity = city.replace(/\s*\(.*\)\s*$/, '').trim();
+
+        // Build OR conditions: exact → prefix → base city fallback
+        const conditions: Prisma.ListingWhereInput[] = [
+            { city: { equals: city, mode: 'insensitive' as const } },
+            { city: { startsWith: city, mode: 'insensitive' as const } },
+            { city: { contains: city, mode: 'insensitive' as const } }
+        ];
+
+        // If city has a parenthetical neighborhood, add broad base-city fallback
+        // This ensures "Toronto (East End-Danforth)" still returns Toronto results
+        if (baseCity) {
+            conditions.push(
+                { city: { equals: baseCity, mode: 'insensitive' as const } },
+                { city: { startsWith: baseCity, mode: 'insensitive' as const } },
+                { city: { contains: baseCity, mode: 'insensitive' as const } }
+            );
+        }
+
+        return { OR: conditions };
     },
     // 2.5 Province
     province: (v) => {
@@ -444,9 +465,6 @@ const FILTER_MAP: Record<string, FilterProcessor> = {
     },
     type: (v, q) => q.propertyType ? null : FILTER_MAP.propertyType(v, q),
     listingType: (v, q) => {
-        // If we also have propertyType, we don't want a strict listingType filter (which would hide other commercial properties)
-        // because we want "priority then other".
-        if (q.propertyType && q.propertyType !== 'Any') return null;
         return FILTER_MAP.propertyType(v, q);
     },
     featured: (v) => (v === true || v === 'true') ? { isFeatured: true } : null,
