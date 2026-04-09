@@ -113,3 +113,20 @@ model SyncLog {
   @@index([startedAt])
   @@index([status])
 }
+
+model SellLead {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String
+  propertyType  String
+  city          String
+  address       String
+  status        String   @default("New")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([city])
+}

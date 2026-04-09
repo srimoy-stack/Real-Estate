@@ -35,6 +35,7 @@ export default function SellPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
   const validate = (): boolean => {
@@ -56,14 +57,31 @@ export default function SellPage() {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
+    setSubmitError('');
     try {
-      console.log('[Sell Lead Captured]', formData);
-      await new Promise((r) => setTimeout(r, 900));
+      const res = await fetch('/api/sell-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.fields) {
+          setErrors(data.fields);
+        } else {
+          setSubmitError(data.error || 'Something went wrong. Please try again.');
+        }
+        return;
+      }
+
       setShowSuccess(true);
       setFormData(INITIAL_FORM);
       setErrors({});
     } catch (err) {
       console.error('Submission failed:', err);
+      setSubmitError('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -301,6 +319,14 @@ export default function SellPage() {
 
                   {/* Submit */}
                   <div className="pt-2">
+                    {submitError && (
+                      <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-sm text-red-600 font-semibold">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        {submitError}
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={isSubmitting}
