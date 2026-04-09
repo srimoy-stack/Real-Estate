@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const title = seo?.metaTitle || website.seo?.defaultTitle || 'SquareFT';
   const description = seo?.metaDescription || website.seo?.defaultDescription;
-  const domain = website.domain || 'skyline-estates.com';
+  const domain = website.domain || 'squareft.com';
 
   return {
     title: title,
@@ -48,8 +48,8 @@ export default async function HomePage() {
     '@type': pageSeo?.schemaType || 'RealEstateAgent',
     name: pageSeo?.metaTitle || seo?.defaultTitle || brandName,
     description: pageSeo?.metaDescription || seo?.defaultDescription,
-    url: `https://${domain || 'skyline-estates.com'}`,
-    logo: `https://${domain || 'skyline-estates.com'}${website.branding?.logoUrl || '/logo.png'}`,
+    url: `https://${domain || 'squareft.com'}`,
+    logo: `https://${domain || 'squareft.com'}${website.branding?.logoUrl || '/logo.png'}`,
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'CA',

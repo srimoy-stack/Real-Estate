@@ -15,7 +15,7 @@ interface FormData {
     accessCode: string;
 }
 
-const STORAGE_KEY = 'skyline_lead_registered';
+const STORAGE_KEY = 'squareft_lead_registered';
 
 /**
  * Check if the user has already registered (persisted in localStorage).

@@ -92,7 +92,7 @@ export const ContactSection = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-widest text-[#4F46E5]/80 mb-1">Email Us Directly</p>
-                                    <a href="mailto:hello@skylinerealty.ca" className="text-2xl font-black text-white hover:text-[#4F46E5]/60 transition-colors">hello@skylinerealty.ca</a>
+                                    <a href="mailto:hello@squareft.ca" className="text-2xl font-black text-white hover:text-[#4F46E5]/60 transition-colors">hello@squareft.ca</a>
                                 </div>
                             </div>
 

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const title = auto ? generated.title : (seo.title || page.title);
     const description = auto ? generated.description : seo.description;
 
-    const domain = website?.domain || 'skyline-estates.com';
+    const domain = website?.domain || 'squareft.com';
     const baseUrl = `https://${domain}`;
 
     return {

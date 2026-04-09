@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { useWebsite } from '../../lib/tenant/website-context';
@@ -84,8 +85,6 @@ function HeaderInner() {
     };
 
     const brandName = website.brandName || 'SquareFT';
-    const firstWord = brandName.split(' ')[0];
-    const restWords = brandName.split(' ').slice(1).join(' ');
 
     return (
         <>
@@ -99,13 +98,16 @@ function HeaderInner() {
                 <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-[68px]">
                         {/* ── Logo ───────────────────────────────── */}
-                        <Link href="/" className="flex items-center gap-1.5 group flex-shrink-0">
-                            <div className="flex items-center gap-1.5">
-                                <div className="h-7 w-7 bg-[#4F46E5] flex-shrink-0 rounded-[2px]" />
-                                <div className="flex items-baseline leading-none">
-                                    <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{firstWord}</span>
-                                    <span className="text-2xl font-black text-[#4F46E5] tracking-tighter uppercase ml-0.5">{restWords}</span>
-                                </div>
+                        <Link href="/" className="flex items-center h-[68px] group shrink-0">
+                            <div className="h-[73px] overflow-hidden flex items-start">
+                                <Image 
+                                    src="/logo.png" 
+                                    alt={brandName} 
+                                    width={400} 
+                                    height={130}
+                                    className="h-[140px] w-auto object-contain object-top transition-all duration-300 group-hover:scale-[1.03] origin-left"
+                                    priority
+                                />
                             </div>
                         </Link>
 

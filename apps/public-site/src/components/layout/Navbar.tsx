@@ -34,11 +34,13 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                 <SafeImage src={logoUrl} alt={brandName} fill className="object-contain" />
               </div>
             ) : (
-                <img
-                    src="/logo.png"
-                    alt="SquareFT"
-                    className="h-48 w-auto object-contain -my-16 transition-all duration-300 group-hover:scale-105"
-                />
+                <div className="h-[40px] overflow-hidden flex items-start">
+                    <img
+                        src="/logo.png"
+                        alt="SquareFT"
+                        className="h-[120px] w-auto object-contain object-top transition-all duration-300 group-hover:scale-105 origin-left"
+                    />
+                </div>
             )}
           </Link>
           {/* Search Bar — Professional & Integrated */}
