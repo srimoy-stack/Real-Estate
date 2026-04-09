@@ -11,6 +11,63 @@ import {
 } from './design-tokens';
 import { NormalizedProperty, autoNormalize } from './normalize-property';
 import { SafeImage } from './SafeImage';
+import { useAuth } from '@repo/auth';
+import { userSavedItemService } from '@repo/services';
+
+// ─── Sub-Components ───────────────────────────────────────────────
+function SaveButton({ listingId, userId }: { listingId: string; userId?: string }) {
+  const [isSaved, setIsSaved] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!userId || !listingId) return;
+    userSavedItemService.isListingSaved(userId, listingId).then(setIsSaved);
+  }, [userId, listingId]);
+
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId || !listingId || loading) return;
+
+    setLoading(true);
+    try {
+      if (isSaved) {
+        await userSavedItemService.removeSavedListing(userId, listingId);
+        setIsSaved(false);
+      } else {
+        await userSavedItemService.saveListing(userId, listingId);
+        setIsSaved(true);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      disabled={!userId || loading}
+      className={`group/heart flex h-10 w-10 items-center justify-center rounded-full border shadow-xl transition-all active:scale-90 
+        ${!userId ? 'bg-white/40 cursor-not-allowed opacity-50' : 'bg-white hover:scale-110'} 
+        ${isSaved ? 'border-rose-100' : 'border-transparent'}`}
+    >
+      <svg
+        className={`h-5 w-5 transition-all duration-300 ${
+          isSaved ? 'fill-rose-500 stroke-rose-500 scale-110 animate-[heartPulse_0.3s_ease-out]' : 'fill-transparent stroke-slate-500 group-hover/heart:stroke-rose-400'
+        } ${loading ? 'opacity-50' : ''}`}
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+    </button>
+  );
+}
 
 
 
@@ -34,6 +91,7 @@ const PinIcon = () => (
 
 // ─── Component ───────────────────────────────────────────────────
 export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: UnifiedPropertyCardProps) {
+  const { user } = useAuth();
   // ─── Normalize data ──
   const prop: NormalizedProperty = listing._normalized ? listing : autoNormalize(listing);
 
@@ -168,9 +226,21 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
           seed={seed}
           fill
           className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out 
-            ${onAuthRequired ? 'blur-[8px] brightness-75 group-hover:blur-[4px] grayscale-[0.5]' : 'group-hover:scale-[1.04]'} 
+            ${onAuthRequired ? 'blur-[10px] brightness-[0.6] group-hover:blur-[6px] grayscale-[0.3]' : 'group-hover:scale-[1.04]'} 
             ${isPlaceholder ? 'opacity-40 grayscale' : ''}`}
         />
+
+        {/* ── SQFT Watermark Branding (Locked State) ── */}
+        {onAuthRequired && (
+          <div className="absolute inset-0 z-[2] flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden pb-4">
+             <span className="text-[72px] font-[1000] text-white/[0.08] -rotate-[12deg] tracking-tighter scale-125 transition-all duration-700 group-hover:scale-[1.3] filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+               SQFT
+             </span>
+             <span className="text-[9px] font-black text-white/[0.06] uppercase tracking-[0.6em] -rotate-[12deg] -mt-5 transition-all duration-700 group-hover:text-white/[0.1] group-hover:scale-105">
+               SquareFT
+             </span>
+          </div>
+        )}
 
         {isPlaceholder && (
           <div className="absolute inset-0 z-[2] flex items-center justify-center">
@@ -189,7 +259,6 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
 
         {/* ── Badges ── */}
         <div className="absolute inset-x-3 top-3 z-[3] flex items-start justify-between">
-          {/* Freshness Badge (Top-Left) */}
           <div className="flex flex-col gap-2">
             {freshnessBadge && (
               <span 
@@ -207,9 +276,7 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
             )}
           </div>
 
-          {/* Top-right: number, status badge, photo count */}
           <div className="flex flex-col items-end gap-1.5">
-            {/* Active / Inactive status pill */}
             {(() => {
               const s = (prop.status || '').toLowerCase();
               const isActive = s === 'active' || s === 'active_under_contract' || s === 'coming_soon';
@@ -226,7 +293,6 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
                 </span>
               );
             })()}
-            {/* Listing number only */}
             {prop.mlsNumber && (
               <div className="rounded-md bg-black/55 backdrop-blur-sm px-2 py-1 shadow-md">
                 <span className="text-[9px] font-black tracking-[0.15em] text-white/80 tabular-nums">
@@ -234,17 +300,15 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
                 </span>
               </div>
             )}
-            {/* Photo count */}
-            {prop.imageCount > 1 && (
-              <div className="flex items-center gap-1 rounded-md bg-black/50 backdrop-blur-sm px-2 py-1 shadow-md">
-                <svg className="w-3 h-3 text-white/75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="text-[9px] font-bold text-white/80">{prop.imageCount}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* ── Save (Heart) Action ── */}
+        {!onAuthRequired && (
+          <div className="absolute bottom-3 right-3 z-[10]">
+            <SaveButton listingId={prop.mlsNumber} userId={user?.id} />
+          </div>
+        )}
 
         {/* Auth-required hover overlay — subtle hint for unauthenticated users */}
         {onAuthRequired && (
@@ -320,6 +384,11 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
         @keyframes pcFadeUp {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes heartPulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.4); }
+          100% { transform: scale(1.1); }
         }
       `}</style>
     </div>

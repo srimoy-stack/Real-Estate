@@ -40,7 +40,7 @@ export const HeroSection = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-red shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
                             </span>
-                            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white/80">Market Activity: Live Ontario Feed</span>
+                            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white/80">Market Activity: Live Market Feed</span>
                         </div>
 
                         {/* Heading with Decorative Span */}
@@ -57,7 +57,7 @@ export const HeroSection = () => {
                         {/* Refined Marketing Copy */}
                         <div className="max-w-3xl space-y-6">
                             <p className="text-xl md:text-2xl text-slate-100 font-bold leading-relaxed tracking-tight">
-                                Access thousands of verified commercial properties and lease opportunities across Ontario&apos;s top markets.
+                                Access thousands of verified commercial properties and lease opportunities across the most sought-after markets.
                             </p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 pt-2">
@@ -78,7 +78,7 @@ export const HeroSection = () => {
                                         </svg>
                                     </div>
                                     <p className="text-sm md:text-base text-white/70 font-medium leading-relaxed">
-                                        Localized insights covering premium retail, commercial, and industrial markets in Ontario.
+                                        Localized insights covering premium retail, commercial, and industrial markets.
                                     </p>
                                 </div>
                             </div>
@@ -87,7 +87,7 @@ export const HeroSection = () => {
 
                     {/* Integrated Search Bar with Glass Container */}
                     <div className="pt-8 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300 ease-out">
-                        <div className="relative p-2 bg-white/[0.03] backdrop-blur-md rounded-[42px] border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]">
+                        <div className="relative z-30 p-2 bg-white/[0.03] backdrop-blur-md rounded-[42px] border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]">
                             <SearchBar />
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export const HeroSection = () => {
                             </div>
                             <div className="h-8 w-px bg-white/10" />
                             <p className="text-xs text-white/50 font-black uppercase tracking-[0.2em] leading-tight">
-                                Trusted by <span className="text-white">50,000+</span> <br />Investors across Ontario
+                                Trusted by <span className="text-white">50,000+</span> <br />Active Investors
                             </p>
                         </div>
                     </div>

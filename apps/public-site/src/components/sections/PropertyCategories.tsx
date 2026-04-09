@@ -21,7 +21,7 @@ export const PropertyCategories = () => {
                         Browse By <span className="text-brand-red italic">Category</span>
                     </h2>
                     <p className="text-slate-500 font-medium">
-                        Discover premium commercial spaces and high-value lease opportunities across Ontario&apos;s most sought-after markets.
+                        Discover premium commercial spaces and high-value lease opportunities across the most sought-after markets.
                     </p>
                 </div>
 

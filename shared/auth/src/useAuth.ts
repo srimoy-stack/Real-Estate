@@ -36,6 +36,19 @@ export const useAuth = () => {
         }
     }, [setAuth]);
 
+    const signup = useCallback(async (userData: any) => {
+        setIsLoading(true);
+        try {
+            const response = await apiClient.post('/auth/signup', userData);
+            const { user, accessToken } = response.data;
+            setAuth(user, accessToken);
+        } catch (error) {
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [setAuth]);
+
     const logout = useCallback(async () => {
         try {
             await apiClient.post('/auth/logout');
@@ -166,6 +179,7 @@ export const useAuth = () => {
         originalUser,
         isLoading,
         login,
+        signup,
         logout,
         refreshToken,
         startImpersonation,

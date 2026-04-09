@@ -1,64 +1,57 @@
 import { useAuthStore } from '@repo/auth';
+import { apiClient } from '@repo/api-client';
 
 /**
- * Mock Auth Service
- * Simulates login, logout, registration, and session management using local storage.
+ * Auth Service
+ * Integrated with the JWT API for login, registration, and session management.
  */
 export const authService = {
     /**
-     * Simulate a login.
-     * In a real app, this would call a backend API.
+     * Real login call to API.
      */
-    login: async (email: string, _password?: string): Promise<void> => {
-        // Mock delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const { setAuth } = useAuthStore.getState();
-
-        const mockUser = {
-            id: 'user-' + Math.random().toString(36).substr(2, 9),
-            name: email.split('@')[0],
-            email: email,
-            role: 'viewer' as any,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        setAuth(mockUser, 'mock-jwt-token-' + Date.now());
-        console.log('[Mock Auth] User logged in:', mockUser.email);
+    login: async (email: string, password?: string): Promise<void> => {
+        try {
+            const response = await apiClient.post('/auth/login', { email, password });
+            const { user, accessToken } = response.data;
+            
+            const { setAuth } = useAuthStore.getState();
+            setAuth(user, accessToken);
+            console.log('[Auth Service] User logged in:', user.email);
+        } catch (error) {
+            console.error('[Auth Service] Login failed:', error);
+            throw error;
+        }
     },
 
     /**
-     * Simulate registration.
+     * Real registration call to API.
      */
-    register: async (name: string, email: string, _password?: string): Promise<void> => {
-        // Mock delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const { setAuth } = useAuthStore.getState();
-
-        const mockUser = {
-            id: 'user-' + Math.random().toString(36).substr(2, 9),
-            name: name,
-            email: email,
-            role: 'viewer' as any,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        setAuth(mockUser, 'mock-jwt-token-' + Date.now());
-        console.log('[Mock Auth] User registered and logged in:', mockUser.email);
+    register: async (name: string, email: string, password?: string): Promise<void> => {
+        try {
+            const response = await apiClient.post('/auth/signup', { name, email, password });
+            const { user, accessToken } = response.data;
+            
+            const { setAuth } = useAuthStore.getState();
+            setAuth(user, accessToken);
+            console.log('[Auth Service] User registered:', user.email);
+        } catch (error) {
+            console.error('[Auth Service] Registration failed:', error);
+            throw error;
+        }
     },
 
     /**
      * Clear the user session.
      */
     logout: async (): Promise<void> => {
-        const { logout } = useAuthStore.getState();
-        logout();
-        console.log('[Mock Auth] User logged out');
+        try {
+            // Optional: call backend logout if implemented
+            await apiClient.post('/auth/logout').catch(() => {});
+        } finally {
+            const { logout } = useAuthStore.getState();
+            logout();
+            console.log('[Auth Service] User logged out');
+        }
     },
 
     /**

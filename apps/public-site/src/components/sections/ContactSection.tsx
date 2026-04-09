@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
-import { leadService } from '@repo/services';
+import React, { useState, useEffect } from 'react';
 
 export const ContactSection = () => {
     const [formData, setFormData] = useState({
@@ -13,6 +12,14 @@ export const ContactSection = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Persist success state in this session
+    useEffect(() => {
+        const sentFlag = localStorage.getItem('inquiry_sent');
+        if (sentFlag === 'true') {
+            setIsSuccess(true);
+        }
+    }, []);
 
     const validate = (): string | null => {
         if (!formData.name.trim()) return 'Please enter your name.';
@@ -35,21 +42,38 @@ export const ContactSection = () => {
 
         setIsSubmitting(true);
         try {
-            await leadService.createLead({
-                name: formData.name.trim(),
-                email: formData.email.trim(),
-                phone: formData.phone.trim(),
-                message: formData.message.trim(),
-                source: 'contact_page',
+            const response = await fetch('/api/inquiries', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: formData.name.trim(),
+                    email: formData.email.trim(),
+                    phone: formData.phone.trim(),
+                    message: formData.message.trim(),
+                }),
             });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to send inquiry');
+            }
+
             setIsSuccess(true);
+            localStorage.setItem('inquiry_sent', 'true');
             setFormData({ name: '', email: '', phone: '', message: '' });
-        } catch (err) {
+        } catch (err: any) {
             console.error('Contact form submission failed:', err);
-            setError('Something went wrong. Please try again.');
+            setError(err.message || 'Something went wrong. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleReset = () => {
+        setIsSuccess(false);
+        localStorage.removeItem('inquiry_sent');
     };
 
     return (
@@ -122,7 +146,7 @@ export const ContactSection = () => {
                                     One of our licensed professionals will reach out to you within 24 hours.
                                 </p>
                                 <button
-                                    onClick={() => setIsSuccess(false)}
+                                    onClick={handleReset}
                                     className="text-xs font-black text-[#4F46E5] uppercase tracking-widest hover:text-[#4338CA] transition-colors"
                                 >
                                     Send another message

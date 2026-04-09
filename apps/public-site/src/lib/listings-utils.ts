@@ -111,7 +111,7 @@ const LISTING_SELECT_FIELDS = {
     mediaJson: true,
     rawData: true, // Necessary if the API response expects these fields (per route.ts mapping)
     listingDate: true,
-    normalized_property_type: true,
+    normalizedPropertyType: true,
 };
 
 /**
@@ -129,7 +129,7 @@ export async function fetchRankedListings(
         const txn = (query.transaction || '').toLowerCase();
         const isLeaseMode = txn === 'lease';
 
-        // Priority type: which normalized_property_type should appear first
+        // Priority type: which normalizedPropertyType should appear first
         const priorityType = isLeaseMode ? 'lease' : 'commercial';
 
         // ── 2. Build WHERE clause (handles all filters) ─────────────────────
@@ -148,12 +148,12 @@ export async function fetchRankedListings(
         const orderBy = buildOrderByClause(query);
         let listings: any[];
 
-        // Priority WHERE: same base filters + normalized_property_type match
+        // Priority WHERE: same base filters + normalizedPropertyType match
         const baseConditions = Array.isArray(baseWhere.AND) ? baseWhere.AND : [baseWhere];
         const priorityWhere: any = {
             AND: [
                 ...baseConditions,
-                { normalized_property_type: priorityType },
+                { normalizedPropertyType: priorityType },
                 { isActive: true }
             ]
         };
@@ -179,7 +179,7 @@ export async function fetchRankedListings(
                 const otherListings = await prisma.listing.findMany({
                     where: {
                         ...baseWhere,
-                        NOT: { normalized_property_type: priorityType }
+                        NOT: { normalizedPropertyType: priorityType }
                     },
                     take: remainder,
                     skip: 0,
@@ -196,7 +196,7 @@ export async function fetchRankedListings(
             listings = await prisma.listing.findMany({
                 where: {
                     ...baseWhere,
-                    NOT: { normalized_property_type: priorityType }
+                    NOT: { normalizedPropertyType: priorityType }
                 },
                 take: limit,
                 skip: otherSkip,

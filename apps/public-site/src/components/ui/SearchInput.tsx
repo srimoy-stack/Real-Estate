@@ -161,7 +161,7 @@ export function SearchInput({
                 <div 
                     id="predictive-search-results"
                     role="listbox"
-                    className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 py-2.5 z-[100] max-h-[400px] overflow-y-auto"
+                    className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.25)] border border-slate-100 py-3 z-[100] max-h-[450px] overflow-y-auto ring-1 ring-slate-900/5 animate-in fade-in zoom-in-95 duration-200"
                 >
                     {suggestions.meta?.fallbackUsed && (
                         <div className="px-5 py-2 mb-2 border-b border-slate-50 flex items-center gap-2 bg-amber-50/30">

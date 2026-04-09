@@ -53,110 +53,67 @@ export async function GET(request: NextRequest) {
     // All queries use indexed fields ONLY, LIMIT 5 each.
     // ──────────────────────────────────────────────────────────
 
-    const [
-      exactCities,
-      partialCities,
-      prefixCities,
-      exactAddresses,
-      prefixAddresses,
-      exactTypes,
-      partialTypes,
-    ] = await Promise.all([
-      // ── CITIES ────────────────────────────────
-      // 1. Exact contains
+    // ─── OPTIMIZED QUERY STRATEGY ─────────────────────────────
+    // Combine multiple conditions into fewer parallel queries to 
+    // reduce connection pressure (Neon pool-friendly).
+    const [cityMatches, addressMatches, typeMatches] = await Promise.all([
+      // 1. CITIES (Combined contains + prefix)
       prisma.listing.findMany({
-        where: { city: { contains: primary, mode: 'insensitive' }, isActive: true },
+        where: {
+          city: { contains: fallback, mode: 'insensitive' },
+          isActive: true,
+        },
         select: { city: true },
         distinct: ['city'],
-        take: 5,
-      }),
-      // 2. Partial (fallback) contains
-      primary !== fallback
-        ? prisma.listing.findMany({
-            where: { city: { contains: fallback, mode: 'insensitive' }, isActive: true },
-            select: { city: true },
-            distinct: ['city'],
-            take: 5,
-          })
-        : Promise.resolve([]),
-      // 3. Prefix (index-friendly fast path)
-      prisma.listing.findMany({
-        where: { city: { startsWith: fallback, mode: 'insensitive' }, isActive: true },
-        select: { city: true },
-        distinct: ['city'],
-        take: 5,
+        take: 10,
       }),
 
-      // ── ADDRESSES ─────────────────────────────
-      // 1. Exact contains
+      // 2. ADDRESSES (Prefix priority, fallback to contains)
       prisma.listing.findMany({
-        where: { address: { contains: primary, mode: 'insensitive' }, isActive: true },
+        where: {
+          OR: [
+            { address: { startsWith: primary, mode: 'insensitive' } },
+            { address: { contains: fallback, mode: 'insensitive' } },
+          ],
+          isActive: true,
+        },
         select: { address: true, city: true },
-        take: 5,
+        take: 8,
       }),
-      // 2. Prefix (index-friendly)
+
+      // 3. PROPERTY TYPES
       prisma.listing.findMany({
-        where: { address: { startsWith: fallback, mode: 'insensitive' }, isActive: true },
-        select: { address: true, city: true },
-        take: 5,
-      }),
-
-      // ── PROPERTY TYPES ────────────────────────
-      // 1. Exact contains
-      prisma.listing.findMany({
-        where: { normalized_property_type: { contains: primary, mode: 'insensitive' }, isActive: true },
-        select: { normalized_property_type: true },
-        distinct: ['normalized_property_type'],
-        take: 5,
-      }),
-      // 2. Partial (fallback)
-      prisma.listing.findMany({
-        where: { normalized_property_type: { contains: fallback, mode: 'insensitive' }, isActive: true },
-        select: { normalized_property_type: true },
-        distinct: ['normalized_property_type'],
+        where: {
+          normalizedPropertyType: { contains: fallback, mode: 'insensitive' },
+          isActive: true,
+        },
+        select: { normalizedPropertyType: true },
+        distinct: ['normalizedPropertyType'],
         take: 5,
       }),
     ]);
 
-    // ── MERGE + DEDUPE ──────────────────────────────────────
-    const mergedCities = uniqueStrings([
-      ...exactCities.map(l => l.city),
-      ...prefixCities.map(l => l.city),
-      ...(Array.isArray(partialCities) ? partialCities.map(l => l.city) : []),
-    ]);
-
-    const mergedAddresses = uniqueStrings([
-      ...exactAddresses.map(l => l.address),
-      ...prefixAddresses.map(l => l.address),
-    ]);
-
-    const mergedTypes = uniqueStrings([
-      ...exactTypes.map(l => l.normalized_property_type),
-      ...partialTypes.map(l => l.normalized_property_type),
-    ]);
-
-    // ── FALLBACK GUARANTEE ──────────────────────────────────
-    // If exact cities returned nothing but partial/prefix did, flag it.
-    const fallbackUsed = exactCities.length === 0 && mergedCities.length > 0;
+    const mergedCities = uniqueStrings(cityMatches.map(l => l.city));
+    const mergedAddresses = uniqueStrings(addressMatches.map(l => l.address));
+    const mergedTypes = uniqueStrings(typeMatches.map(l => l.normalizedPropertyType));
 
     const queryMs = Date.now() - startTime;
 
     return NextResponse.json({
-      cities: mergedCities.slice(0, 8),
-      addresses: mergedAddresses.slice(0, 5),
-      types: mergedTypes.slice(0, 5),
+      cities: mergedCities,
+      addresses: mergedAddresses,
+      types: mergedTypes,
       meta: {
-        fallbackUsed,
-        fallbackTerm: fallbackUsed ? fallback : null,
         queryMs,
       },
     });
   } catch (error) {
-    console.error('Search suggestions error:', error);
-    const queryMs = Date.now() - startTime;
-    return NextResponse.json(
-      { cities: [], addresses: [], types: [], meta: { error: true, queryMs } },
-      { status: 500 }
-    );
+    console.error('Search suggestions fail-safe triggered:', error);
+    return NextResponse.json({
+      cities: [],
+      addresses: [],
+      types: [],
+      meta: { error: true, queryMs: Date.now() - startTime }
+    });
   }
 }

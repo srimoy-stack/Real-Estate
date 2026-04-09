@@ -21,17 +21,26 @@ export default function SearchPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { isAuthenticated, hasHydrated } = useAuth();
-    const isGated = hasHydrated && !isAuthenticated;
+    
+    // Controlled Gate State
+    const [showGate, setShowGate] = useState(false);
 
     // Lock body scroll when auth gate is active
     useEffect(() => {
-        if (isGated) {
+        if (showGate && !isAuthenticated) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
         return () => { document.body.style.overflow = ''; };
-    }, [isGated]);
+    }, [showGate, isAuthenticated]);
+    
+    // Auto-close gate on successful auth
+    useEffect(() => {
+        if (isAuthenticated) {
+            setShowGate(false);
+        }
+    }, [isAuthenticated]);
 
     const transaction = searchParams.get('transaction') || 'buy';
     const isLeaseMode = transaction === 'lease';
@@ -176,22 +185,37 @@ export default function SearchPage() {
         }
     };
 
-    // ─── Commercial Mode ───────────────────────────────────────────
-    // Both Buy and Lease are commercial-first — no residential toggle needed.
-    // Sub-type filtering (Office, Retail, etc.) is handled by the FilterBar.
-
     // Auto-search on mount if not triggered by transaction effect
     useEffect(() => {
         if (hasSearched) return;
         handleSearch();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Helper to open gate
+    // Auto-open gate on mount for Search Page (Gated flow)
+    useEffect(() => {
+        if (hasHydrated && !isAuthenticated) {
+            setShowGate(true);
+        }
+    }, [hasHydrated, isAuthenticated]);
+
+    const requestAuth = () => {
+        if (!isAuthenticated) {
+            setShowGate(true);
+        }
+    };
+
     // ─── Render View ───────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-slate-50/50 flex flex-col relative">
-            {isGated && <LeadGate />}
+            
+            <LeadGate 
+                isOpen={showGate && !isAuthenticated} 
+                onClose={() => setShowGate(false)} 
+                mandatory={true}
+            />
 
-            <div className={isGated ? 'blur-sm brightness-75 pointer-events-none select-none transition-all duration-500 flex-1' : 'transition-all duration-500 flex-1'}>
+            <div className={(showGate && !isAuthenticated) ? 'blur-sm brightness-75 pointer-events-none select-none transition-all duration-500 flex-1' : 'transition-all duration-500 flex-1'}>
                 
                 {/* ─── Compact Search Header ─── */}
                 <div className="pt-20 pb-5 bg-white border-b border-slate-100">
@@ -235,7 +259,7 @@ export default function SearchPage() {
                                 </div>
                                 <div className="w-px h-4 bg-slate-200" />
                                 <span className="hidden sm:inline text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    {isLeaseMode ? 'Leasing Opportunities' : 'Asset Disposition &amp; Sales'}
+                                    {isLeaseMode ? 'Leasing Opportunities' : 'Asset Disposition & Sales'}
                                 </span>
                                 {filteredTotal > 0 && (
                                     <>
@@ -297,10 +321,6 @@ export default function SearchPage() {
                             ) : (
                                 <>
                                     {viewMode === 'map' ? (
-                                        /* ═══════════════════════════════════════════════════════════
-                                           PRODUCTION SPLIT-SCREEN: listings panel | interactive map
-                                           Fill remaining viewport below the sticky control bar
-                                           ═══════════════════════════════════════════════════════════ */
                                         <div className="flex" style={{ height: 'calc(100vh - 180px)' }}>
 
                                             {/* ── LEFT: Listings Panel (50%) ── */}
@@ -379,7 +399,7 @@ export default function SearchPage() {
                                                                 <UnifiedPropertyCard
                                                                     listing={l}
                                                                     index={i}
-                                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? () => {} : undefined}
+                                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? requestAuth : undefined}
                                                                 />
                                                             </div>
                                                         ))}
@@ -478,20 +498,18 @@ export default function SearchPage() {
                                             </div>
                                         </div>
                                     ) : (
-                                        /* ═══════════════════════════════════════════
-                                           LIST VIEW: Standard responsive grid
-                                           ═══════════════════════════════════════════ */
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                             {listings.map((l, i) => (
-                                                <UnifiedPropertyCard key={l.ListingId || l.ListingKey} listing={l} index={i} />
+                                                <UnifiedPropertyCard 
+                                                    key={l.ListingId || l.ListingKey} 
+                                                    listing={l} 
+                                                    index={i} 
+                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? requestAuth : undefined}
+                                                />
                                             ))}
                                         </div>
                                     )}
 
-                                    {/* ═══════════════════════════════════════════
-                                        PAGINATION (List mode only)
-                                        Production-grade: 1 2 3 ... N with ellipsis
-                                       ═══════════════════════════════════════════ */}
                                     {viewMode === 'list' && totalPages > 1 && (() => {
                                         const pages: (number | '...')[] = [];
                                         if (totalPages <= 7) {
@@ -507,17 +525,15 @@ export default function SearchPage() {
                                         return (
                                             <div className="mt-16 flex flex-col items-center gap-6">
                                                 <div className="flex items-center gap-2">
-                                                    {/* Prev */}
                                                     <button
                                                         disabled={currentPage === 1}
                                                         onClick={() => goToPage(currentPage - 1)}
                                                         className="h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-all"
                                                     >
-                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                                                         Previous
                                                     </button>
 
-                                                    {/* Page Numbers */}
                                                     {pages.map((p, i) =>
                                                         p === '...' ? (
                                                             <span key={`ellipsis-${i}`} className="w-11 h-11 flex items-center justify-center text-slate-400 text-xs font-bold select-none">
@@ -539,14 +555,13 @@ export default function SearchPage() {
                                                         )
                                                     )}
 
-                                                    {/* Next */}
                                                     <button
                                                         disabled={currentPage === totalPages}
                                                         onClick={() => goToPage(currentPage + 1)}
                                                         className="h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-500 text-xs font-bold flex items-center gap-1.5 disabled:opacity-30 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-all"
                                                     >
                                                         Next
-                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                                     </button>
                                                 </div>
 

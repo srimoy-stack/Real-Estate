@@ -1,71 +1,100 @@
 import { SavedListing, SavedSearch, ListingFilters } from '@repo/types';
 
-// Mock DB
-let savedListings: SavedListing[] = [
-    { id: 'sl-1', userId: 'user-1', listingId: 'premium-property-3', createdAt: new Date().toISOString() }
-];
-
-let savedSearches: SavedSearch[] = [
-    {
-        id: 'ss-1',
-        userId: 'user-1',
-        name: 'Toronto Condos Under 1M',
-        filters: { city: 'Toronto', maxPrice: 1000000, page: 1, limit: 10 },
-        createdAt: new Date().toISOString()
-    }
-];
+// In-memory cache to prevent infinite loops and request flooding
+const savedListingsCache: Record<string, { data: SavedListing[], timestamp: number } | undefined> = {};
+const pendingRequests: Record<string, Promise<SavedListing[]> | undefined> = {};
+const CACHE_TTL = 3000; // 3 seconds is enough to prevent scroll-based flooding
 
 export const userSavedItemService = {
     // Saved Listings
     getSavedListings: async (userId: string): Promise<SavedListing[]> => {
-        return savedListings.filter(sl => sl.userId === userId);
+        if (!userId) return [];
+
+        // Check if there is an active request for this user
+        if (pendingRequests[userId]) return pendingRequests[userId];
+
+        // Check cache
+        const cached = savedListingsCache[userId];
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+            return cached.data;
+        }
+
+        // Create new request
+        const fetchPromise = (async () => {
+            try {
+                const res = await fetch(`/api/account/saved-listings?userId=${userId}`);
+                if (!res.ok) throw new Error('Failed to fetch saved listings');
+                const data = await res.json();
+                
+                // Update cache
+                savedListingsCache[userId] = { data, timestamp: Date.now() };
+                return data;
+            } catch (error) {
+                console.error('userSavedItemService.getSavedListings error:', error);
+                return [];
+            } finally {
+                // Cleanup pending request
+                delete pendingRequests[userId];
+            }
+        })();
+
+        pendingRequests[userId] = fetchPromise;
+        return fetchPromise;
     },
 
-    saveListing: async (userId: string, listingId: string): Promise<SavedListing> => {
-        const existing = savedListings.find(sl => sl.userId === userId && sl.listingId === listingId);
-        if (existing) return existing;
-
-        const newSaved: SavedListing = {
-            id: `sl-${Math.random().toString(36).substr(2, 9)}`,
-            userId,
-            listingId,
-            createdAt: new Date().toISOString()
-        };
-        savedListings.push(newSaved);
-        return newSaved;
+    saveListing: async (userId: string, listingId: string): Promise<SavedListing | null> => {
+        try {
+            // Invalidate cache on change
+            delete savedListingsCache[userId];
+            
+            const res = await fetch('/api/account/saved-listings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, listingId })
+            });
+            if (!res.ok) throw new Error('Failed to save listing');
+            return await res.json();
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
     },
 
     removeSavedListing: async (userId: string, listingId: string): Promise<void> => {
-        savedListings = savedListings.filter(sl => !(sl.userId === userId && sl.listingId === listingId));
+        try {
+            // Invalidate cache on change
+            delete savedListingsCache[userId];
+
+            const res = await fetch(`/api/account/saved-listings?userId=${userId}&listingId=${listingId}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to remove listing');
+        } catch (error) {
+            console.error(error);
+        }
     },
 
     isListingSaved: async (userId: string, listingId: string): Promise<boolean> => {
-        return savedListings.some(sl => sl.userId === userId && sl.listingId === listingId);
+        if (!userId || !listingId) return false;
+        const saved = await userSavedItemService.getSavedListings(userId);
+        return saved.some(sl => sl.listingId === listingId);
     },
 
     // Saved Searches
-    getSavedSearches: async (userId: string): Promise<SavedSearch[]> => {
-        return savedSearches.filter(ss => ss.userId === userId);
+    getSavedSearches: async (_userId: string): Promise<SavedSearch[]> => {
+        // Mocking searches for now, but following the pattern
+        return [];
     },
 
-    saveSearch: async (userId: string, name: string, filters: ListingFilters): Promise<SavedSearch> => {
-        const newSearch: SavedSearch = {
-            id: `ss-${Math.random().toString(36).substr(2, 9)}`,
-            userId,
-            name,
-            filters,
-            createdAt: new Date().toISOString()
-        };
-        savedSearches.push(newSearch);
-        return newSearch;
+    saveSearch: async (_userId: string, _name: string, _filters: ListingFilters): Promise<SavedSearch | null> => {
+        return null;
     },
 
-    removeSavedSearch: async (id: string): Promise<void> => {
-        savedSearches = savedSearches.filter(ss => ss.id !== id);
+    removeSavedSearch: async (_id: string): Promise<void> => {
     },
 
     // Internal helper for notifications
     getAllSavedSearches: (): SavedSearch[] => {
-        return savedSearches;
+        return [];
     }
 };

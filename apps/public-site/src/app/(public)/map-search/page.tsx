@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UnifiedPropertyCard } from '@/components/ui';
-import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
+import { LeadGate } from '@/components/auth/LeadGate';
 import { useAuth } from '@repo/auth';
 import { FilterBar } from '@/app/listings-demo/components/FilterBar';
 import { fetchListings } from '@/app/listings-demo/api';
@@ -45,7 +45,7 @@ export default function MapBasedSearchPage() {
     const [activeListingId, setActiveListingId] = useState<string | null>(null);
     const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
     const [page, setPage] = useState(1);
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isGateOpen, setIsGateOpen] = useState(false);
     const { isAuthenticated, hasHydrated } = useAuth();
 
     const [isDrawActive, setIsDrawActive] = useState(false);
@@ -90,20 +90,33 @@ export default function MapBasedSearchPage() {
 
     // ─── Force Body Lock (Critical Fix) ─────────────────────────
     useEffect(() => {
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.height = '100%';
+        if (isGateOpen && !isAuthenticated) {
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+        }
         
         return () => {
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.width = '';
-            document.body.style.height = '';
         };
-    }, []);
+    }, [isGateOpen, isAuthenticated]);
+    
+    // Auto-close gate on successful auth
+    useEffect(() => {
+        if (isAuthenticated) {
+            setIsGateOpen(false);
+        }
+    }, [isAuthenticated]);
+
+    // Auto-open gate on mount for Map Search (Gated flow)
+    useEffect(() => {
+        if (hasHydrated && !isAuthenticated) {
+            setIsGateOpen(true);
+        }
+    }, [hasHydrated, isAuthenticated]);
 
     // ─── Debounced Search Core ──────────────────────────────────
     const performSearch = useCallback(async (activeFilters: FilterState, activeBounds: DrawBounds | null, pageNum: number = 1) => {
@@ -191,9 +204,16 @@ export default function MapBasedSearchPage() {
 
     return (
         <main className="fixed inset-0 top-[72px] bg-white overflow-hidden z-10">
-            <div className={`flex h-full flex-col lg:flex-row overflow-hidden ${!showMap ? 'container mx-auto max-w-[1400px]' : ''}`}>
+            
+            <LeadGate 
+                isOpen={isGateOpen && !isAuthenticated} 
+                onClose={() => setIsGateOpen(false)} 
+                mandatory={true}
+            />
 
-                {/* ── LEFT PANEL ── Elevated z-index to manage sticky FilterBar inside */}
+            <div className={`flex h-full flex-col lg:flex-row overflow-hidden ${!showMap ? 'container mx-auto max-w-[1400px]' : ''} ${(isGateOpen && !isAuthenticated) ? 'blur-sm brightness-75 pointer-events-none' : ''}`}>
+
+                {/* ── LEFT PANEL ── */}
                 <aside className={`flex flex-col h-full bg-white border-r border-slate-200 transition-all duration-700 ease-in-out z-40 ${showMap ? 'lg:w-[50%] xl:w-[45%]' : 'w-full'}`}>
 
                     <div className="bg-white/95 backdrop-blur-md px-6 py-4 border-b border-slate-100 z-[70] shadow-sm">
@@ -277,7 +297,7 @@ export default function MapBasedSearchPage() {
                                             >
                                                 <UnifiedPropertyCard 
                                                     listing={listing} 
-                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? () => setIsLoginModalOpen(true) : undefined}
+                                                    onAuthRequired={(!isAuthenticated && hasHydrated) ? () => setIsGateOpen(true) : undefined}
                                                 />
                                             </div>
                                         ))}
@@ -313,14 +333,14 @@ export default function MapBasedSearchPage() {
                             )}
                         </div>
 
-                        {/* Pagination or Load More Footer would go here */}
+                        {/* Footer */}
                         <footer className="mt-12 p-8 border-t border-slate-100 text-center">
                             <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">SquareFT • MLS® Data Integration</p>
                         </footer>
                     </div>
                 </aside>
 
-                {/* ══════════ RIGHT PANEL ══════════ */}
+                {/* ── RIGHT PANEL ── */}
                 {showMap && (
                     <section className="flex-1 h-full relative p-0 lg:p-6 lg:pl-0">
                         <div className="w-full h-full lg:rounded-[32px] overflow-hidden border border-slate-200 shadow-xl bg-white relative">
@@ -338,11 +358,6 @@ export default function MapBasedSearchPage() {
                     </section>
                 )}
             </div>
-
-            <LeadCaptureModal 
-                isOpen={isLoginModalOpen} 
-                onSuccess={() => setIsLoginModalOpen(false)} 
-            />
 
             <style jsx global>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 3px; }

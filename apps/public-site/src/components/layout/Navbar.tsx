@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { SafeImage } from '@/components/ui';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@repo/auth';
 import type { NavLink } from '@/types/website';
 
 interface NavbarProps {
@@ -15,12 +16,20 @@ interface NavbarProps {
 export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setShowProfileMenu(false);
+    router.push('/');
   };
 
   return (
@@ -43,20 +52,21 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                 </div>
             )}
           </Link>
+          
           {/* Search Bar — Professional & Integrated */}
           <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-lg mx-12">
             <div className="relative w-full group/search">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-brand-red transition-colors">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-slate-900 transition-colors">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
                 <input
                     type="text"
-                    placeholder="Search by city, address, or MLS®..."
+                    placeholder="Search city, address, or MLS®..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-11 pl-11 pr-4 rounded-xl bg-slate-100/60 border border-transparent focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-brand-red/5 outline-none transition-all text-[13px] font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-semibold"
+                    className="w-full h-11 pl-11 pr-4 rounded-xl bg-slate-100/60 border border-transparent focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-900/5 outline-none transition-all text-[13px] font-bold text-slate-800 placeholder:text-slate-400 placeholder:font-semibold"
                 />
             </div>
           </form>
@@ -68,7 +78,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                 <li key={link.href}>
                     <Link
                     href={link.href}
-                    className="rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 transition-all hover:bg-slate-50 hover:text-brand-red"
+                    className="rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500 transition-all hover:bg-slate-50 hover:text-slate-900"
                     >
                     {link.label}
                     </Link>
@@ -78,18 +88,57 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
             
             <div className="h-4 w-px bg-slate-200" />
             
-            <Link
-                href="/contact"
-                className="rounded-xl bg-brand-red h-10 px-6 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-900 hover:scale-105 active:scale-95 shadow-lg shadow-brand-red/10"
-            >
-                Inquire
-            </Link>
+            {isAuthenticated ? (
+                <div className="relative">
+                    <button 
+                        onClick={() => setShowProfileMenu(!showProfileMenu)}
+                        className="flex items-center gap-3 h-10 px-4 rounded-xl bg-slate-900 text-white transition-all hover:bg-slate-800"
+                    >
+                        <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-black uppercase">
+                            {user?.name?.charAt(0) || user?.email?.charAt(0)}
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{user?.name?.split(' ')[0]}</span>
+                    </button>
+
+                    {showProfileMenu && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="px-4 py-2 border-b border-slate-50 mb-2">
+                                <p className="text-[10px] font-black text-slate-900 uppercase truncate">{user?.name}</p>
+                                <p className="text-[9px] font-medium text-slate-400 truncate">{user?.email}</p>
+                            </div>
+                            <Link href="/account/saved-listings" className="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors uppercase tracking-wider">Saved Listings</Link>
+                            <Link href="/contact" className="block px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors uppercase tracking-wider">Inquire</Link>
+                            <button 
+                                onClick={handleLogout}
+                                className="w-full text-left px-4 py-2 text-[10px] font-black text-red-500 hover:bg-red-50 transition-colors uppercase tracking-wider mt-2 pt-2 border-t border-slate-50"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/login"
+                        className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+                    >
+                        Login
+                    </Link>
+                    <Link
+                        href="/register"
+                        className="rounded-xl bg-slate-900 h-10 px-6 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800 hover:scale-105 active:scale-95 shadow-lg shadow-slate-900/10"
+                    >
+                        Join
+                    </Link>
+                </div>
+            )}
           </div>
 
           {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-slate-50 text-slate-900 hover:bg-brand-red hover:text-white transition-all md:hidden"
+            className="inline-flex items-center justify-center h-10 w-10 border border-slate-100 rounded-xl bg-white text-slate-900 hover:bg-slate-900 hover:text-white transition-all md:hidden"
             aria-label="Toggle navigation"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -115,7 +164,7 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search by city, address, or MLS®..."
+                        placeholder="Search by city, address..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-14 pl-12 pr-4 rounded-2xl bg-slate-100 border-none outline-none font-bold text-slate-900 placeholder:text-slate-400"
@@ -134,15 +183,37 @@ export function Navbar({ brandName, logoUrl, links }: NavbarProps) {
                     </Link>
                     </li>
                 ))}
-                    <li>
-                        <Link
-                            href="/contact"
-                            onClick={() => setMobileOpen(false)}
-                            className="flex items-center justify-center h-14 rounded-2xl bg-brand-red text-white font-black uppercase tracking-widest shadow-xl shadow-brand-red/20"
-                        >
-                            Contact Agent
-                        </Link>
-                    </li>
+                    {isAuthenticated ? (
+                        <>
+                            <li className="pt-2">
+                                <Link
+                                    href="/account/saved-listings"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="flex items-center h-14 px-5 rounded-2xl text-sm font-black uppercase tracking-widest text-slate-900 bg-slate-50"
+                                >
+                                    My saved properties
+                                </Link>
+                            </li>
+                            <li>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center h-14 px-5 rounded-2xl text-sm font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-all"
+                                >
+                                    Sign Out
+                                </button>
+                            </li>
+                        </>
+                    ) : (
+                        <li className="pt-2">
+                            <Link
+                                href="/login"
+                                onClick={() => setMobileOpen(false)}
+                                className="flex items-center justify-center h-14 rounded-2xl bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-900/20"
+                            >
+                                Secure Login
+                            </Link>
+                        </li>
+                    )}
                 </ul>
             </div>
           </div>

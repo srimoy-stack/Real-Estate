@@ -91,7 +91,7 @@ export interface NormalizedProperty {
  */
 function deriveCategory(data: any): PropertyCategory {
   // 1. DB Source of Truth (Prioritize normalizedPropertyType from our own API)
-  const dbType = data.normalizedPropertyType || data.normalized_property_type;
+  const dbType = data.normalizedPropertyType;
   if (dbType && ['commercial', 'residential', 'lease'].includes(dbType.toLowerCase())) {
     return dbType.toLowerCase() as PropertyCategory;
   }

@@ -5,7 +5,7 @@ import { listingService } from '@repo/services';
 import { Listing, ListingSectionFilters, ListingSortOrder } from '@repo/types';
 import { UnifiedPropertyCard } from '@/components/ui';
 import { useAuth } from '@repo/auth';
-import { LeadCaptureModal } from '@/components/auth/LeadCaptureModal';
+import { LeadGate } from '@/components/auth/LeadGate';
 
 // ─── Types ─────────────────────────────────────────────
 export interface ListingsSectionConfig {
@@ -54,41 +54,16 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     const [error, setError] = useState<string | null>(null);
 
     const { isAuthenticated, hasHydrated } = useAuth();
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [isGateOpen, setIsGateOpen] = useState(false);
 
     const handleAuthRequired = () => {
-        setIsLoginModalOpen(true);
+        setIsGateOpen(true);
     };
 
     const sectionRef = useRef<HTMLElement>(null);
 
     // Memoize filter key to avoid unnecessary refetches
     const filterKey = useMemo(() => JSON.stringify({ configName, filters, limit, sort }), [configName, filters, limit, sort]);
-
-    // ─── Scroll-based Gating Trigger ─────────────
-    useEffect(() => {
-        if (!isAuthenticated && hasHydrated && sectionRef.current) {
-            let timer: NodeJS.Timeout;
-
-            const observer = new IntersectionObserver(([entry]) => {
-                if (entry.isIntersecting) {
-                    // Slight delay before popup
-                    timer = setTimeout(() => {
-                        setIsLoginModalOpen(true);
-                    }, 800);
-                } else {
-                    clearTimeout(timer);
-                }
-            }, { threshold: 0.2 });
-
-            observer.observe(sectionRef.current);
-
-            return () => {
-                observer.disconnect();
-                clearTimeout(timer);
-            };
-        }
-    }, [isAuthenticated, hasHydrated]);
 
     useEffect(() => {
         let cancelled = false;
@@ -103,7 +78,6 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 if (configName) {
                     // ── Branch A: Managed Shortcode Config ─────────────
                     const params = new URLSearchParams();
-                    // Inline filters override config - pass them as query params
                     if (filters.city) params.set('city', filters.city);
                     if (filters.propertyType) params.set('propertyType', String(filters.propertyType));
                     if (filters.status) params.set('status', String(filters.status));
@@ -124,8 +98,15 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     }
                 } else {
                     // ── Branch B: Standard Search (Inline Only) ────────
+                    // Smart fix for Ontario in Featured Section
+                    const queryFilters = { ...filters };
+                    if (queryFilters.city?.toLowerCase() === 'ontario') {
+                        queryFilters.province = 'Ontario';
+                        delete queryFilters.city;
+                    }
+
                     results = await listingService.getBySectionConfig(
-                        filters,
+                        queryFilters,
                         limit || 6,
                         sort || 'latest'
                     );
@@ -159,7 +140,6 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         return (
             <section className={`py-20 bg-white overflow-hidden ${className}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header skeleton */}
                     <div className="mb-16 space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="h-1 w-8 bg-slate-200 rounded-full animate-pulse" />
@@ -169,7 +149,6 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         <div className="h-5 w-96 bg-slate-50 rounded-xl animate-pulse" />
                     </div>
 
-                    {/* Card skeletons */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
                         {Array.from({ length: Math.min(limit, 8) }).map((_, i) => (
                             <div key={i} className="animate-pulse">
@@ -214,18 +193,25 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     // ─── Empty State ───────────────────────────────────
     if (listings.length === 0) {
         return (
-            <section className={`py-20 bg-white overflow-hidden ${className}`}>
+            <section className={`py-24 bg-slate-50/30 overflow-hidden ${className}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-20 h-20 rounded-3xl bg-slate-50 flex items-center justify-center mb-6">
-                            <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-[40px] border border-slate-100 shadow-sm">
+                        <div className="w-24 h-24 rounded-[32px] bg-slate-50 flex items-center justify-center mb-8 transform -rotate-6">
+                            <svg className="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-700 mb-2">No Properties Found</h3>
-                        <p className="text-slate-400 max-w-sm">
-                            No listings match the current criteria. Try adjusting your filters or check back soon.
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2 uppercase italic leading-none">
+                            Market <span className="text-slate-300">Quiet</span>
+                        </h3>
+                        <p className="text-slate-400 font-medium max-w-sm text-sm uppercase tracking-widest leading-relaxed">
+                            No listings match the current criteria in {filters.city || filters.province || 'this area'}.
                         </p>
+                        <div className="mt-8 flex gap-4">
+                            <a href="/search" className="h-12 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center hover:bg-[#4F46E5] transition-colors">
+                                Browse All Assets
+                            </a>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -340,9 +326,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             `}</style>
         </section>
 
-            <LeadCaptureModal 
-                isOpen={isLoginModalOpen} 
-                onSuccess={() => setIsLoginModalOpen(false)} 
+            <LeadGate 
+                isOpen={isGateOpen && !isAuthenticated} 
+                onClose={() => setIsGateOpen(false)} 
             />
         </>
     );

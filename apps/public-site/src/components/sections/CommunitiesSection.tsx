@@ -25,7 +25,7 @@ export const CommunitiesSection = () => {
                             Explore <span className="text-[#4F46E5] italic">Communities</span>
                         </h2>
                         <p className="text-slate-500 font-medium">
-                            Discover the unique character, local amenities, and market trends of Ontario&apos;s most vibrant neighborhoods.
+                            Discover the unique character, local amenities, and market trends of the most vibrant neighborhoods.
                         </p>
                     </div>
                 </div>
