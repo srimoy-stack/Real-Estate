@@ -6,29 +6,26 @@ import { SearchBar } from './SearchBar';
 
 export const HeroSection = () => {
     return (
-        <section className="relative w-full min-h-[95vh] flex items-center justify-center overflow-hidden bg-slate-950">
-            {/* Background Image Layer */}
-            <div className="absolute inset-0 z-0 transition-opacity duration-1000">
-                <SafeImage
-                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
-                    alt="Luxury Property Background"
-                    fill
-                    priority
-                    className="object-cover scale-105"
-                    style={{ animation: 'slowZoom 30s ease-in-out infinite alternate' }}
-                />
-                {/* Advanced Gradient Overlay for better depth */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/70 to-slate-900/60" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
+        <section className="relative w-full min-h-[95vh] flex items-center justify-center bg-slate-950">
+            {/* Background & Decorative Layer — overflow-hidden kept here to clip blobs/zoom */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 z-0 transition-opacity duration-1000">
+                    <SafeImage
+                        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000"
+                        alt="Luxury Property Background"
+                        fill
+                        priority
+                        className="object-cover scale-105"
+                        style={{ animation: 'slowZoom 30s ease-in-out infinite alternate' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/70 to-slate-900/60" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
+                </div>
+                <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-brand-red/10 rounded-full blur-[120px] animate-pulse" />
+                <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[140px] animate-pulse delay-700" />
+                <div className="absolute inset-0 opacity-[0.03]" 
+                     style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
             </div>
-
-            {/* Decorative Elements - Glowing Orbs */}
-            <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-brand-red/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[140px] animate-pulse delay-700" />
-            
-            {/* Visual Grid Pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                 style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
             {/* Hero Content */}
             <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-40">

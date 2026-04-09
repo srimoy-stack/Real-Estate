@@ -3,8 +3,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
- * Shared SearchInput Component
- * Implements predictive search with debouncing, suggestions, and keyboard navigation.
+ * Predictive Search Input
+ * - DB-synced suggestions via /api/search-suggestions
+ * - 250ms debounce with AbortController (cancels stale requests)
+ * - Keyboard navigation (↑↓ Enter Escape)
+ * - Listing counts per city
+ * - Max 8 results
  */
 
 interface SearchInputProps {
@@ -14,14 +18,17 @@ interface SearchInputProps {
     placeholder?: string;
     className?: string;
     inputClassName?: string;
+    prefixIcon?: React.ReactNode;
     showTypes?: boolean;
     showAddresses?: boolean;
     onEnter?: () => void;
 }
 
-type SuggestionItem = {
-    value: string;
+type Suggestion = {
+    label: string;
     type: 'city' | 'address' | 'type';
+    count?: number;
+    city?: string;
 };
 
 export function SearchInput({
@@ -31,75 +38,109 @@ export function SearchInput({
     placeholder = "Search city or address",
     className = "",
     inputClassName = "",
+    prefixIcon,
     showTypes = true,
     showAddresses = true,
     onEnter
 }: SearchInputProps) {
-    const [suggestions, setSuggestions] = useState<{
-        cities: string[];
-        addresses: string[];
-        types: string[];
-        meta?: { fallbackUsed?: boolean; fallbackTerm?: string; queryMs?: number };
-    }>({ cities: [], addresses: [], types: [] });
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
+    const abortRef = useRef<AbortController | null>(null);
 
-    // Flattened list for easy indexing
-    const flatSuggestions: SuggestionItem[] = [
-        ...suggestions.cities.map(v => ({ value: v, type: 'city' as const })),
-        ...(showAddresses ? suggestions.addresses.map(v => ({ value: v, type: 'address' as const })) : []),
-        ...(showTypes ? suggestions.types.map(v => ({ value: v, type: 'type' as const })) : [])
-    ];
+    // Filter suggestions based on visibility settings
+    const visibleSuggestions = suggestions.filter(s => {
+        if (s.type === 'address' && !showAddresses) return false;
+        if (s.type === 'type' && !showTypes) return false;
+        return true;
+    });
 
-    // ─── Fetch logic ─────────────────────────────────────────────
+    // ─── Fetch logic with debounce + AbortController ─────────────
     useEffect(() => {
         if (!showSuggestions || value.trim().length < 2) {
-            setSuggestions({ cities: [], addresses: [], types: [] });
+            setSuggestions([]);
             return;
         }
 
         const timer = setTimeout(async () => {
+            // Cancel previous in-flight request
+            if (abortRef.current) {
+                abortRef.current.abort();
+            }
+
+            const controller = new AbortController();
+            abortRef.current = controller;
+
             setIsLoading(true);
             try {
-                const res = await fetch(`/api/search-suggestions?q=${encodeURIComponent(value)}`);
+                const res = await fetch(
+                    `/api/search-suggestions?q=${encodeURIComponent(value)}`,
+                    { signal: controller.signal }
+                );
                 const data = await res.json();
-                setSuggestions(data);
+
+                // New API returns { suggestions: [...], meta: {...} }
+                if (data.suggestions) {
+                    setSuggestions(data.suggestions);
+                } else if (data.cities) {
+                    // Backward compat with old API shape
+                    const compat: Suggestion[] = [
+                        ...(data.cities || []).map((c: string) => ({ label: c, type: 'city' as const })),
+                        ...(data.addresses || []).map((a: string) => ({ label: a, type: 'address' as const })),
+                        ...(data.types || []).map((t: string) => ({ label: t, type: 'type' as const })),
+                    ];
+                    setSuggestions(compat);
+                }
                 setSelectedIndex(-1);
-            } catch (err) {
-                console.error("Failed to fetch suggestions:", err);
+            } catch (err: any) {
+                if (err.name !== 'AbortError') {
+                    console.error("Failed to fetch suggestions:", err);
+                }
             } finally {
                 setIsLoading(false);
             }
-        }, 300);
+        }, 250); // 250ms debounce
 
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            if (abortRef.current) {
+                abortRef.current.abort();
+                abortRef.current = null;
+            }
+        };
     }, [value, showSuggestions]);
 
     // ─── Event handlers ──────────────────────────────────────────
-    const handleSelect = useCallback((item: SuggestionItem) => {
-        onSelect(item.value, item.type);
+    const handleSelect = useCallback((item: Suggestion) => {
+        onSelect(item.label, item.type);
         setShowSuggestions(false);
         setSelectedIndex(-1);
     }, [onSelect]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (!showSuggestions || flatSuggestions.length === 0) return;
+        if (!showSuggestions || visibleSuggestions.length === 0) {
+            if (e.key === 'Enter' && onEnter) {
+                e.preventDefault();
+                onEnter();
+            }
+            return;
+        }
 
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                setSelectedIndex(prev => (prev < flatSuggestions.length - 1 ? prev + 1 : 0));
+                setSelectedIndex(prev => (prev < visibleSuggestions.length - 1 ? prev + 1 : 0));
                 break;
             case 'ArrowUp':
                 e.preventDefault();
-                setSelectedIndex(prev => (prev > 0 ? prev - 1 : flatSuggestions.length - 1));
+                setSelectedIndex(prev => (prev > 0 ? prev - 1 : visibleSuggestions.length - 1));
                 break;
             case 'Enter':
                 e.preventDefault();
-                if (selectedIndex >= 0 && selectedIndex < flatSuggestions.length) {
-                    handleSelect(flatSuggestions[selectedIndex]);
+                if (selectedIndex >= 0 && selectedIndex < visibleSuggestions.length) {
+                    handleSelect(visibleSuggestions[selectedIndex]);
                 } else if (onEnter) {
                     setShowSuggestions(false);
                     onEnter();
@@ -122,16 +163,18 @@ export function SearchInput({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // ─── Section headers ─────────────────────────────────────────
     const getSectionHeader = (type: string, index: number): string | null => {
         if (index === 0) return type === 'city' ? 'Cities' : type === 'type' ? 'Property Types' : 'Addresses';
-        const prevType = flatSuggestions[index - 1]?.type;
+        const prevType = visibleSuggestions[index - 1]?.type;
         if (prevType !== type) return type === 'city' ? 'Cities' : type === 'type' ? 'Property Types' : 'Addresses';
         return null;
     };
 
     return (
-        <div className={`relative ${className}`} ref={containerRef}>
+        <div className={`${className}`} ref={containerRef}>
             <div className="relative group">
+                {prefixIcon}
                 <input
                     type="text"
                     value={value}
@@ -145,7 +188,7 @@ export function SearchInput({
                     className={`w-full ${inputClassName}`}
                     role="combobox"
                     aria-controls="predictive-search-results"
-                    aria-expanded={showSuggestions && flatSuggestions.length > 0}
+                    aria-expanded={showSuggestions && visibleSuggestions.length > 0}
                     aria-haspopup="listbox"
                     autoComplete="off"
                 />
@@ -157,27 +200,18 @@ export function SearchInput({
                 )}
             </div>
 
-            {showSuggestions && (flatSuggestions.length > 0) && (
+            {showSuggestions && (visibleSuggestions.length > 0) && (
                 <div 
                     id="predictive-search-results"
                     role="listbox"
                     className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.25)] border border-slate-100 py-3 z-[100] max-h-[450px] overflow-y-auto ring-1 ring-slate-900/5 animate-in fade-in zoom-in-95 duration-200"
                 >
-                    {suggestions.meta?.fallbackUsed && (
-                        <div className="px-5 py-2 mb-2 border-b border-slate-50 flex items-center gap-2 bg-amber-50/30">
-                             <svg className="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                             </svg>
-                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Broad search: <span className="text-slate-900">{suggestions.meta.fallbackTerm}</span></span>
-                        </div>
-                    )}
-
-                    {flatSuggestions.map((item, i) => {
+                    {visibleSuggestions.map((item, i) => {
                         const header = getSectionHeader(item.type, i);
                         const isSelected = i === selectedIndex;
 
                         return (
-                            <React.Fragment key={`${item.type}-${item.value}-${i}`}>
+                            <React.Fragment key={`${item.type}-${item.label}-${i}`}>
                                 {header && (
                                     <div className="px-5 pt-3 pb-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 bg-white">
                                         {header}
@@ -213,12 +247,28 @@ export function SearchInput({
                                                 </svg>
                                             )}
                                         </div>
-                                        <span>{highlightMatch(item.value, value)}</span>
+                                        <div className="flex flex-col">
+                                            <span>{highlightMatch(item.label, value)}</span>
+                                            {item.type === 'address' && item.city && (
+                                                <span className="text-[10px] text-slate-400 font-medium mt-0.5">{item.city}</span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className={`transition-all duration-200 ${isSelected ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                        </svg>
+                                    <div className="flex items-center gap-2">
+                                        {item.count !== undefined && item.count > 0 && (
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                isSelected 
+                                                    ? 'bg-brand-red/10 text-brand-red' 
+                                                    : 'bg-slate-100 text-slate-500'
+                                            }`}>
+                                                {item.count.toLocaleString()} listings
+                                            </span>
+                                        )}
+                                        <div className={`transition-all duration-200 ${isSelected ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
                             </React.Fragment>

@@ -1,12 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// ─── In-Memory Cache ──────────────────────────────────────────
+// Key: normalized query string, Value: { data, expiry }
+const cache = new Map<string, { data: any; expiry: number }>();
+const CACHE_TTL_MS = 45_000; // 45 seconds
+
+function getCached(key: string) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache(key: string, data: any) {
+  // Evict old entries if cache grows too large (memory safety)
+  if (cache.size > 500) {
+    const now = Date.now();
+    for (const [k, v] of cache) {
+      if (now > v.expiry) cache.delete(k);
+    }
+    // If still too large, clear oldest half
+    if (cache.size > 400) {
+      const keys = [...cache.keys()];
+      keys.slice(0, keys.length / 2).forEach(k => cache.delete(k));
+    }
+  }
+  cache.set(key, { data, expiry: Date.now() + CACHE_TTL_MS });
+}
+
 // ─── Input Normalization ──────────────────────────────────────
 // "Toronto (West Hill)" → primary="toronto (west hill)", fallback="toronto"
 // "123 King St"         → primary="123 king st",         fallback="123"
 function normalizeInput(raw: string): { primary: string; fallback: string } {
   const trimmed = raw.trim().toLowerCase();
-  // Extract base term before parentheses, commas, or dashes
   const fallback = trimmed
     .replace(/\s*[\(\[\{].*$/, '')  // remove (...)
     .replace(/\s*[,\-–—].*$/, '')  // remove after comma/dash
@@ -15,17 +45,14 @@ function normalizeInput(raw: string): { primary: string; fallback: string } {
 }
 
 // ─── Dedup helper ─────────────────────────────────────────────
-function uniqueStrings(arr: (string | null | undefined)[]): string[] {
+function dedup<T extends { label: string }>(arr: T[]): T[] {
   const seen = new Set<string>();
-  const result: string[] = [];
-  for (const item of arr) {
-    if (!item) continue;
-    const key = item.toLowerCase().trim();
-    if (seen.has(key)) continue;
+  return arr.filter(item => {
+    const key = item.label.toLowerCase().trim();
+    if (seen.has(key)) return false;
     seen.add(key);
-    result.push(item.trim());
-  }
-  return result;
+    return true;
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -35,53 +62,61 @@ export async function GET(request: NextRequest) {
 
   if (!q || q.trim().length < 2) {
     return NextResponse.json({
-      cities: [],
-      addresses: [],
-      types: [],
-      meta: { fallbackUsed: false, queryMs: 0 },
+      suggestions: [],
+      meta: { queryMs: 0 },
     });
   }
 
   const { primary, fallback } = normalizeInput(q);
+  const cacheKey = primary;
+
+  // ── Check cache first ───────────────────────────────────────
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return NextResponse.json({
+      ...cached,
+      meta: { ...cached.meta, queryMs: Date.now() - startTime, cached: true },
+    });
+  }
 
   try {
     // ──────────────────────────────────────────────────────────
-    // STRATEGY: 3-tier parallel query → merge → dedupe → limit
-    //   1. exact   — ILIKE '%primary%'  (best match)
-    //   2. partial — ILIKE '%fallback%' (broader match)
-    //   3. prefix  — ILIKE 'fallback%'  (index-friendly)
-    // All queries use indexed fields ONLY, LIMIT 5 each.
+    // STRATEGY: Prefix-first parallel query → merge → dedupe
+    //   1. Cities  — prefix match (index-friendly, fast)
+    //   2. Cities  — contains fallback (broader, only if needed)
+    //   3. Addresses — prefix match
+    //   4. Property types — contains
+    // All use indexed fields, LIMIT 8 per category.
     // ──────────────────────────────────────────────────────────
 
-    // ─── OPTIMIZED QUERY STRATEGY ─────────────────────────────
-    // Combine multiple conditions into fewer parallel queries to 
-    // reduce connection pressure (Neon pool-friendly).
-    const [cityMatches, addressMatches, typeMatches] = await Promise.all([
-      // 1. CITIES (Combined contains + prefix)
-      prisma.listing.findMany({
-        where: {
-          city: { contains: fallback, mode: 'insensitive' },
-          isActive: true,
-        },
-        select: { city: true },
-        distinct: ['city'],
-        take: 10,
-      }),
+    const [
+      cityPrefixResults,
+      addressPrefixResults,
+      typeResults,
+    ] = await Promise.all([
+      // 1. CITIES — prefix match with count (uses text_pattern_ops index)
+      prisma.$queryRaw<{ city: string; count: bigint }[]>`
+        SELECT city, COUNT(*) as count
+        FROM "Listing"
+        WHERE "isActive" = true
+          AND city IS NOT NULL
+          AND LOWER(city) LIKE ${fallback + '%'}
+        GROUP BY city
+        ORDER BY COUNT(*) DESC
+        LIMIT 8
+      `,
 
-      // 2. ADDRESSES (Prefix priority, fallback to contains)
-      prisma.listing.findMany({
-        where: {
-          OR: [
-            { address: { startsWith: primary, mode: 'insensitive' } },
-            { address: { contains: fallback, mode: 'insensitive' } },
-          ],
-          isActive: true,
-        },
-        select: { address: true, city: true },
-        take: 8,
-      }),
+      // 2. ADDRESSES — prefix match
+      prisma.$queryRaw<{ address: string; city: string }[]>`
+        SELECT DISTINCT address, city
+        FROM "Listing"
+        WHERE "isActive" = true
+          AND address IS NOT NULL
+          AND LOWER(address) LIKE ${primary + '%'}
+        LIMIT 5
+      `,
 
-      // 3. PROPERTY TYPES
+      // 3. PROPERTY TYPES — contains match
       prisma.listing.findMany({
         where: {
           normalizedPropertyType: { contains: fallback, mode: 'insensitive' },
@@ -93,27 +128,104 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const mergedCities = uniqueStrings(cityMatches.map(l => l.city));
-    const mergedAddresses = uniqueStrings(addressMatches.map(l => l.address));
-    const mergedTypes = uniqueStrings(typeMatches.map(l => l.normalizedPropertyType));
+    // ── Build suggestions array ─────────────────────────────────
+    type Suggestion = {
+      label: string;
+      type: 'city' | 'address' | 'type';
+      count?: number;
+      city?: string;
+    };
+
+    let suggestions: Suggestion[] = [];
+
+    // Cities with counts
+    for (const row of cityPrefixResults) {
+      if (row.city) {
+        suggestions.push({
+          label: row.city.trim(),
+          type: 'city',
+          count: Number(row.count),
+        });
+      }
+    }
+
+    // If no prefix results, try broader contains search (fallback)
+    if (suggestions.length === 0 && fallback !== primary) {
+      const cityContainsResults = await prisma.$queryRaw<{ city: string; count: bigint }[]>`
+        SELECT city, COUNT(*) as count
+        FROM "Listing"
+        WHERE "isActive" = true
+          AND city IS NOT NULL
+          AND LOWER(city) LIKE ${'%' + fallback + '%'}
+        GROUP BY city
+        ORDER BY COUNT(*) DESC
+        LIMIT 8
+      `;
+      for (const row of cityContainsResults) {
+        if (row.city) {
+          suggestions.push({
+            label: row.city.trim(),
+            type: 'city',
+            count: Number(row.count),
+          });
+        }
+      }
+    }
+
+    // Addresses
+    for (const row of addressPrefixResults) {
+      if (row.address) {
+        suggestions.push({
+          label: row.address.trim(),
+          type: 'address',
+          city: row.city?.trim() || undefined,
+        });
+      }
+    }
+
+    // Property types
+    for (const row of typeResults) {
+      if (row.normalizedPropertyType) {
+        suggestions.push({
+          label: row.normalizedPropertyType.trim(),
+          type: 'type',
+        });
+      }
+    }
+
+    // Deduplicate
+    suggestions = dedup(suggestions);
+
+    // ── Priority sort ───────────────────────────────────────────
+    // 1. Exact prefix match first
+    // 2. Highest listing count
+    // 3. Cities before addresses before types
+    const typePriority = { city: 0, address: 1, type: 2 };
+    suggestions.sort((a, b) => {
+      const aExact = a.label.toLowerCase().startsWith(primary) ? 0 : 1;
+      const bExact = b.label.toLowerCase().startsWith(primary) ? 0 : 1;
+      if (aExact !== bExact) return aExact - bExact;
+      if (typePriority[a.type] !== typePriority[b.type]) {
+        return typePriority[a.type] - typePriority[b.type];
+      }
+      return (b.count || 0) - (a.count || 0);
+    });
+
+    // Cap total suggestions
+    suggestions = suggestions.slice(0, 8);
 
     const queryMs = Date.now() - startTime;
+    const response = { suggestions, meta: { queryMs } };
 
-    return NextResponse.json({
-      cities: mergedCities,
-      addresses: mergedAddresses,
-      types: mergedTypes,
-      meta: {
-        queryMs,
-      },
-    });
+    // ── Cache the result ────────────────────────────────────────
+    setCache(cacheKey, response);
+
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Search suggestions fail-safe triggered:', error);
+    console.error('[SearchSuggestions] Error:', error);
     return NextResponse.json({
-      cities: [],
-      addresses: [],
-      types: [],
-      meta: { error: true, queryMs: Date.now() - startTime }
+      suggestions: [],
+      meta: { error: true, queryMs: Date.now() - startTime },
     });
   }
 }

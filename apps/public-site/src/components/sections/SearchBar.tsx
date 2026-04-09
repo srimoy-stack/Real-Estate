@@ -64,7 +64,7 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
 
     return (
         <div className="w-full max-w-5xl flex flex-col items-center lg:items-start">
-            <div className="w-full bg-white p-2.5 rounded-[32px] border border-white/20 flex flex-col lg:flex-row items-center gap-2.5">
+            <div className="w-full bg-white p-2.5 rounded-[32px] border border-white/20 flex flex-col lg:flex-row items-center gap-2.5 relative">
                 <div className="w-full flex flex-col lg:flex-row items-center gap-2.5">
                     {/* Location Input with Predictive Search */}
                     <div className="flex-[2] w-full relative group">
