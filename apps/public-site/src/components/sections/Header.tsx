@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { useWebsite } from '../../lib/tenant/website-context';
@@ -84,7 +83,7 @@ function HeaderInner() {
         return true;
     };
 
-    const brandName = website.brandName || 'SquareFT';
+
 
     return (
         <>
@@ -98,17 +97,17 @@ function HeaderInner() {
                 <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-[68px]">
                         {/* ── Logo ───────────────────────────────── */}
-                        <Link href="/" className="flex items-center h-[68px] group shrink-0">
-                            <div className="h-[73px] overflow-hidden flex items-start">
-                                <Image 
-                                    src="/logo.png" 
-                                    alt={brandName} 
-                                    width={400} 
-                                    height={130}
-                                    className="h-[140px] w-auto object-contain object-top transition-all duration-300 group-hover:scale-[1.03] origin-left"
-                                    priority
-                                />
-                            </div>
+<Link href="/" className="flex items-center group flex-shrink-0 self-center">
+                            {(website as any).logoUrl ? (
+                                <img
+                                    src={(website as any).logoUrl}
+                                    alt={website.brandName}
+className="h-9 w-auto max-w-[160px] object-contain transition-all duration-300 group-hover:scale-105"                                />) : (
+                                <img
+                                    src="/logo.png"
+                                    alt="SquareFT"
+className="h-14 w-auto object-contain transition-all duration-300 group-hover:scale-105"                                />
+                            )}
                         </Link>
 
                         {/* ── Desktop Nav ────────────────────────── */}
@@ -161,7 +160,7 @@ function HeaderInner() {
                                                     <Link
                                                         key={child.id}
                                                         href={child.href}
-                                                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-600 hover:text-[#4F46E5] hover:bg-indigo-50 transition-all"
+                                                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-600 hover:text-[#4F46E5] hover:bg-slate-50 transition-all"
                                                     >
                                                         {child.label}
                                                     </Link>
@@ -216,7 +215,7 @@ function HeaderInner() {
                                     </Link>
                                     <Link
                                         href="/sell"
-                                        className="hidden sm:inline-flex items-center h-9 px-5 bg-[#4F46E5] hover:bg-indigo-700 text-white text-[13px] font-semibold rounded-lg transition-all shadow-sm shadow-indigo-100 hover:shadow-md hover:shadow-indigo-200/40 hover:-translate-y-px active:translate-y-0"
+                                        className="hidden sm:inline-flex items-center h-9 px-5 bg-[#0F172A] hover:bg-slate-800 text-white text-[13px] font-semibold rounded-lg transition-all shadow-sm shadow-slate-100 hover:shadow-md hover:shadow-slate-200/40 hover:-translate-y-px active:translate-y-0 border border-slate-700/50"
                                     >
                                         List Property
                                     </Link>

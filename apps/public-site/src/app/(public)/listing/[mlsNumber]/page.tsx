@@ -176,21 +176,17 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
   const relatedListings = await getRelatedListingsDirect(listing, 4);
   const priceDisplay = resolvePrice(prop.price, prop.leaseAmount, prop.leaseRatePerSqft, prop.category);
 
-
   const images = Array.isArray(listing.images) ? listing.images.filter(Boolean) : [];
   
   const city = prop.city || 'Canada';
   const province = prop.province || '';
   const postalCode = prop.postalCode || '';
-
   const propertyType = prop.propertySubType || 'Property';
 
-  // ── Smart Title fallback if normalization didn't catch it ──
   const displayTitle = (prop.title && !prop.title.toLowerCase().includes('null'))
     ? prop.title
     : `${prop.bedrooms > 0 ? prop.bedrooms + ' Bedroom ' : ''}${prop.propertySubType || 'Property'} in ${city}`;
 
-  // ── Agent Data with Fallbacks ──
   const agentName = listing.agentName || 'Our Listing Team';
   const agentPhoto = listing.agentPhoto || null;
   const agentPhone = listing.agentPhone || null;
@@ -211,14 +207,14 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
       <ListingStructuredData listing={listing} domain="platform.com" />
 
       {/* Sub-Header Navigation */}
-      <div className="sticky top-[72px] z-40 hidden border-b border-slate-100 bg-white/90 backdrop-blur-md lg:block">
+      <div className="sticky top-[72px] z-40 hidden border-b border-slate-100 bg-white/70 backdrop-blur-xl lg:block">
         <div className="mx-auto max-w-7xl px-8">
-          <div className="no-scrollbar flex items-center gap-8 overflow-x-auto py-4">
+          <div className="no-scrollbar flex items-center gap-10 overflow-x-auto py-5">
             {navItems.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-slate-400 transition-colors hover:text-[#4F46E5]"
+                className="whitespace-nowrap text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:text-slate-900 active:scale-95"
               >
                 {item.label}
               </a>
@@ -227,116 +223,79 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl space-y-12 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-16 px-4 py-8 sm:px-6 lg:px-8">
         {/* ──── Breadcrumb ──── */}
         <nav
           id="listing-breadcrumb"
-          className="flex items-center gap-2 overflow-hidden whitespace-nowrap text-xs font-bold uppercase tracking-widest text-slate-400"
+          className="flex items-center gap-3 overflow-hidden whitespace-nowrap text-[10px] font-black uppercase tracking-[0.2em] text-slate-300"
         >
-          <Link href="/" className="transition-colors hover:text-[#4F46E5]">
+          <Link href="/" className="transition-colors hover:text-slate-900 px-1">
             Home
           </Link>
-          <svg
-            className="h-3 w-3 text-slate-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={3}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-          <Link href="/search" className="transition-colors hover:text-[#4F46E5]">
+          <div className="h-1 w-1 rounded-full bg-slate-200" />
+          <Link href="/search" className="transition-colors hover:text-slate-900 px-1">
             Search
           </Link>
-          <svg
-            className="h-3 w-3 text-slate-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={3}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-slate-500">{city}</span>
+          <div className="h-1 w-1 rounded-full bg-slate-200" />
+          <span className="text-slate-400 px-1">{city}</span>
         </nav>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           {/* Left Column: Content */}
-          <div className="space-y-16 lg:col-span-8">
+          <div className="space-y-20 lg:col-span-8">
             {/* Header & Gallery */}
-            <div className="space-y-8">
-              <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                  {/* Active / Inactive badge */}
-                  {(() => {
-                    const s = (prop.status || listing.status || '').toLowerCase();
-                    const isActive = s === 'active' || s === 'active_under_contract' || s === 'coming_soon';
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-lg ${
-                          isActive
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-slate-400 text-white'
-                        }`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full bg-white ${isActive ? 'animate-pulse' : 'opacity-60'}`} />
-                        {isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    );
-                  })()}
-                    <span className="rounded-lg bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <div className="space-y-10">
+              <div className="flex flex-col justify-between gap-10 md:flex-row md:items-start">
+                <div className="flex-1 space-y-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    {(() => {
+                      const s = (prop.status || listing.status || '').toLowerCase();
+                      const isActive = s === 'active' || s === 'active_under_contract' || s === 'coming_soon';
+                      return (
+                        <div
+                          className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border ${
+                            isActive
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                              : 'bg-slate-50 text-slate-400 border-slate-100'
+                          }`}
+                        >
+                          <div className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                          {isActive ? 'Live Listing' : 'Property Sold/Inactive'}
+                        </div>
+                      );
+                    })()}
+                    <div className="rounded-full bg-slate-50 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-100">
                       {propertyType}
-                    </span>
-                    {(listing as any).updatedAt &&
+                    </div>
+                    {((listing as any).updatedAt &&
                       new Date().getTime() - new Date((listing as any).updatedAt).getTime() <
-                      24 * 60 * 60 * 1000 && (
-                        <span className="flex animate-pulse items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-600">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-600" />
-                          Price Improved
-                        </span>
+                      24 * 60 * 60 * 1000) && (
+                        <div className="flex items-center gap-2 rounded-full bg-amber-50 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-600 border border-amber-100">
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                          Price Improvement
+                        </div>
                       )}
-                    <span className="flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#4F46E5]">
-                      <svg
-                        className="h-3 w-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      {Math.floor(Math.random() * 40) + 12} people viewed this recently
-                    </span>
                   </div>
-                  <h1 className="text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                    {displayTitle}
-                  </h1>
-                  <p className="text-xl font-bold italic text-slate-400">
-                    {prop.title !== displayTitle ? prop.title : (city + (province ? `, ${province}` : ''))}
-                  </p>
+                  
+                  <div className="space-y-2">
+                    <h1 className="text-3xl font-black leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+                      {displayTitle}
+                    </h1>
+                    <p className="text-xl font-bold text-slate-400 max-w-2xl">
+                      {prop.title !== displayTitle ? prop.title : (city + (province ? `, ${province}` : ''))}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col items-center gap-4 text-left md:items-end md:text-right">
-                  <div>
-                    <p
-                      className={`text-2xl font-black tracking-tighter sm:text-3xl ${(prop.price ?? 0) > 0 ? 'text-[#4F46E5]' : 'text-slate-400'}`}
-                    >
+
+                <div className="flex flex-col items-start gap-6 md:items-end">
+                  <div className="text-left md:text-right">
+                    <p className={`text-4xl font-black tracking-tighter sm:text-5xl ${(prop.price ?? 0) > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
                       {priceDisplay.text}
                     </p>
-                    <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-300">
-                      Property ID: {listing.mlsNumber}
-                    </p>
-
+                    <div className="mt-3 flex items-center justify-start md:justify-end gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">MLS® ID</span>
+                      <span className="rounded-md bg-slate-50 px-2 py-1 text-[11px] font-black text-slate-900 border border-slate-100">{listing.mlsNumber}</span>
+                    </div>
                   </div>
                   <SaveButton listingId={listing.mlsNumber} variant="full" />
                 </div>
@@ -346,78 +305,51 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                 <ListingGallery images={images} title={displayTitle} />
               ) : (
                 <div className="relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-slate-900 shadow-2xl">
-                  {/* Background stock image or abstract gradient */}
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center opacity-40 grayscale" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
-                  
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
                     <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-md text-white border border-white/20">
-                      <svg
-                        className="h-10 w-10"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                     <h2 className="mb-2 text-xl font-black text-white">No photos available yet</h2>
-                    <p className="max-w-md font-bold text-slate-400">
-                      We&apos;re currently preparing the media for this listing. Contact us for a private showing.
-                    </p>
-                    
-                    <div className="mt-8 flex items-center gap-3">
-                      <div className="rounded-full bg-[#4F46E5] px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
-                        Live MLS® Listing
-                      </div>
-                      <div className="rounded-full bg-white/10 backdrop-blur-md px-6 py-2 text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
-                        {listing.mlsNumber}
-                      </div>
-                    </div>
+                    <p className="max-w-md font-bold text-slate-400">Preparation in progress. Contact us for priority access.</p>
                   </div>
                 </div>
               )}
             </div>
 
-
-
-
             {/* Public Remarks */}
             {(listing as any).description && (
-              <section id="property-description" className="space-y-5">
-                {/* Section header */}
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-[#4F46E5]">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                    </svg>
-                  </span>
-                  <h2 className="text-2xl font-black tracking-tight text-slate-900">Public Remarks</h2>
+              <section id="property-description" className="scroll-mt-32 space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-200">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-900">Public Remarks</h2>
+                    <div className="mt-1 h-1 w-12 rounded-full bg-slate-100" />
+                  </div>
                 </div>
-                {/* Remarks body */}
-                <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6 sm:p-8">
-                  <div className="space-y-4 text-[15px] font-medium leading-relaxed text-slate-600">
+                <div className="rounded-[40px] border border-slate-100 bg-white p-10 shadow-sm shadow-slate-100/50 sm:p-14">
+                  <div className="space-y-8 text-[17px] font-bold leading-relaxed text-slate-500">
                     {(listing as any).description
                       .split('\n')
                       .filter(Boolean)
                       .map((p: string, i: number) => (
-                        <p key={i}>{p}</p>
+                        <p key={i} className="first-letter:text-3xl first-letter:font-black first-letter:text-slate-900 first-letter:mr-1">
+                          {p}
+                        </p>
                       ))}
                   </div>
                 </div>
               </section>
             )}
 
-            {/* ──── Deep Property Details (from rawData) ──── */}
+            {/* Deep Property Details */}
             {(() => {
               const details = extractListingDetails(listing);
               return (
-                <div id="property-features" className="space-y-10">
+                <div id="property-features" className="space-y-16">
                   <PropertySummarySection data={details.propertySummary} />
                   <BuildingDetailsSection data={details.building} />
                   <InteriorFeaturesSection data={details.interior} />
@@ -431,97 +363,80 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
               );
             })()}
 
-            {/* Mortgage Calculator — only show when price is known */}
             {prop.price && prop.price > 0 && <MortgageCalculator price={prop.price} />}
             <PropertyStats listing={listing} />
 
             {/* Location Map */}
-            <section id="property-map" className="relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-slate-50 shadow-inner group">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  className="grayscale-0 transition-all duration-1000 group-hover:grayscale-0 contrast-125"
-                  style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)' }}
-                  loading="lazy"
-                  allowFullScreen
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
-                />
-                
-                <div className="absolute top-8 left-8 z-10 flex flex-col gap-2">
-                    <Link
-                      href={`https://maps.google.com/?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}`}
-                      target="_blank"
-                      className="rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-900 shadow-xl transition-all hover:bg-slate-900 hover:text-white"
-                    >
-                      Open in Google Maps
-                    </Link>
+            <section id="property-map" className="relative group scroll-mt-32">
+                <div className="absolute -inset-4 bg-slate-50 rounded-[64px] border border-slate-100 opacity-50 transition-opacity group-hover:opacity-100 pointer-events-none" />
+                <div className="relative aspect-video w-full overflow-hidden rounded-[48px] border border-slate-100 bg-white shadow-2xl transition-all duration-500 group-hover:shadow-indigo-100">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    className="grayscale-[20%] transition-all duration-1000 group-hover:grayscale-0 contrast-110"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                  />
+                  <div className="absolute top-8 left-8 z-10">
+                      <Link
+                        href={`https://maps.google.com/?q=${encodeURIComponent(`${prop.title}, ${city}, ${province} ${postalCode}`)}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        View Route in Maps
+                      </Link>
+                  </div>
                 </div>
-                
-                {/* Custom Overlay */}
-                <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-slate-900/10 rounded-[48px]" />
             </section>
 
             {/* Agent Detailed Profile */}
-            <section
-              id="agent-profile"
-              className="flex flex-col gap-12 rounded-[48px] border border-slate-100 bg-slate-50/50 p-12 md:flex-row"
-            >
-              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl bg-white border-4 border-white">
+            <section id="agent-profile" className="flex flex-col gap-12 rounded-[56px] border border-slate-100 bg-white p-12 shadow-sm transition-all hover:shadow-xl md:flex-row">
+              <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-[32px] shadow-2xl bg-slate-100 border-8 border-slate-50 rotate-3 transition-transform hover:rotate-0">
                 <SafeImage
-                  src={
-                    agentPhoto ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&bold=true`
-                  }
+                  src={agentPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=111827&color=fff&bold=true`}
                   alt={agentName}
                   seed={agentName}
                   fill
                   className="object-cover"
                 />
               </div>
-              <div className="flex-1 space-y-8">
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">{agentName}</h3>
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">
-                    Professional Real Estate Advisor
-                  </p>
+              <div className="flex-1 space-y-10">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h3 className="text-3xl font-black text-slate-900">{agentName}</h3>
+                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300">Listing Representative</p>
+                  </div>
                   {brokerageName && (
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                    <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-400">
                       {brokerageName}
-                    </p>
+                    </div>
                   )}
                 </div>
-                
-                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Direct Inquiries
-                    </span>
+                <div className="grid grid-cols-1 gap-12 sm:grid-cols-2">
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Direct Inquiries</span>
                     {agentPhone ? (
-                       <a href={`tel:${agentPhone}`} className="text-lg font-black text-slate-900 transition-colors hover:text-red-600">
+                       <a href={`tel:${agentPhone}`} className="flex items-center gap-3 text-2xl font-black text-slate-900 transition-all hover:text-red-600 hover:translate-x-1">
+                         <div className="h-2 w-2 rounded-full bg-red-600" />
                          {agentPhone}
                        </a>
-                    ) : (
-                      <span className="text-lg font-black text-slate-300">Speak to an expert</span>
-                    )}
+                    ) : ( <span className="text-2xl font-black text-slate-300 italic">Contact Office</span> )}
                   </div>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Availability
-                    </span>
-                    <span className="flex items-center gap-2 text-lg font-black text-emerald-600">
-                      <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                  <div className="space-y-3">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Status</span>
+                    <span className="flex items-center gap-3 text-2xl font-black text-emerald-600">
+                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 animate-pulse" />
                       Ready to Help
                     </span>
                   </div>
                 </div>
-
-                <div className="pt-4">
-                  <a 
-                    href="#listing-inquiry"
-                    className="inline-block rounded-2xl bg-slate-900 px-10 py-5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl transition-all hover:scale-[1.02] active:scale-95"
-                  >
-                    Contact Listing Expert
+                <div className="pt-2">
+                  <a href="#listing-inquiry" className="inline-flex items-center gap-4 rounded-2xl bg-slate-900 px-12 py-5 text-[11px] font-black uppercase tracking-[0.2em] text-white shadow-2xl transition-all hover:bg-slate-800 hover:translate-y-[-2px]">
+                    Send Inquiry
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                   </a>
                 </div>
               </div>
@@ -530,18 +445,14 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
 
           <div className="space-y-8 lg:col-span-4" id="listing-inquiry">
             <StickyInquirySidebar listing={listing as any} />
-
-
           </div>
         </div>
 
-        {/* Related Listings — AI-Powered Recommendations */}
+        {/* Related Listings */}
         {(() => {
           const details = extractListingDetails(listing);
           const community = details.propertySummary.communityName;
-          const locationLabel = community 
-            ? `${city} (${community})` 
-            : city;
+          const locationLabel = community ? `${city} (${community})` : city;
 
           return relatedListings && relatedListings.length > 0 && (
             <SimilarListingsComp

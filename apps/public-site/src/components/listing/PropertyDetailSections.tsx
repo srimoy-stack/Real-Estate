@@ -11,14 +11,17 @@ import type {
 /* ─── Shared Section Shell ────────────────────────────────────────── */
 function Section({ id, title, icon, children }: { id?: string; title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section id={id} className="space-y-5">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-[#4F46E5]">
+    <section id={id} className="scroll-mt-32 space-y-6">
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-200">
           {icon}
-        </span>
-        <h2 className="text-2xl font-black tracking-tight text-slate-900">{title}</h2>
+        </div>
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-slate-900">{title}</h2>
+          <div className="mt-1 h-1 w-12 rounded-full bg-slate-100" />
+        </div>
       </div>
-      <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-6 sm:p-8">
+      <div className="overflow-hidden rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm shadow-slate-100/50 sm:p-10">
         {children}
       </div>
     </section>
@@ -28,9 +31,9 @@ function Section({ id, title, icon, children }: { id?: string; title: string; ic
 function Row({ label, value }: { label: string; value: string | number | null | undefined }) {
   if (!value && value !== 0) return null;
   return (
-    <div className="flex justify-between border-b border-slate-100 py-3 last:border-0">
-      <span className="text-sm font-bold text-slate-400">{label}</span>
-      <span className="text-sm font-black text-slate-800 text-right">{value}</span>
+    <div className="grid grid-cols-2 items-baseline gap-4 border-b border-slate-50 py-4 last:border-0 hover:bg-slate-50/30 transition-colors px-2 -mx-2 rounded-xl">
+      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+      <span className="text-[14px] font-bold text-slate-900 text-right md:text-left">{value}</span>
     </div>
   );
 }
@@ -38,11 +41,11 @@ function Row({ label, value }: { label: string; value: string | number | null | 
 function TagList({ label, items }: { label?: string; items: string[] | null }) {
   if (!items || items.length === 0) return null;
   return (
-    <div className="mb-5 last:mb-0">
-      {label && <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-slate-400">{label}</span>}
-      <div className="flex flex-wrap gap-2">
+    <div className="mt-8 first:mt-0 last:mb-0">
+      {label && <span className="mb-4 block text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">{label}</span>}
+      <div className="flex flex-wrap gap-2.5">
         {items.map((item, i) => (
-          <span key={i} className="rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm border border-slate-100">
+          <span key={i} className="rounded-full bg-slate-50 px-5 py-2 text-[11px] font-bold text-slate-600 border border-slate-100 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md cursor-default">
             {item}
           </span>
         ))}
@@ -90,49 +93,51 @@ export function PropertySummarySection({ data }: { data: PropertySummary }) {
 
       {/* ── Location + Dates info bar ── */}
       {(locationLine || data.postalCode || data.listedDate || data.updatedDate) && (
-        <div className="mb-6 flex flex-wrap gap-4 rounded-2xl bg-white border border-slate-100 px-5 py-4 shadow-sm">
+        <div className="mb-10 flex flex-wrap items-center gap-8 rounded-[24px] bg-slate-50/50 border border-slate-100 px-6 py-6 transition-all hover:border-slate-200">
           {/* Location */}
           {(locationLine || data.postalCode) && (
-            <div className="flex items-start gap-2 min-w-[180px]">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[#4F46E5]">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-4 min-w-[200px]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm border border-slate-100">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-              </span>
+              </div>
               <div>
-                {locationLine && <p className="text-[13px] font-bold text-slate-700 leading-tight">{locationLine}</p>}
-                {data.postalCode && <p className="text-[12px] font-black text-[#4F46E5] tracking-widest mt-0.5">{data.postalCode}</p>}
+                {locationLine && <p className="text-[13px] font-black text-slate-900">{locationLine}</p>}
+                {data.postalCode && <p className="text-[11px] font-bold text-slate-400 tracking-widest mt-0.5">{data.postalCode}</p>}
               </div>
             </div>
           )}
 
+          <div className="h-10 w-px bg-slate-200 hidden lg:block" />
+
           {/* Listed date */}
           {data.listedDate && (
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm border border-slate-100">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-              </span>
+              </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Listed</p>
-                <p className="text-[13px] font-bold text-slate-700 leading-tight">{data.listedDate}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-0.5">Listed</p>
+                <p className="text-[13px] font-black text-slate-900">{data.listedDate}</p>
               </div>
             </div>
           )}
 
           {/* Last updated date */}
           {data.updatedDate && (
-            <div className="flex items-start gap-2">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm border border-slate-100">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-              </span>
+              </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Last Updated</p>
-                <p className="text-[13px] font-bold text-slate-700 leading-tight">{data.updatedDate}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-0.5">Updated</p>
+                <p className="text-[13px] font-black text-slate-900">{data.updatedDate}</p>
               </div>
             </div>
           )}
