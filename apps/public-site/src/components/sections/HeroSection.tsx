@@ -31,14 +31,7 @@ export const HeroSection = () => {
             <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-40">
                 <div className="max-w-5xl space-y-12">
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 ease-out">
-                        {/* Status Badge */}
-                        <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full shadow-2xl">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-red shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-                            </span>
-                            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white/80">Market Activity: Live Market Feed</span>
-                        </div>
+
 
                         {/* Heading with Decorative Span */}
                         <div className="space-y-4">
@@ -54,31 +47,10 @@ export const HeroSection = () => {
                         {/* Refined Marketing Copy */}
                         <div className="max-w-3xl space-y-6">
                             <p className="text-xl md:text-2xl text-slate-100 font-bold leading-relaxed tracking-tight">
-                                Access thousands of verified commercial properties and lease opportunities across the most sought-after markets.
+                                Browse thousands of homes, condos, and investment properties listed directly from Canada&apos;s top MLS® boards.
                             </p>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 pt-2">
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-brand-red/20 flex items-center justify-center border border-brand-red/30">
-                                        <svg className="w-3 h-3 text-brand-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-sm md:text-base text-white/70 font-medium leading-relaxed">
-                                        Verified pricing and availability data directly from owners and professional brokers.
-                                    </p>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-1 flex-shrink-0 w-5 h-5 rounded-full bg-brand-red/20 flex items-center justify-center border border-brand-red/30">
-                                        <svg className="w-3 h-3 text-brand-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-sm md:text-base text-white/70 font-medium leading-relaxed">
-                                        Localized insights covering premium retail, commercial, and industrial markets.
-                                    </p>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
 
@@ -89,30 +61,8 @@ export const HeroSection = () => {
                         </div>
                     </div>
 
-                    {/* Footer Social Proof Section */}
-                    <div className="flex flex-wrap items-center gap-10 pt-10 animate-in fade-in duration-1000 delay-700">
-                        <div className="flex items-center gap-4">
-                            <div className="flex -space-x-3.5">
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="relative h-11 w-11 border-2 border-slate-900 rounded-full overflow-hidden shadow-xl">
-                                        <SafeImage
-                                            src={`https://i.pravatar.cc/100?u=user_${i}`}
-                                            alt="Verified User"
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                ))}
-                                <div className="flex items-center justify-center h-11 w-11 rounded-full bg-brand-red border-2 border-slate-900 text-white text-[10px] font-black tracking-tighter shadow-lg shadow-brand-red/20">
-                                    +50k
-                                </div>
-                            </div>
-                            <div className="h-8 w-px bg-white/10" />
-                            <p className="text-xs text-white/50 font-black uppercase tracking-[0.2em] leading-tight">
-                                Trusted by <span className="text-white">50,000+</span> <br />Active Investors
-                            </p>
-                        </div>
-                    </div>
+
+
                 </div>
             </div>
 

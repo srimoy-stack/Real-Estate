@@ -280,6 +280,13 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
             {(() => {
               const s = (prop.status || '').toLowerCase();
               const isActive = s === 'active' || s === 'active_under_contract' || s === 'coming_soon';
+              // If it has a monthly rent amount, it is a lease, regardless of category
+              const isLease = prop.category === 'lease' || !!prop.leaseAmount || !!prop.leaseRatePerSqft;
+              
+              const label = isActive 
+                ? (isLease ? 'For Lease' : 'For Sale')
+                : (s.charAt(0).toUpperCase() + s.slice(1));
+
               return (
                 <span
                   className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[9px] font-black uppercase tracking-[0.15em] shadow-md ${
@@ -289,7 +296,7 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
                   }`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-white animate-pulse' : 'bg-white/50'}`} />
-                  {isActive ? 'Active' : 'Inactive'}
+                  {label}
                 </span>
               );
             })()}
@@ -371,10 +378,11 @@ export function UnifiedPropertyCard({ listing, index = 0, onAuthRequired }: Unif
 
 
       {/* Footer / Brokerage (Subtle) */}
-      {prop.brokerageName && (
+      {(prop.brokerageName || prop.agentName) && (
         <div className="bg-[#F9FAFB] px-4 py-2 border-t border-[#E5E7EB]">
            <span className="text-[10px] font-medium uppercase tracking-wider text-[#9CA3AF] truncate block">
-             Listing courtesy of: {prop.brokerageName}
+             {prop.agentName ? `${prop.agentName} • ` : ''}
+             {prop.brokerageName ? `Courtesy of: ${prop.brokerageName}` : ''}
            </span>
         </div>
       )}

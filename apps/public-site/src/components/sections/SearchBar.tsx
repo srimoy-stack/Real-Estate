@@ -20,6 +20,7 @@ interface SearchBarProps {
 export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
     const router = useRouter();
     const [city, setCity] = useState('');
+    const [transactionType, setTransactionType] = useState('buy');
     const [propertyType, setPropertyType] = useState('');
     const [priceRange, setPriceRange] = useState('');
 
@@ -40,6 +41,7 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
         }
 
         params.set('listingType', isCommercial ? 'Commercial' : 'Residential');
+        params.set('transaction', transactionType);
         params.set('province', 'Ontario');
 
         if (finalType) params.set('propertyType', finalType);
@@ -58,7 +60,7 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
         }
 
         router.push(`/search?${params.toString()}`);
-    }, [city, propertyType, priceRange, isCommercial, router]);
+    }, [city, propertyType, priceRange, transactionType, isCommercial, router]);
 
     const isSearchEnabled = city.trim() !== '' || propertyType !== '' || priceRange !== '';
 
@@ -67,7 +69,7 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
             <div className="w-full bg-white p-2.5 rounded-[32px] border border-white/20 flex flex-col lg:flex-row items-center gap-2.5 relative">
                 <div className="w-full flex flex-col lg:flex-row items-center gap-2.5">
                     {/* Location Input with Predictive Search */}
-                    <div className="flex-[2] w-full relative group">
+                    <div className="flex-[2] w-full relative group min-w-[200px]">
                         <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-brand-red transition-colors duration-200 z-10">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -91,8 +93,23 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
                         />
                     </div>
 
+                    {/* Transaction Type */}
+                    <div className="flex-1 w-full relative group min-w-[140px]">
+                        <select
+                            className="w-full pl-6 pr-10 h-16 rounded-[24px] bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-red/30 outline-none transition-all text-slate-900 text-[10px] font-black uppercase tracking-[0.15em] appearance-none cursor-pointer"
+                            value={transactionType}
+                            onChange={(e) => setTransactionType(e.target.value)}
+                        >
+                            <option value="buy">Sale</option>
+                            <option value="lease">Lease</option>
+                        </select>
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-brand-red transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+
                     {/* Property Type */}
-                    <div className="flex-1 w-full relative group min-w-[160px]">
+                    <div className="flex-1 w-full relative group min-w-[140px]">
                         <select
                             className="w-full pl-6 pr-10 h-16 rounded-[24px] bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-red/30 outline-none transition-all text-slate-900 text-[10px] font-black uppercase tracking-[0.15em] appearance-none cursor-pointer"
                             value={propertyType}
@@ -111,7 +128,7 @@ export const SearchBar = ({ isCommercial = true }: SearchBarProps) => {
                     </div>
 
                     {/* Price Range */}
-                    <div className="flex-1 w-full relative group min-w-[160px]">
+                    <div className="flex-1 w-full relative group min-w-[140px]">
                         <select
                             className="w-full pl-6 pr-10 h-16 rounded-[24px] bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-red/30 outline-none transition-all text-slate-900 text-[10px] font-black uppercase tracking-[0.15em] appearance-none cursor-pointer"
                             value={priceRange}

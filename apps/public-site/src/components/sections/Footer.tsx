@@ -1,121 +1,135 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { useWebsite } from '../../lib/tenant/website-context';
+import { getWebsiteFromHeaders } from '../../lib/tenant/getWebsiteFromHeaders';
 
 export const Footer = () => {
-    const website = useWebsite();
-    const footerLinks = website.navigation.footerLinks || [];
-    const brandName = website.brandName || 'SquareFT';
+    const website = getWebsiteFromHeaders() as any;
+    const brandName = website?.brandName || 'SquareFT';
+
+    const cityGroups = [
+        { name: 'Toronto, ON', slug: 'toronto' },
+        { name: 'Vancouver, BC', slug: 'vancouver' },
+        { name: 'Montreal, QC', slug: 'montreal' },
+        { name: 'Calgary, AB', slug: 'calgary' },
+        { name: 'Ottawa, ON', slug: 'ottawa' },
+        { name: 'Mississauga, ON', slug: 'mississauga' },
+        { name: 'Brampton, ON', slug: 'brampton' },
+        { name: 'Hamilton, ON', slug: 'hamilton' },
+        { name: 'Winnipeg, MB', slug: 'winnipeg' },
+        { name: 'Edmonton, AB', slug: 'edmonton' },
+    ];
+
+    const pages = [
+        { label: 'Buy a Home', href: '/listings' },
+        { label: 'Sell Property', href: '/sell' },
+        { label: 'Market Search', href: '/search' },
+        { label: 'Map Explorer', href: '/map-search' },
+        { label: 'News & Insights', href: '/blog' },
+        { label: 'Get in Touch', href: '/contact' },
+    ];
 
     return (
-        <footer className="pt-24 pb-12 bg-[#fafafa] border-t border-slate-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Main Footer Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-20">
-                    {/* Column 1: Brand & About */}
-                    <div className="space-y-8">
-                        <Link href="/" className="inline-block group">
-                            <div className="h-[48px] overflow-hidden flex items-start">
-                                <img
-                                    src="/logo.png"
-                                    alt={brandName}
-                                    className="h-[140px] w-auto object-contain object-top transition-transform duration-500 group-hover:scale-105 origin-left"
-                                />
-                            </div>
-                        </Link>
-                        <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-xs">
-                            Luxury commercial and residential real estate across Canada. Exceptional service driven by data and local expertise.
-                        </p>
+        <footer className="relative bg-white pt-16 pb-12 border-t border-slate-100 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+                    
+                    {/* Brand Section */}
+                    <div className="lg:col-span-4 space-y-8">
+                        <div className="space-y-4">
+                            <Link href="/" className="inline-block group">
+                                <div className="h-10 flex items-center">
+                                    <img
+                                        src="/logo.png"
+                                        alt={brandName}
+                                        className="h-full w-auto object-contain transition-all duration-500"
+                                    />
+                                </div>
+                            </Link>
+                            <p className="text-slate-500 text-sm leading-relaxed max-w-xs font-medium">
+                                Redefining the Canadian real estate experience through elite brokerage services, live market intelligence, and uncompromising local expertise.
+                            </p>
+                        </div>
+
+                        {/* Social Links - Fixed Row */}
                         <div className="flex items-center gap-3">
-                            {['fb', 'tw', 'ig', 'ln'].map(s => (
-                                <a key={s} href="#" className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-[#4F46E5] hover:border-[#4F46E5]/30 hover:shadow-sm transition-all duration-300">
-                                    <span className="text-[10px] font-bold uppercase">{s}</span>
+                            {[
+                                { id: 'fb', path: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' },
+                                { id: 'tw', path: 'M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z' },
+                                { id: 'ig', path: 'M16 3H8C5.24 3 3 5.24 3 8v8c0 2.76 2.24 5 5 5h8c2.76 0 5-2.24 5-5V8c0-2.76-2.24-5-5-5zm-4 12c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm5-7.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z' },
+                                { id: 'ln', path: 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4' }
+                            ].map((social) => (
+                                <a 
+                                    key={social.id} 
+                                    href="#" 
+                                    className="w-9 h-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-brand-red hover:border-brand-red hover:bg-brand-red/5 transition-all duration-300"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d={social.path}></path>
+                                    </svg>
                                 </a>
                             ))}
                         </div>
                     </div>
 
-                    {/* Column 2: Search */}
-                    <div className="space-y-8">
-                        <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 border-l-2 border-[#4F46E5] pl-4">Communities</h4>
-                        <ul className="space-y-4 pl-4">
-                            {[
-                                { name: 'Toronto, ON', slug: 'toronto' },
-                                { name: 'Vancouver, BC', slug: 'vancouver' },
-                                { name: 'Montreal, QC', slug: 'montreal' },
-                                { name: 'Calgary, AB', slug: 'calgary' }
-                            ].map(item => (
-                                <li key={item.slug}>
-                                    <Link href={`/communities/${item.slug}`} className="text-slate-500 hover:text-[#4F46E5] text-xs font-bold transition-colors uppercase tracking-wider">{item.name}</Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Column 3: Navigation */}
-                    <div className="space-y-8">
-                        <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 border-l-2 border-[#4F46E5] pl-4">Corporate</h4>
-                        <ul className="space-y-4 pl-4">
-                            {footerLinks.filter(l => l.isVisible).sort((a, b) => a.order - b.order).map(item => (
-                                <li key={item.id}>
-                                    <Link href={item.href} className="text-slate-500 hover:text-[#4F46E5] text-xs font-bold transition-colors uppercase tracking-wider">{item.label}</Link>
-                                </li>
-                            ))}
-                            <li><Link href="/about" className="text-slate-500 hover:text-[#4F46E5] text-xs font-bold transition-colors uppercase tracking-wider">About Us</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Column 4: Contact & Subscribe */}
-                    <div className="space-y-8">
-                        <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900 border-l-2 border-[#4F46E5] pl-4">Concierge</h4>
-                        <div className="space-y-6 pl-4">
-                            <div className="group">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-[#4F46E5]/60 mb-1">Direct Line</p>
-                                <p className="text-slate-900 font-bold text-sm group-hover:text-[#4F46E5] transition-colors cursor-pointer">1-800-555-0199</p>
-                            </div>
-                            <div className="group">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-[#4F46E5]/60 mb-1">Support Email</p>
-                                <p className="text-slate-900 font-bold text-sm group-hover:text-[#4F46E5] transition-colors cursor-pointer">support@squareft.com</p>
-                            </div>
+                    {/* Links Grid */}
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-8">
+                        
+                        {/* Communities */}
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Locations</h4>
+                            <ul className="grid grid-cols-1 gap-3">
+                                {cityGroups.slice(0, 6).map((city) => (
+                                    <li key={city.slug}>
+                                        <Link 
+                                            href={`/communities/${city.slug}`} 
+                                            className="text-slate-600 hover:text-brand-red text-sm font-semibold transition-all duration-200"
+                                        >
+                                            {city.name}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <div className="pt-2 pl-4">
-                            <div className="p-5 rounded-3xl bg-white border border-slate-100 shadow-sm">
-                                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-3">Newsletter</p>
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="email" 
-                                        placeholder="Email" 
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/10 transition-all" 
-                                    />
-                                    <button className="bg-slate-900 text-white p-2.5 rounded-xl hover:bg-[#4F46E5] transition-all duration-300 shadow-lg shadow-slate-200">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                    </button>
+
+                        {/* Navigation */}
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Company</h4>
+                            <ul className="space-y-3">
+                                {pages.map((page) => (
+                                    <li key={page.href}>
+                                        <Link 
+                                            href={page.href} 
+                                            className="text-slate-600 hover:text-brand-red text-sm font-semibold transition-all duration-200"
+                                        >
+                                            {page.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Concierge Card - Clean & Organized */}
+                        <div className="space-y-6">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Support</h4>
+                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Direct Line</p>
+                                    <a href="tel:+18005550199" className="text-slate-900 text-sm font-black hover:text-brand-red transition-colors">
+                                        1-800-555-0199
+                                    </a>
                                 </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                                    <a href="mailto:hello@squareft.ca" className="text-slate-900 text-sm font-black hover:text-brand-red transition-colors">
+                                        hello@squareft.ca
+                                    </a>
+                                </div>
+                                <button className="w-full py-3 bg-slate-900 hover:bg-brand-red text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+                                    Send Inquiry
+                                </button>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Bottom Bar */}
-                <div className="pt-8 border-t border-slate-200/60 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            &copy; {new Date().getFullYear()} {brandName} Realty Group.
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <Link href="/privacy" className="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">Privacy</Link>
-                            <Link href="/terms" className="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">Terms</Link>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 px-3 py-1 bg-white border border-slate-100 rounded-full">
-                        <div className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                        </div>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">System Ready</span>
                     </div>
                 </div>
             </div>

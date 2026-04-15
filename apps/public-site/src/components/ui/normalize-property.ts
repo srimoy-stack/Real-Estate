@@ -69,6 +69,7 @@ export interface NormalizedProperty {
 
   // Description
   publicRemarks?: string | null;
+  agentName?: string | null;
 
   // Compliance
   moreInformationLink?: string | null;
@@ -213,9 +214,9 @@ export function normalizeListing(listing: any): NormalizedProperty {
 
     category,
 
-    price: listing.price && listing.price > 0 ? listing.price : null,
-    leaseAmount: listing.leaseAmount && listing.leaseAmount > 0 ? listing.leaseAmount : null,
-    leaseRatePerSqft: listing.leaseRatePerSqft || null,
+    price: (listing.price || listing.ListPrice || listing.listPrice) > 0 ? (listing.price || listing.ListPrice || listing.listPrice) : null,
+    leaseAmount: (listing.leaseAmount || listing.LeaseAmount) > 0 ? (listing.leaseAmount || listing.LeaseAmount) : null,
+    leaseRatePerSqft: listing.leaseRatePerSqft || listing.LeaseRatePerSqft || null,
 
     title,
     city,
@@ -245,6 +246,7 @@ export function normalizeListing(listing: any): NormalizedProperty {
     createdAt: listing.createdAt || null,
 
     publicRemarks: listing.publicRemarks || listing.PublicRemarks || null,
+    agentName: listing.agentName || listing.AgentName || null,
     moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.brokerageName || null,
   };
@@ -310,6 +312,7 @@ export function normalizeMLSProperty(listing: any): NormalizedProperty {
     createdAt: listing.CreatedAt || listing.OriginalEntryTimestamp || null,
 
     publicRemarks: listing.PublicRemarks || listing.publicRemarks || null,
+    agentName: listing.AgentName || listing.agentName || null,
     moreInformationLink: resolveListingUrl(listing),
     brokerageName: listing.officeName || null,
   };

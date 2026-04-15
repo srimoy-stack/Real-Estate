@@ -1,37 +1,58 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { SafeImage } from '@/components/ui';
+
+const SERVICES = [
+    { title: 'Buy a Home', description: 'Browse verified listings across Canada', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800', href: '/listings' },
+    { title: 'Sell Your Property', description: 'Get a free home valuation today', image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800', href: '/sell' },
+    { title: 'Find an Agent', description: 'Connect with licensed local experts', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800', href: '/agents' },
+    { title: 'Lease a Space', description: 'Commercial and residential leases', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800', href: '/search?transaction=lease' },
+    { title: 'Explore Communities', description: 'Discover vibrant neighbourhoods', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800', href: '/communities' },
+    { title: 'Map Search', description: 'Search properties on an interactive map', image: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800', href: '/map-search' },
+];
 
 export const CTASection = () => {
     return (
-        <section className="px-4 sm:px-6 lg:px-8 py-10">
-            <div className="relative max-w-7xl mx-auto rounded-[40px] overflow-hidden bg-slate-900 px-8 py-20 md:px-20 md:py-24 group">
+        <section className="py-24 bg-slate-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-red">How Can We Help</span>
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-tight">
+                        Our <span className="text-brand-red italic">Services</span>
+                    </h2>
+                    <p className="text-slate-500 font-medium">
+                        Whether you&apos;re buying, selling, or leasing — we have the tools and expertise to guide you every step of the way.
+                    </p>
+                </div>
 
-                {/* Decorative Background Elements */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#4F46E5]/10 to-transparent pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#4F46E5]/20 rounded-full blur-3xl group-hover:bg-[#4F46E5]/30 transition-colors" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {SERVICES.map((item, i) => (
+                        <Link
+                            key={i}
+                            href={item.href}
+                            className="group relative h-72 rounded-[32px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+                        >
+                            <SafeImage
+                                src={item.image}
+                                alt={item.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
 
-                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
-                    <div className="max-w-2xl space-y-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/10 rounded-full">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#4F46E5]/50">Valuation Services</span>
-                        </div>
-                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter leading-tight">
-                            Sell Your Home With <br className="hidden md:block" /> <span className="text-[#4F46E5]/80 italic">Confidence.</span>
-                        </h2>
-                        <p className="text-lg md:text-xl text-slate-400 font-medium max-w-xl">
-                            Our data-driven strategies and elite network of agents ensure your property gets the attention it deserves and the results you expect.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                        <button className="w-full sm:w-auto h-16 px-10 bg-white hover:bg-indigo-50 text-slate-900 font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-black/20">
-                            Book a Valuation
-                        </button>
-                        <button className="w-full sm:w-auto h-16 px-8 bg-transparent hover:bg-white/5 text-white border border-white/20 font-black uppercase tracking-widest rounded-2xl transition-all">
-                            Learn More
-                        </button>
-                    </div>
+                            <div className="absolute bottom-8 left-8 right-8 flex items-end justify-between">
+                                <div className="space-y-1">
+                                    <h3 className="text-2xl font-black text-white tracking-tight">{item.title}</h3>
+                                    <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">{item.description}</p>
+                                </div>
+                                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white group-hover:bg-brand-red group-hover:text-white transition-all flex-shrink-0">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
             </div>
         </section>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { onboardOrganization, PLATFORM_TEMPLATES, ProvisioningProgress } from '@repo/services';
 import { Template, OrganizationType } from '@repo/types';
 
-export default function OnboardOrganizationPage() {
+export default function OnboardBrokeragePage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -24,6 +24,13 @@ export default function OnboardOrganizationPage() {
             blog: false,
             analytics: false,
             teamManagement: false,
+        },
+        listingProvider: {
+            providerName: 'CREA DDF',
+            apiEndpoint: '',
+            apiKey: '',
+            authKey: '',
+            otherDetails: '',
         },
         listingCity: '', propertyType: 'residential', status: 'active', listingLimit: '25',
         metaTitle: '', metaDescription: '',
@@ -83,7 +90,7 @@ export default function OnboardOrganizationPage() {
     useEffect(() => {
         if (progress?.progress === 100) {
             const timer = setTimeout(() => {
-                router.push('/organizations');
+                router.push('/brokerages');
             }, 1000); // TASK 4: Auto redirect after ~1s
             return () => clearTimeout(timer);
         }
@@ -93,7 +100,7 @@ export default function OnboardOrganizationPage() {
     const labelCls = "text-[10px] font-black uppercase tracking-widest text-slate-400";
 
     const provisioningSteps = [
-        { id: 1, label: "Creating organization...", minProgress: 0 },
+        { id: 1, label: "Creating brokerage...", minProgress: 0 },
         { id: 2, label: "Assigning template...", minProgress: 35 },
         { id: 3, label: "Setting up website...", minProgress: 70 },
         { id: 4, label: "Finalizing setup...", minProgress: 95 },
@@ -113,7 +120,7 @@ export default function OnboardOrganizationPage() {
                                     <div className="h-20 w-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_40px_rgba(16,185,129,0.4)]">
                                         <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path d="M5 13l4 4L19 7" /></svg>
                                     </div>
-                                    <h2 className="text-3xl font-black text-white tracking-tight">Organization Successfully Created</h2>
+                                    <h2 className="text-3xl font-black text-white tracking-tight">Brokerage Successfully Created</h2>
                                     <p className="text-slate-400 font-medium">Redirecting to management suite...</p>
                                 </div>
                             ) : (
@@ -186,9 +193,10 @@ export default function OnboardOrganizationPage() {
                         {[
                             { s: 1, label: 'Client Type' },
                             { s: 2, label: 'Org Details' },
-                            { s: 3, label: 'Website Setup' },
-                            { s: 4, label: 'Modules' },
-                            { s: 5, label: 'Review & Submit' },
+                            { s: 3, label: 'Listing Provider' },
+                            { s: 4, label: 'Website Setup' },
+                            { s: 5, label: 'Modules' },
+                            { s: 6, label: 'Review & Submit' },
                         ].map(item => (
                             <div key={item.s} className="flex items-center gap-3 cursor-pointer" onClick={() => (step > item.s && !loading) && setStep(item.s)}>
                                 <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-black text-xs transition-all ${step === item.s ? 'bg-indigo-600 scale-110 shadow-lg' : step > item.s ? 'bg-emerald-500' : 'bg-slate-800 text-slate-600'}`}>
@@ -198,7 +206,7 @@ export default function OnboardOrganizationPage() {
                             </div>
                         ))}
                     </div>
-                    <button onClick={() => router.push('/organizations')} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors mt-6">← Back to Organizations</button>
+                    <button onClick={() => router.push('/brokerages')} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors mt-6">← Back to Brokerages</button>
                 </div>
 
                 {/* Content */}
@@ -206,7 +214,7 @@ export default function OnboardOrganizationPage() {
                     {/* Step 1: Client Type */}
                     {step === 1 && (
                         <div className="space-y-8 animate-in fade-in duration-300">
-                            <div><h2 className="text-2xl font-black text-slate-900">Select Client Type</h2><p className="text-slate-500 font-medium mt-1">Specify whether this organization is a brokerage or an individual agent.</p></div>
+                            <div><h2 className="text-2xl font-black text-slate-900">Select Client Type</h2><p className="text-slate-500 font-medium mt-1">Specify whether this brokerage is a large office or an individual agent platform.</p></div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {[
                                     { id: 'BROKERAGE', label: 'Brokerage', desc: 'Multiple agents, office management, and global listings.', icon: '🏢' },
@@ -232,10 +240,10 @@ export default function OnboardOrganizationPage() {
                         </div>
                     )}
 
-                    {/* Step 2: Org Details */}
+                    {/* Step 2: Brokerage Details */}
                     {step === 2 && (
                         <div className="space-y-6 animate-in fade-in duration-300">
-                            <div><h2 className="text-2xl font-black text-slate-900">Organization Details</h2><p className="text-slate-500 font-medium mt-1">Core contact and billing information.</p></div>
+                            <div><h2 className="text-2xl font-black text-slate-900">Brokerage Details</h2><p className="text-slate-500 font-medium mt-1">Core contact and billing information.</p></div>
                             <div className="grid grid-cols-2 gap-5 bg-slate-50/70 p-7 rounded-[28px]">
                                 <div className="col-span-2 flex items-center gap-6 mb-4">
                                     <div className="relative group/logo">
@@ -254,7 +262,7 @@ export default function OnboardOrganizationPage() {
                                         />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Organization Logo</p>
+                                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Brokerage Logo</p>
                                         <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">PNG or SVG, Max 500KB</p>
                                         <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-2 hover:underline">Upload Image</button>
                                     </div>
@@ -273,8 +281,26 @@ export default function OnboardOrganizationPage() {
                         </div>
                     )}
 
-                    {/* Step 3: Website Setup */}
+                    {/* Step 3: Listing Provider */}
                     {step === 3 && (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            <div><h2 className="text-2xl font-black text-slate-900">Listing Provider</h2><p className="text-slate-500 font-medium mt-1">Configure the property data source and API credentials.</p></div>
+                            <div className="grid grid-cols-2 gap-5 bg-slate-50/70 p-7 rounded-[28px]">
+                                <div className="space-y-1.5"><label className={labelCls}>Provider Name *</label><input type="text" value={form.listingProvider.providerName} onChange={e => update({ listingProvider: { ...form.listingProvider, providerName: e.target.value } })} className={inputCls} placeholder="e.g. CREA DDF, Treb, etc." /></div>
+                                <div className="space-y-1.5"><label className={labelCls}>API Endpoint</label><input type="text" value={form.listingProvider.apiEndpoint} onChange={e => update({ listingProvider: { ...form.listingProvider, apiEndpoint: e.target.value } })} className={inputCls} placeholder="https://api.provider.com/v3" /></div>
+                                <div className="space-y-1.5"><label className={labelCls}>API Key</label><input type="password" value={form.listingProvider.apiKey} onChange={e => update({ listingProvider: { ...form.listingProvider, apiKey: e.target.value } })} className={inputCls} placeholder="••••••••••••••••" /></div>
+                                <div className="space-y-1.5"><label className={labelCls}>Auth Key / Token</label><input type="password" value={form.listingProvider.authKey} onChange={e => update({ listingProvider: { ...form.listingProvider, authKey: e.target.value } })} className={inputCls} placeholder="••••••••••••••••" /></div>
+                                <div className="col-span-2 space-y-1.5"><label className={labelCls}>Other Implementation Details</label><textarea value={form.listingProvider.otherDetails} onChange={e => update({ listingProvider: { ...form.listingProvider, otherDetails: e.target.value } })} className={`${inputCls} h-24 resize-none`} placeholder="Specific notes for the technical team..." /></div>
+                            </div>
+                            <div className="flex justify-between pt-4">
+                                <button onClick={back} className="px-8 py-4 text-slate-400 font-black uppercase tracking-widest hover:text-slate-600 transition-colors">Back</button>
+                                <button onClick={next} disabled={!form.listingProvider.providerName} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-200 hover:bg-indigo-500 transition-all disabled:opacity-40">Continue</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 4: Website Setup */}
+                    {step === 4 && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <div><h2 className="text-2xl font-black text-slate-900">Website Provisioning</h2><p className="text-slate-500 font-medium mt-1">Select a tenant template and configure the access domain.</p></div>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
@@ -294,8 +320,8 @@ export default function OnboardOrganizationPage() {
                         </div>
                     )}
 
-                    {/* Step 4: Module Selection */}
-                    {step === 4 && (
+                    {/* Step 5: Module Selection */}
+                    {step === 5 && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <div><h2 className="text-2xl font-black text-slate-900">Module Selection</h2><p className="text-slate-500 font-medium mt-1">Enable specific platform features for this client.</p></div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -329,8 +355,8 @@ export default function OnboardOrganizationPage() {
                         </div>
                     )}
 
-                    {/* Step 5: Review & Submit */}
-                    {step === 5 && (
+                    {/* Step 6: Review & Submit */}
+                    {step === 6 && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <div><h2 className="text-2xl font-black text-slate-900">Review & Submit</h2><p className="text-slate-500 font-medium mt-1">Verify all details before initiating ecosystem provisioning.</p></div>
                             <div className="grid grid-cols-2 gap-5">
@@ -349,6 +375,22 @@ export default function OnboardOrganizationPage() {
                                     <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Selected Template</h3>
                                     <p className="font-bold text-slate-900 tracking-tight">{PLATFORM_TEMPLATES.find(t => t.templateKey === form.templateId)?.templateName || 'Not selected'}</p>
                                     <p className="text-xs text-indigo-600 font-black uppercase tracking-widest">{form.domain || 'Auto-generated Domain'}</p>
+                                </div>
+                                <div className="col-span-2 p-6 bg-slate-50 rounded-[24px] space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Listing Provider</h3>
+                                        <span className="text-[8px] font-black bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-500 uppercase">{form.listingProvider.providerName}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                            <p className="text-xs font-bold text-slate-900 truncate">{form.listingProvider.apiEndpoint ? 'API CONFIGURED' : 'PENDING CONFIG'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Credentials</p>
+                                            <p className="text-xs font-bold text-slate-900">{form.listingProvider.apiKey ? 'KEYS PROVIDED' : 'NOT SUPPLIED'}</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="col-span-2 p-6 bg-slate-50 rounded-[24px] space-y-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Enabled Modules</h3>

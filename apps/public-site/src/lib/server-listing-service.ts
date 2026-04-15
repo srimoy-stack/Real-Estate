@@ -2,6 +2,7 @@ import { prisma } from './prisma';
 import { withActive, buildWhereClause, buildOrderByClause } from './listings-utils';
 import { MLSListing } from '@repo/services';
 import { resolveListingUrl } from './resolve-listing-url';
+import { getAgentFromCache } from './agent-cache';
 
 const NON_IMAGE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i;
 export const isValidImageUrl = (url: string) => {
@@ -52,6 +53,12 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
       return [];
     })();
 
+    // ── Agent Hydration from Redis (Late-Binding) ──────────────────
+    const agentCache = await getAgentFromCache(raw.ListAgentKey, raw.ListOfficeKey);
+    const agentName = listing.agentName || agentCache?.agentName || raw.ListAgentFullName || '';
+    const agentPhone = listing.agentPhone || agentCache?.agentPhone || raw.ListAgentDirectPhone || undefined;
+    const agentPhoto = listing.agentPhoto || agentCache?.agentPhoto || (raw.ListAgentPhoto && isValidImageUrl(raw.ListAgentPhoto) ? raw.ListAgentPhoto : null);
+    const brokerageName = listing.officeName || agentCache?.officeName || raw.ListOfficeName || null;
 
     return {
       mlsNumber: listing.listingKey,
@@ -74,11 +81,11 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
         lat: listing.latitude ?? 0, 
         lng: listing.longitude ?? 0 
       },
-      agentName: listing.agentName || raw.ListAgentFullName || '',
-      agentPhone: listing.agentPhone || raw.ListAgentDirectPhone || undefined,
+      agentName,
+      agentPhone,
       agentEmail: raw.ListAgentEmail || undefined,
-      agentPhoto: raw.ListAgentPhoto && isValidImageUrl(raw.ListAgentPhoto) ? raw.ListAgentPhoto : null,
-      brokerageName: listing.officeName || raw.ListOfficeName || null,
+      agentPhoto,
+      brokerageName,
       moreInformationLink: listing.moreInformationLink || raw.ListingURL || null,
       primaryPhotoUrl: (listing.primaryPhotoUrl || listing.primaryPhoto) && isValidImageUrl(listing.primaryPhotoUrl || listing.primaryPhoto as string) ? (listing.primaryPhotoUrl || listing.primaryPhoto as string) : null,
       features: raw.BuildingFeatures || [],

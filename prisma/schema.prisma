@@ -45,6 +45,7 @@ model Listing {
 
   agentName             String?
   agentPhone            String?
+  agentEmail            String?
   officeName            String?
 
   moreInformationLink   String?
@@ -129,4 +130,29 @@ model SellLead {
   @@index([status])
   @@index([createdAt])
   @@index([city])
+}
+
+model Inquiry {
+  id        String   @id
+  name      String
+  email     String
+  phone     String?
+  message   String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+model SavedListing {
+  id        String   @id
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([listingId])
+  @@index([userId])
 }

@@ -53,6 +53,7 @@ export interface Listing extends BaseEntity {
     agentPhone?: string;
     agentEmail?: string;
     agentPhoto?: string;
+    officeName?: string;
     brokerageName?: string;
     moreInformationLink?: string | null;
 

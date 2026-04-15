@@ -51,8 +51,8 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
                         <div>
                             <h3 className="text-xl font-black text-slate-900 leading-none mb-1">{listing.agentName || (listing as any).AgentName || 'Contact our team'}</h3>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{(listing as any).agentTitle || (listing as any).AgentTitle || 'Listing Expert'}</p>
-                            {listing.brokerageName && (
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#4F46E5]/60 mt-1">{listing.brokerageName}</p>
+                            {(listing.officeName || listing.brokerageName) && (
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#4F46E5]/60 mt-1">{listing.officeName || listing.brokerageName}</p>
                             )}
                         </div>
                     </div>
@@ -74,10 +74,20 @@ export const StickyInquirySidebar = ({ listing }: StickyInquirySidebarProps) => 
 
                     {/* Quick Action Buttons */}
                     <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-50">
-                        <button className="flex items-center justify-center gap-3 w-full py-4 text-slate-500 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                            Call Agent
-                        </button>
+                        {listing.agentPhone ? (
+                            <a 
+                                href={`tel:${listing.agentPhone}`}
+                                className="flex items-center justify-center gap-3 w-full py-4 text-slate-500 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                Call {listing.agentPhone}
+                            </a>
+                        ) : (
+                            <button className="flex items-center justify-center gap-3 w-full py-4 text-slate-500 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                Call Agent
+                            </button>
+                        )}
                         <button className="flex items-center justify-center gap-3 w-full py-4 text-emerald-500 hover:text-emerald-600 font-black text-[10px] uppercase tracking-widest transition-all">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412 0 6.556-5.338-11.892-11.893-11.892-1.996-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.52c1.547.919 3.482 1.44 5.416 1.441 5.452 0 9.889-4.437 9.889-9.891 0-2.64-1.029-5.122-2.898-6.991-1.868-1.868-4.349-2.897-6.991-2.897-5.451 0-9.889 4.437-9.889 9.891 0 2.02.614 3.997 1.774 5.69l-.939 3.428 3.51-.921zm10.987-1.511c-.3.12-1.77.87-2.046.972-.276.103-.476.155-.676-.153-.2.302-.776.974-.951 1.178-.175.204-.351.229-.65.071-.3-.152-1.27-.467-2.42-1.485-.896-.792-1.498-1.77-1.674-2.072-.176-.3-.018-.462.132-.612.135-.133.301-.354.451-.531.149-.177.199-.303.301-.505.101-.202.05-.38-.026-.531-.076-.151-.676-1.627-.926-2.231-.244-.59-.49-.51-.676-.52-.175-.008-.376-.01-.577-.01-.2 0-.527.075-.802.378-.276.301-1.052 1.027-1.052 2.506 0 1.479 1.076 2.909 1.226 3.111.15.202 2.12 3.232 5.14 4.536.72.309 1.28.495 1.71.631.72.23 1.38.19 1.89.11.58-.09 1.77-.72 2.02-1.41.25-.69.25-1.28.17-1.41-.08-.13-.27-.202-.57-.322z" /></svg>
                             WhatsApp

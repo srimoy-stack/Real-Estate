@@ -2809,6 +2809,214 @@ const SettingsPanel = () => {
                                         </select>
                                     </label>
                                 </div>
+
+                                <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Advanced Filters</span>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Sqft</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No min"
+                                                value={selected.props.filters?.minSqft || ''}
+                                                onChange={e => updateProp('filters.minSqft', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Sqft</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No max"
+                                                value={selected.props.filters?.maxSqft || ''}
+                                                onChange={e => updateProp('filters.maxSqft', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Land Size</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No min"
+                                                value={selected.props.filters?.minLandSize || ''}
+                                                onChange={e => updateProp('filters.minLandSize', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Land Size</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No max"
+                                                value={selected.props.filters?.maxLandSize || ''}
+                                                onChange={e => updateProp('filters.maxLandSize', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Building Type</span>
+                                        <select
+                                            value={selected.props.filters?.buildingType || ''}
+                                            onChange={e => updateProp('filters.buildingType', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="">Any Building</option>
+                                            <option value="House">House</option>
+                                            <option value="Two Apartment House">Two Apartment House</option>
+                                            <option value="Offices">Offices</option>
+                                            <option value="No Building">No Building</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </label>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Storeys</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min"
+                                                value={selected.props.filters?.minStoreys || ''}
+                                                onChange={e => updateProp('filters.minStoreys', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Storeys</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max"
+                                                value={selected.props.filters?.maxStoreys || ''}
+                                                onChange={e => updateProp('filters.maxStoreys', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ownership Type</span>
+                                        <select
+                                            value={selected.props.filters?.ownershipType || ''}
+                                            onChange={e => updateProp('filters.ownershipType', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="">Any Ownership</option>
+                                            <option value="Freehold">Freehold</option>
+                                            <option value="Condo/Strata">Condo/Strata</option>
+                                        </select>
+                                    </label>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Year Built</span>
+                                            <input
+                                                type="number"
+                                                placeholder="1990"
+                                                value={selected.props.filters?.minYearBuilt || ''}
+                                                onChange={e => updateProp('filters.minYearBuilt', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Year Built</span>
+                                            <input
+                                                type="number"
+                                                placeholder="2025"
+                                                value={selected.props.filters?.maxYearBuilt || ''}
+                                                onChange={e => updateProp('filters.maxYearBuilt', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Maint Fee</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min $"
+                                                value={selected.props.filters?.minMaintFee || ''}
+                                                onChange={e => updateProp('filters.minMaintFee', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Maint Fee</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max $"
+                                                value={selected.props.filters?.maxMaintFee || ''}
+                                                onChange={e => updateProp('filters.maxMaintFee', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Tax</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min $"
+                                                value={selected.props.filters?.minTax || ''}
+                                                onChange={e => updateProp('filters.minTax', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Tax</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max $"
+                                                value={selected.props.filters?.maxTax || ''}
+                                                onChange={e => updateProp('filters.maxTax', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Keywords</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Waterfront, Pool, Garage..."
+                                            value={selected.props.filters?.keywords || ''}
+                                            onChange={e => updateProp('filters.keywords', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Listed Since</span>
+                                        <input
+                                            type="date"
+                                            value={selected.props.filters?.listedSince || ''}
+                                            onChange={e => updateProp('filters.listedSince', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+
+                                    <div className="flex flex-col gap-2 pt-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</span>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={selected.props.filters?.featured || false}
+                                                    onChange={e => updateProp('filters.featured', e.target.checked)}
+                                                />
+                                                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-indigo-600 transition-all duration-300"></div>
+                                                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full peer-checked:translate-x-5 transition-all duration-300"></div>
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Featured Only</span>
+                                        </label>
+                                    </div>
+                                </div>
                             </>
                         )}
                     </>
@@ -2996,6 +3204,197 @@ const SettingsPanel = () => {
                                             <option value="price_asc" className="hidden">Price: Low to High (Legacy)</option>
                                             <option value="price_desc" className="hidden">Price: High to Low (Legacy)</option>
                                         </select>
+                                    </label>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-slate-100 mt-4">
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Advanced Filters</span>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Sqft</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No min"
+                                                value={selected.props.filters?.minSqft || ''}
+                                                onChange={e => updateProp('filters.minSqft', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Sqft</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No max"
+                                                value={selected.props.filters?.maxSqft || ''}
+                                                onChange={e => updateProp('filters.maxSqft', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Land Size</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No min"
+                                                value={selected.props.filters?.minLandSize || ''}
+                                                onChange={e => updateProp('filters.minLandSize', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Land Size</span>
+                                            <input
+                                                type="number"
+                                                placeholder="No max"
+                                                value={selected.props.filters?.maxLandSize || ''}
+                                                onChange={e => updateProp('filters.maxLandSize', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Building Type</span>
+                                        <select
+                                            value={selected.props.filters?.buildingType || ''}
+                                            onChange={e => updateProp('filters.buildingType', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="">Any Building</option>
+                                            <option value="House">House</option>
+                                            <option value="Two Apartment House">Two Apartment House</option>
+                                            <option value="Offices">Offices</option>
+                                            <option value="No Building">No Building</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </label>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Storeys</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min"
+                                                value={selected.props.filters?.minStoreys || ''}
+                                                onChange={e => updateProp('filters.minStoreys', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Storeys</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max"
+                                                value={selected.props.filters?.maxStoreys || ''}
+                                                onChange={e => updateProp('filters.maxStoreys', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ownership Type</span>
+                                        <select
+                                            value={selected.props.filters?.ownershipType || ''}
+                                            onChange={e => updateProp('filters.ownershipType', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        >
+                                            <option value="">Any Ownership</option>
+                                            <option value="Freehold">Freehold</option>
+                                            <option value="Condo/Strata">Condo/Strata</option>
+                                        </select>
+                                    </label>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Year Built</span>
+                                            <input
+                                                type="number"
+                                                placeholder="1990"
+                                                value={selected.props.filters?.minYearBuilt || ''}
+                                                onChange={e => updateProp('filters.minYearBuilt', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Year Built</span>
+                                            <input
+                                                type="number"
+                                                placeholder="2025"
+                                                value={selected.props.filters?.maxYearBuilt || ''}
+                                                onChange={e => updateProp('filters.maxYearBuilt', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Maint Fee</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min $"
+                                                value={selected.props.filters?.minMaintFee || ''}
+                                                onChange={e => updateProp('filters.minMaintFee', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Maint Fee</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max $"
+                                                value={selected.props.filters?.maxMaintFee || ''}
+                                                onChange={e => updateProp('filters.maxMaintFee', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Min Tax</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Min $"
+                                                value={selected.props.filters?.minTax || ''}
+                                                onChange={e => updateProp('filters.minTax', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                        <label className="block space-y-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Max Tax</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Max $"
+                                                value={selected.props.filters?.maxTax || ''}
+                                                onChange={e => updateProp('filters.maxTax', e.target.value ? parseInt(e.target.value) : undefined)}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Keywords</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Waterfront, Pool, Garage..."
+                                            value={selected.props.filters?.keywords || ''}
+                                            onChange={e => updateProp('filters.keywords', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
+                                    </label>
+                                    <label className="block space-y-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Listed Since</span>
+                                        <input
+                                            type="date"
+                                            value={selected.props.filters?.listedSince || ''}
+                                            onChange={e => updateProp('filters.listedSince', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:bg-white transition-all outline-none"
+                                        />
                                     </label>
                                 </div>
                             </>
@@ -3811,7 +4210,7 @@ const Topbar = ({ onSave, agentId, builderMode, canPreview, isPreviewMode, onTog
                 <div className="min-w-0">
                     <p className="text-xs font-black text-slate-800 truncate">Website Builder</p>
                     <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider truncate">
-                        {agentId ? (builderMode === 'agent-advanced' ? `Advanced · ${agentId}` : `Agent · ${agentId}`) : (websiteId?.slice(0, 12) || 'Organization')}
+                        {agentId ? (builderMode === 'agent-advanced' ? `Advanced · ${agentId}` : `Agent · ${agentId}`) : (websiteId?.slice(0, 12) || 'Brokerage')}
                     </p>
                 </div>
             </div>
@@ -4622,7 +5021,7 @@ function WebsiteBuilderInternal({ resolver, ...props }: { resolver: any } & Webs
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col font-inter flex-1">
+        <div className="h-screen bg-slate-50 flex flex-col font-inter flex-1">
             <Loader agentId={agentId} websiteId={websiteId} pageId={resolvedPageId} templateId={templateId || 'modern-realty'} agentAdvanced={agentAdvanced} />
             <Topbar
                 onSave={handleSave}
@@ -4634,7 +5033,7 @@ function WebsiteBuilderInternal({ resolver, ...props }: { resolver: any } & Webs
                 userRole={userRole}
             />
 
-            <div className="flex flex-1 overflow-hidden relative">
+            <div className="flex flex-1 min-h-0 overflow-hidden relative">
                 {/* Left Sidebar - Tab Side Nav */}
                 {!isPreviewMode && (
                     <div className="w-20 bg-slate-900 flex flex-col items-center py-8 gap-6 z-50 flex-shrink-0">
@@ -4801,7 +5200,7 @@ function WebsiteBuilderInternal({ resolver, ...props }: { resolver: any } & Webs
 
                 {/* Right Panel: Configuration */}
                 {isRightPanelOpen && (
-                    <div className="w-[340px] max-w-[340px] bg-white border-l border-slate-200 flex flex-col overflow-hidden shadow-xl z-40 animate-in slide-in-from-right duration-300">
+                    <div className="w-[340px] max-w-[340px] bg-white border-l border-slate-200 flex flex-col min-h-0 overflow-y-auto shadow-xl z-40 animate-in slide-in-from-right duration-300">
                         {/* 1) Specific element configuration takes precedence */}
                         {selected ? (
                             <SettingsPanel />

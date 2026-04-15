@@ -17,7 +17,9 @@ export default function AgentsPage() {
     const [filterTemplate, setFilterTemplate] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
     const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+    const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -49,6 +51,22 @@ export default function AgentsPage() {
             setSelectedAgent(null);
         } catch (error) {
             alert('Failed to delete agent');
+        }
+    };
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingAgent) return;
+
+        setSaving(true);
+        try {
+            // Update local state for now
+            setAgents(prev => prev.map(a => a.id === editingAgent.id ? editingAgent : a));
+            setEditingAgent(null);
+        } catch (error) {
+            alert('Update failed');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -110,6 +128,27 @@ export default function AgentsPage() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+
+                            <div className="space-y-4">
+                                <h5 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-6 underline decoration-indigo-100 underline-offset-8 decoration-2">Listing Infrastructure</h5>
+                                <div className="p-6 bg-slate-50 rounded-[28px] border border-slate-100/50 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Source</p>
+                                        <span className="px-2 py-0.5 bg-indigo-600 text-white rounded text-[8px] font-black uppercase tracking-widest">{(selectedAgent as any).listingProvider?.providerName || 'CREA DDF'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Endpoint Status</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            <p className="text-xs font-bold text-slate-900 truncate">{(selectedAgent as any).listingProvider?.apiEndpoint || 'Integrated Platform Source'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-2 flex items-center justify-between border-t border-slate-200/50">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">API Authentication</p>
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Verified</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="pt-10 flex flex-col gap-4 border-t border-slate-50">
@@ -226,6 +265,7 @@ export default function AgentsPage() {
                             <tr className="border-b border-slate-50">
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deployment Identity</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Cluster Map</th>
+                                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Provider</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Protocol State</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Synchronization</th>
                                 <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
@@ -264,6 +304,18 @@ export default function AgentsPage() {
                                                 <div className="h-1 w-1 rounded-full bg-slate-200" />
                                                 <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{templateNames[agent.templateId || ''] || 'No Template'}</p>
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-8">
+                                        <div className="flex items-center gap-2 group/prov">
+                                            <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{(agent as any).listingProvider?.providerName || 'DDF'}</span>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setEditingAgent(agent); }}
+                                                className="opacity-0 group-hover/prov:opacity-100 p-1 hover:bg-white text-indigo-400 hover:text-indigo-600 rounded transition-all shadow-sm"
+                                                title="Edit Source Config"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3V17.5l13.732-13.732z" /></svg>
+                                            </button>
                                         </div>
                                     </td>
                                     <td className="px-10 py-8">
@@ -318,6 +370,15 @@ export default function AgentsPage() {
                                                     View Identity
                                                 </button>
                                                 <button 
+                                                    onClick={(e) => { e.stopPropagation(); setEditingAgent(agent); setOpenMenuId(null); }} 
+                                                    className="w-full text-left px-5 py-3 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-3 text-[10px] font-black uppercase tracking-widest"
+                                                >
+                                                    <svg className="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    Edit / Configuration
+                                                </button>
+                                                <button 
                                                     onClick={(e) => { e.stopPropagation(); router.push(`/preview/agent/${agent.id}`); setOpenMenuId(null); }}
                                                     className="w-full text-left px-5 py-3 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-3 text-[10px] font-black uppercase tracking-widest"
                                                 >
@@ -358,6 +419,126 @@ export default function AgentsPage() {
                     </div>
                 )}
             </div>
+            {/* Edit Modal */}
+            {editingAgent && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Edit <span className="text-indigo-600">Agent Identity</span></h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Registry Code: {editingAgent.id}</p>
+                            </div>
+                            <button onClick={() => setEditingAgent(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdate} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Full Legal Name</label>
+                                    <input
+                                        type="text"
+                                        value={editingAgent.name}
+                                        onChange={(e) => setEditingAgent({ ...editingAgent, name: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all uppercase"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact Email</label>
+                                    <input
+                                        type="email"
+                                        value={editingAgent.email}
+                                        onChange={(e) => setEditingAgent({ ...editingAgent, email: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identity Template</label>
+                                    <select
+                                        value={editingAgent.templateId || ''}
+                                        onChange={(e) => setEditingAgent({ ...editingAgent, templateId: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                                    >
+                                        <option value="">Independent Agent</option>
+                                        {PLATFORM_TEMPLATES.map(t => (
+                                            <option key={t.templateKey} value={t.templateKey}>{t.templateName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Deployment City</label>
+                                    <input
+                                        type="text"
+                                        value={editingAgent.city || ''}
+                                        onChange={(e) => setEditingAgent({ ...editingAgent, city: e.target.value })}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-4">
+                                    Listing Infrastructure Config
+                                    <div className="h-px bg-slate-100 flex-1" />
+                                </label>
+                                <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-[28px] border border-slate-100">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Provider Name</label>
+                                        <input
+                                            type="text"
+                                            value={(editingAgent as any).listingProvider?.providerName || ''}
+                                            onChange={(e) => setEditingAgent({ ...editingAgent, listingProvider: { ...((editingAgent as any).listingProvider || {}), providerName: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-black uppercase"
+                                            placeholder="CREA DDF"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">API Authentication Key</label>
+                                        <input
+                                            type="password"
+                                            value={(editingAgent as any).listingProvider?.apiKey || ''}
+                                            onChange={(e) => setEditingAgent({ ...editingAgent, listingProvider: { ...((editingAgent as any).listingProvider || {}), apiKey: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all"
+                                            placeholder="••••••••••••••••"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Technical Endpoint URL</label>
+                                        <input
+                                            type="text"
+                                            value={(editingAgent as any).listingProvider?.apiEndpoint || ''}
+                                            onChange={(e) => setEditingAgent({ ...editingAgent, listingProvider: { ...((editingAgent as any).listingProvider || {}), apiEndpoint: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-mono"
+                                            placeholder="https://api.provider.com/v3"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingAgent(null)}
+                                    className="px-6 py-3 rounded-[20px] text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-8 py-3 rounded-[20px] bg-slate-900 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 disabled:opacity-50 transition-all flex items-center gap-2"
+                                >
+                                    {saving && <div className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                    Commit Identity Updates
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

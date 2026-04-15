@@ -3,6 +3,7 @@ import { prisma } from '../../../lib/prisma';
 import { ListingQuery, fetchRankedListings } from '../../../lib/listings-utils';
 import { enrichListingsWithCompliance } from '../../../lib/ddf-compliance';
 import { buildCacheKey, getCached, setCache } from '../../../lib/redis';
+import { getAgentFromCache } from '../../../lib/agent-cache';
 
 const CACHE_TTL_SECONDS = 60;
 
@@ -161,8 +162,15 @@ export async function GET(request: NextRequest) {
     ]);
 
     // ── 4. Mapping ─────────────────────────────────────────────────────
-    const mappedListings = listingsRaw.map((listing: any) => {
+    const mappedListings = await Promise.all(listingsRaw.map(async (listing: any) => {
       const raw = (listing.rawData as any) || {};
+      
+      // Attempt to hydrate agent/office from Redis if DB is missing data
+      const agentCache = await getAgentFromCache(raw.ListAgentKey, raw.ListOfficeKey);
+      const agentName = listing.agentName || agentCache?.agentName || raw.ListAgentFullName || '';
+      const agentPhone = listing.agentPhone || agentCache?.agentPhone || raw.ListAgentDirectPhone || undefined;
+      const officeName = listing.officeName || agentCache?.officeName || raw.ListOfficeName || null;
+
       return {
         ...raw,
         listingKey: listing.listingKey,
@@ -185,9 +193,9 @@ export async function GET(request: NextRequest) {
         ModificationTimestamp: listing.modificationTimestamp?.toISOString(),
         ListingDate: listing.listingDate?.toISOString() || null,
         CreatedAt: listing.createdAt?.toISOString() || null,
-        agentName: listing.agentName || raw.ListAgentFullName,
-        agentPhone: listing.agentPhone || raw.ListAgentDirectPhone,
-        officeName: listing.officeName || raw.ListOfficeName,
+        agentName,
+        agentPhone,
+        officeName,
         moreInformationLink: listing.moreInformationLink || raw.ListingURL || null,
         primaryPhoto: listing.primaryPhoto || listing.primaryPhotoUrl || null,
         primaryPhotoUrl: listing.primaryPhotoUrl || listing.primaryPhoto || null,
@@ -195,7 +203,7 @@ export async function GET(request: NextRequest) {
           const isValidImageUrl = (url: any) => {
             if (!url || typeof url !== 'string' || url.length < 5) return false;
             if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar)$/i.test(url)) return false;
-            return true; // Trust the URL if it exists and isn't a known non-image doc
+            return true;
           };
           
           const rawMedia =
@@ -213,14 +221,13 @@ export async function GET(request: NextRequest) {
             if (validMedia.length > 0) return validMedia;
           }
 
-          // Fallback: use primaryPhotoUrl or rawData photo fields
           const photoUrl = listing.primaryPhotoUrl || listing.primaryPhoto || raw.primaryPhotoUrl || raw.primaryPhoto || null;
           if (isValidImageUrl(photoUrl))
             return [{ MediaURL: photoUrl, PreferredPhotoYN: true, Order: 0 }];
           return [];
         })(),
       };
-    });
+    }));
 
     // ── DDF Compliance: Enrich all listings with required fields ────────
     const listings = enrichListingsWithCompliance(mappedListings);

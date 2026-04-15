@@ -407,7 +407,6 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <h3 className="text-3xl font-black text-slate-900">{agentName}</h3>
-                    <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300">Listing Representative</p>
                   </div>
                   {brokerageName && (
                     <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-400">
@@ -417,20 +416,19 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                 </div>
                 <div className="grid grid-cols-1 gap-12 sm:grid-cols-2">
                   <div className="space-y-3">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Direct Inquiries</span>
-                    {agentPhone ? (
+                    {agentPhone && (
                        <a href={`tel:${agentPhone}`} className="flex items-center gap-3 text-2xl font-black text-slate-900 transition-all hover:text-red-600 hover:translate-x-1">
                          <div className="h-2 w-2 rounded-full bg-red-600" />
                          {agentPhone}
                        </a>
-                    ) : ( <span className="text-2xl font-black text-slate-300 italic">Contact Office</span> )}
+                    )}
                   </div>
                   <div className="space-y-3">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Status</span>
+                    {agentPhone && (
                     <span className="flex items-center gap-3 text-2xl font-black text-emerald-600">
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 animate-pulse" />
-                      Ready to Help
                     </span>
+                    )}
                   </div>
                 </div>
                 <div className="pt-2">

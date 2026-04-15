@@ -76,7 +76,7 @@ export default function OrgShortcodesPage() {
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">
                         Shortcode Configuration
                     </h1>
-                    <p className="text-slate-500 font-medium">Manage listing queries for {organization?.name || 'Organization'}</p>
+                    <p className="text-slate-500 font-medium">Manage listing queries for {organization?.name || 'Brokerage'}</p>
                 </div>
                 <button
                     onClick={() => { setEditingShortcode(null); setShowModal(true); }}

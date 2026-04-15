@@ -154,20 +154,20 @@ export default function OrgWebsiteManagementPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-3">
-                    <button onClick={() => router.push('/organizations')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                        Back to Organizations
+                    <button onClick={() => router.push('/brokerages')} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                        </svg>
+                        Back to Brokerages
                     </button>
-                    <div className="flex items-center gap-4">
-                        <div className="h-1.5 w-12 bg-indigo-600 rounded-full" />
-                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-indigo-600">Website Management</span>
+                    <div className="flex flex-col">
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                            {website?.organizationName || 'Brokerage'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Website</span>
+                        </h1>
+                        <p className="text-slate-500 font-medium mt-1">
+                            Configure template, pages, SEO, and customize layout for this brokerage.
+                        </p>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-slate-900">
-                        {website?.organizationName || 'Organization'} <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Website</span>
-                    </h1>
-                    <p className="text-slate-500 font-medium max-w-xl">
-                        Configure template, pages, SEO, and customize layout for this organization.
-                    </p>
                 </div>
                 <div className="flex gap-3">
                     <button

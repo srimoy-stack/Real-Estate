@@ -6,288 +6,260 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@repo/auth';
 import { useWebsite } from '../../lib/tenant/website-context';
 
-// useSearchParams() requires a Suspense boundary in Next.js App Router.
-// HeaderInner holds all the logic; Header is the public exported wrapper.
-function HeaderInner() {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const [expandedItems, setExpandedItems] = useState<string[]>([]);
-    const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const { user, logout, hasHydrated } = useAuth();
-    const website = useWebsite();
+/**
+ * ┌──────────────────────────────────────────────────────────────────┐
+ *  HEADER — Sticky, production-grade navigation header.
+ *
+ *  LAYOUT   3-column CSS Grid  [Logo · Nav · Actions]
+ *           `1fr auto 1fr` keeps nav dead-centre.
+ *
+ *  LOGO     Source is 1024×1024. The brand banner sits at ~18 % from
+ *           the top.  We use `object-fit:cover` + `object-position`
+ *           to crop precisely to the banner — no overflow hacks.
+ *
+ *  MOBILE   Full-screen slide-over with accordion children.
+ * └──────────────────────────────────────────────────────────────────┘
+ */
 
+const H = 'h-[76px]';
+
+function HeaderInner() {
+    const [scrolled, setScrolled]       = useState(false);
+    const [menuOpen, setMenuOpen]       = useState(false);
+    const [dropdown, setDropdown]       = useState<string | null>(null);
+    const [expanded, setExpanded]       = useState<string[]>([]);
+    const timer                         = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const router     = useRouter();
+    const pathname   = usePathname();
+    const params     = useSearchParams();
+    const { user, logout, hasHydrated } = useAuth();
+    const website    = useWebsite();
+
+    /* scroll shadow */
     useEffect(() => {
-        const onScroll = () => setIsScrolled(window.scrollY > 10);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
+        const fn = () => setScrolled(window.scrollY > 10);
+        window.addEventListener('scroll', fn, { passive: true });
+        return () => window.removeEventListener('scroll', fn);
     }, []);
 
-    // Close mobile menu on any navigation (path OR query params)
-    useEffect(() => {
-        setIsMenuOpen(false);
-        setExpandedItems([]);
-    }, [pathname, searchParams]);
+    /* close mobile on navigate */
+    useEffect(() => { setMenuOpen(false); setExpanded([]); }, [pathname, params]);
 
-    // Prevent body scroll when mobile menu is open
+    /* body lock */
     useEffect(() => {
-        document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+        document.body.style.overflow = menuOpen ? 'hidden' : '';
         return () => { document.body.style.overflow = ''; };
-    }, [isMenuOpen]);
+    }, [menuOpen]);
 
-    const headerLinks = (website.navigation.headerLinks || [])
+    const links = (website.navigation.headerLinks ?? [])
         .filter(l => l.isVisible)
         .sort((a, b) => a.order - b.order);
 
-    const toggleExpanded = (id: string) => {
-        setExpandedItems(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
-    };
-
-    const handleMouseEnter = (id: string, hasChildren: boolean) => {
-        if (!hasChildren) return;
-        if (dropdownTimeout.current) clearTimeout(dropdownTimeout.current);
-        setActiveDropdown(id);
-    };
-
-    const handleMouseLeave = () => {
-        dropdownTimeout.current = setTimeout(() => setActiveDropdown(null), 120);
-    };
-
-    /**
-     * Determine if a nav link is the currently active route.
-     * For links with query params (e.g. /search?transaction=buy), ALL
-     * params in the link href must be present in the current URL.
-     * For plain path-only links, match by pathname prefix.
-     */
-    const isActive = (href: string) => {
+    const active = (href: string) => {
         if (href === '/') return pathname === '/';
-
-        const [hrefPath, hrefQuery] = href.split('?');
-
-        // Pathname must match first
-        if (!pathname.startsWith(hrefPath)) return false;
-
-        // If the link has no query params, pathname prefix match is enough
-        if (!hrefQuery) return true;
-
-        // All query params in the link href must exist with same value in current URL
-        const linkParams = new URLSearchParams(hrefQuery);
-        for (const [key, val] of linkParams.entries()) {
-            if (searchParams.get(key) !== val) return false;
-        }
+        const [p, q] = href.split('?');
+        if (!pathname.startsWith(p)) return false;
+        if (!q) return true;
+        for (const [k, v] of new URLSearchParams(q)) if (params.get(k) !== v) return false;
         return true;
     };
 
+    const ddOpen  = (id: string) => { if (timer.current) clearTimeout(timer.current); setDropdown(id); };
+    const ddClose = () => { timer.current = setTimeout(() => setDropdown(null), 140); };
 
+    /* ─── Logo element (reusable for desktop + mobile) ────────────── */
+    const Logo = ({ size = 'desktop' }: { size?: 'desktop' | 'mobile' }) => {
+        const logoUrl = (website as any).logoUrl;
+        if (logoUrl) {
+            return (
+                <img src={logoUrl} alt={website.brandName}
+                     className={size === 'desktop' ? 'h-15 w-auto max-w-[220px] object-contain' : 'h-8 w-auto max-w-[160px] object-contain'} />
+            );
+        }
+        return (
+            <img
+                src="/logo.png"
+                alt="SquareFT"
+                className={size === 'desktop' ? 'h-10 w-auto object-contain translate-y-[2px]' : 'h-7 w-auto object-contain translate-y-[1px]'}
+            />
+        );
+    };
 
+    /* ━━━━━━━━━━━━━━━━━━━━━ RENDER ━━━━━━━━━━━━━━━━━━━━━ */
     return (
-        <>
-            <header
-                className={`sticky top-0 z-[100] w-full transition-all duration-300 ${
-                    isScrolled
-                        ? 'bg-white/98 backdrop-blur-md shadow-[0_1px_24px_rgba(0,0,0,0.08)] border-b border-slate-100'
-                        : 'bg-white border-b border-slate-100/60'
-                }`}
-            >
-                <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-[68px]">
-                        {/* ── Logo ───────────────────────────────── */}
-<Link href="/" className="flex items-center group flex-shrink-0 self-center">
-                            {(website as any).logoUrl ? (
-                                <img
-                                    src={(website as any).logoUrl}
-                                    alt={website.brandName}
-className="h-9 w-auto max-w-[160px] object-contain transition-all duration-300 group-hover:scale-105"                                />) : (
-                                <img
-                                    src="/logo.png"
-                                    alt="SquareFT"
-className="h-14 w-auto object-contain transition-all duration-300 group-hover:scale-105"                                />
-                            )}
+        <header
+            className={[
+                'sticky top-0 z-[100] w-full border-b transition-all duration-300',
+                scrolled
+                    ? 'bg-white/[.97] backdrop-blur-xl border-slate-200/60 shadow-[0_4px_24px_rgba(0,0,0,0.06)]'
+                    : 'bg-white border-slate-100',
+            ].join(' ')}
+        >
+            <div className="mx-auto max-w-[1440px] px-6 sm:px-10 lg:px-14">
+                <div className={`grid grid-cols-[1fr_auto_1fr] items-center ${H}`}>
+
+                    {/* ═══ COL 1 — Logo ═══ */}
+                    <div className="flex items-center">
+                        <Link href="/" className="inline-flex items-center focus:outline-none">
+                            <Logo size="desktop" />
                         </Link>
+                    </div>
 
-                        {/* ── Desktop Nav ────────────────────────── */}
-                        <nav className="hidden lg:flex items-center space-x-1">
-                            {headerLinks.map(link => {
-                                const active = isActive(link.href);
-                                const hasChildren = !!(link.children && link.children.length > 0);
-
+                    {/* ═══ COL 2 — Desktop Nav ═══ */}
+                    <nav className="hidden lg:flex items-center justify-center" role="navigation">
+                        <ul className="flex items-center gap-1 m-0 p-0 list-none">
+                            {links.map(link => {
+                                const on   = active(link.href);
+                                const kids = link.children?.length ? link.children : null;
                                 return (
-                                    <div
+                                    <li
                                         key={link.id}
-                                        className="relative h-[68px] flex items-center px-4"
-                                        onMouseEnter={() => handleMouseEnter(link.id, hasChildren)}
-                                        onMouseLeave={handleMouseLeave}
+                                        className="relative flex items-center"
+                                        onMouseEnter={() => kids && ddOpen(link.id)}
+                                        onMouseLeave={ddClose}
                                     >
                                         <Link
                                             href={link.href}
-                                            className={`flex items-center gap-1.5 text-[13.5px] font-semibold transition-all ${
-                                                active ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'
-                                            }`}
+                                            className={[
+                                                'inline-flex items-center gap-1.5 h-10 px-5 rounded-full',
+                                                'text-[14px] font-semibold leading-none select-none transition-colors duration-200',
+                                                on ? 'text-slate-900 bg-slate-100' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50',
+                                            ].join(' ')}
                                         >
                                             {link.label}
-                                            {hasChildren && (
-                                                <svg
-                                                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                                                        activeDropdown === link.id ? 'rotate-180' : ''
-                                                    }`}
-                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                            {kids && (
+                                                <svg className={`w-3 h-3 opacity-40 transition-transform duration-200 ${dropdown === link.id ? 'rotate-180' : ''}`}
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                                                 </svg>
                                             )}
                                         </Link>
 
-                                        {/* Active indicator underline */}
-                                        {active && (
-                                            <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#4F46E5] rounded-full" />
-                                        )}
-
-                                        {/* Dropdown */}
-                                        {hasChildren && (
-                                            <div
-                                                className={`absolute top-full left-0 mt-1 min-w-[200px] bg-white rounded-xl border border-slate-100 shadow-xl shadow-slate-200/60 p-1.5 transition-all duration-200 origin-top ${
-                                                    activeDropdown === link.id
-                                                        ? 'opacity-100 visible translate-y-0'
-                                                        : 'opacity-0 invisible -translate-y-1 pointer-events-none'
-                                                }`}
-                                            >
-                                                {link.children!.sort((a, b) => a.order - b.order).map(child => (
-                                                    <Link
-                                                        key={child.id}
-                                                        href={child.href}
-                                                        className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-[13.5px] font-medium text-slate-600 hover:text-[#4F46E5] hover:bg-slate-50 transition-all"
-                                                    >
-                                                        {child.label}
-                                                    </Link>
-                                                ))}
+                                        {kids && (
+                                            <div className={[
+                                                'absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 transition-all duration-200 origin-top',
+                                                dropdown === link.id ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none',
+                                            ].join(' ')}>
+                                                <div className="min-w-[230px] bg-white rounded-2xl border border-slate-100 shadow-[0_16px_48px_rgba(0,0,0,0.12)] p-1.5">
+                                                    {kids.sort((a, b) => a.order - b.order).map(c => (
+                                                        <Link key={c.id} href={c.href}
+                                                              className="flex items-center px-4 py-3 rounded-xl text-[13.5px] font-semibold text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                                                            {c.label}
+                                                        </Link>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
-                                    </div>
+                                    </li>
                                 );
                             })}
-                        </nav>
+                        </ul>
+                    </nav>
 
-                        {/* ── Actions ─────────────────────────────── */}
-                        <div className="flex items-center gap-3 flex-shrink-0">
+                    {/* ═══ COL 3 — Actions ═══ */}
+                    <div className="flex items-center justify-end gap-2.5">
 
-                            {/* Auth state */}
-                            {!hasHydrated ? (
-                                <div className="h-9 w-20 bg-slate-100 animate-pulse rounded-lg hidden sm:block" />
-                            ) : user ? (
-                                <div className="hidden sm:flex items-center gap-2">
-                                    <Link
-                                        href="/saved-listings"
-                                        className="flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[13px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all border border-slate-200"
-                                    >
-                                        <svg className="w-4 h-4 text-[#4F46E5]" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                                        </svg>
-                                        Saved
-                                    </Link>
-                                    <Link
-                                        href="/account/saved-listings"
-                                        className="h-9 w-9 bg-slate-900 text-white rounded-lg flex items-center justify-center hover:bg-[#4F46E5] transition-all"
-                                        title="Account"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                    </Link>
-                                    <button
-                                        onClick={() => { logout(); router.push('/'); }}
-                                        className="h-9 px-3.5 text-[13px] font-semibold text-slate-500 hover:text-red-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                    >
-                                        Log Out
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <Link
-                                        href="/login"
-                                        className="hidden sm:inline-flex items-center h-9 px-4 text-[13px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all border border-slate-200"
-                                    >
-                                        Sign In
-                                    </Link>
-                                    <Link
-                                        href="/sell"
-                                        className="hidden sm:inline-flex items-center h-9 px-5 bg-[#0F172A] hover:bg-slate-800 text-white text-[13px] font-semibold rounded-lg transition-all shadow-sm shadow-slate-100 hover:shadow-md hover:shadow-slate-200/40 hover:-translate-y-px active:translate-y-0 border border-slate-700/50"
-                                    >
-                                        List Property
-                                    </Link>
-                                </>
-                            )}
+                        {!hasHydrated && (
+                            <div className="hidden sm:flex items-center gap-2">
+                                <div className="h-10 w-20 rounded-full bg-slate-100 animate-pulse" />
+                                <div className="h-10 w-28 rounded-full bg-slate-100 animate-pulse" />
+                            </div>
+                        )}
 
-                            {/* Mobile hamburger */}
-                            <button
-                                onClick={() => setIsMenuOpen(v => !v)}
-                                className="lg:hidden flex items-center justify-center h-9 w-9 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 transition-all border border-slate-200"
-                                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-                                aria-expanded={isMenuOpen}
-                            >
-                                <span className="sr-only">{isMenuOpen ? 'Close menu' : 'Open menu'}</span>
-                                {isMenuOpen ? (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        {hasHydrated && user && (
+                            <div className="hidden sm:flex items-center gap-2">
+                                <Link href="/saved-listings"
+                                      className="inline-flex items-center gap-2 h-10 px-4 rounded-full text-[13px] font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors">
+                                    <svg className="w-3.5 h-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
                                     </svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                                    Saved
+                                </Link>
+                                <Link href="/account/saved-listings" title="Account"
+                                      className="h-10 w-10 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors shadow-sm">
+                                    <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
-                                )}
-                            </button>
-                        </div>
+                                </Link>
+                                <button onClick={() => { logout(); router.push('/'); }}
+                                        className="h-10 px-4 rounded-full text-[13px] font-semibold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                    Log Out
+                                </button>
+                            </div>
+                        )}
+
+                        {hasHydrated && !user && (
+                            <div className="hidden lg:flex items-center gap-2">
+                                <Link href="/login"
+                                      className="h-10 px-5 rounded-full inline-flex items-center text-[13.5px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors">
+                                    Sign In
+                                </Link>
+                                <Link href="/sell"
+                                      className="h-10 px-6 rounded-full inline-flex items-center bg-slate-900 text-white text-[13.5px] font-semibold hover:bg-indigo-600 transition-all shadow-md shadow-slate-900/20 hover:-translate-y-px active:translate-y-0">
+                                    List Property
+                                </Link>
+                            </div>
+                        )}
+
+                        <button onClick={() => setMenuOpen(v => !v)}
+                                className="lg:hidden h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+                                aria-label="Menu">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {menuOpen
+                                    ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                    : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                                }
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            </header>
+            </div>
 
-            {/* ── Mobile Menu ─────────────────────────── */}
-            <div
-                className={`fixed inset-0 top-[68px] z-50 bg-white transition-all duration-300 lg:hidden ${
-                    isMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
-                }`}
-            >
-                <div className="flex flex-col h-full bg-slate-50/30">
-                    <div className="flex-1 overflow-y-auto px-4 py-8">
-                        <nav className="space-y-6">
-                            {headerLinks.map(link => {
-                                const hasChildren = !!(link.children && link.children.length > 0);
-                                const active = isActive(link.href);
-                                const isExpanded = expandedItems.includes(link.id);
+            {/* ═══════════ MOBILE OVERLAY ═══════════ */}
+            <div className={[
+                'fixed inset-0 z-[200] bg-white lg:hidden transition-all duration-300 ease-in-out',
+                menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none',
+            ].join(' ')}>
+                <div className="flex flex-col h-full">
 
+                    <div className={`px-6 flex items-center justify-between ${H} border-b border-slate-100 shrink-0`}>
+                        <Link href="/" onClick={() => setMenuOpen(false)}>
+                            <Logo size="mobile" />
+                        </Link>
+                        <button onClick={() => setMenuOpen(false)}
+                                className="h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center"
+                                aria-label="Close">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-6 py-8">
+                        <nav className="space-y-1">
+                            {links.map(link => {
+                                const kids = link.children?.length ? link.children : null;
+                                const open = expanded.includes(link.id);
                                 return (
-                                    <div key={link.id} className="space-y-3">
+                                    <div key={link.id}>
                                         <button
-                                            onClick={() => hasChildren ? toggleExpanded(link.id) : router.push(link.href)}
-                                            className={`flex items-center justify-between w-full text-left text-lg font-bold tracking-tight ${
-                                                active ? 'text-[#4F46E5]' : 'text-slate-800'
-                                            }`}
-                                        >
+                                            onClick={() => kids ? setExpanded(p => open ? p.filter(x => x !== link.id) : [...p, link.id]) : (setMenuOpen(false), router.push(link.href))}
+                                            className="flex items-center justify-between w-full px-4 py-4 rounded-2xl text-xl font-bold text-slate-900 hover:bg-slate-50 transition-colors">
                                             {link.label}
-                                            {hasChildren && (
-                                                <svg
-                                                    className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                            {kids && (
+                                                <svg className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                                                 </svg>
                                             )}
                                         </button>
-
-                                        {hasChildren && isExpanded && (
-                                            <div className="ml-4 flex flex-col space-y-4 border-l-2 border-slate-100 pl-4 py-2">
-                                                {link.children!.map(child => (
-                                                    <Link
-                                                        key={child.id}
-                                                        href={child.href}
-                                                        onClick={() => setIsMenuOpen(false)}
-                                                        className="text-[15px] font-semibold text-slate-500 hover:text-[#4F46E5]"
-                                                    >
-                                                        {child.label}
+                                        {kids && open && (
+                                            <div className="ml-4 pl-4 border-l-2 border-indigo-500 space-y-1 mt-1 mb-3">
+                                                {kids.sort((a, b) => a.order - b.order).map(c => (
+                                                    <Link key={c.id} href={c.href} onClick={() => setMenuOpen(false)}
+                                                          className="block px-3 py-2.5 text-base font-semibold text-slate-500 hover:text-indigo-600 rounded-xl transition-colors">
+                                                        {c.label}
                                                     </Link>
                                                 ))}
                                             </div>
@@ -298,41 +270,20 @@ className="h-14 w-auto object-contain transition-all duration-300 group-hover:sc
                         </nav>
                     </div>
 
-                    {/* Mobile Auth/Actions */}
-                    <div className="border-t border-slate-100 p-6 bg-white space-y-4">
+                    <div className="px-6 py-5 space-y-3 border-t border-slate-100 shrink-0">
                         {user ? (
-                            <>
-                                <Link
-                                    href="/saved-listings"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-slate-50 text-slate-800 text-[14px] font-semibold border border-slate-200 hover:border-slate-300 transition-all"
-                                >
-                                    <svg className="w-4 h-4 text-[#4F46E5]" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
-                                    </svg>
-                                    Saved Listings
-                                </Link>
-                                <button
-                                    onClick={() => { logout(); setIsMenuOpen(false); router.push('/'); }}
-                                    className="flex items-center justify-center w-full h-12 rounded-xl bg-slate-900 text-white text-[14px] font-semibold hover:bg-indigo-700 transition-all"
-                                >
-                                    Log Out
-                                </button>
-                            </>
+                            <button onClick={() => { logout(); setMenuOpen(false); router.push('/'); }}
+                                    className="w-full py-3.5 rounded-2xl bg-red-50 text-red-600 font-bold text-base active:bg-red-100 transition-colors">
+                                Sign Out
+                            </button>
                         ) : (
                             <>
-                                <Link
-                                    href="/login"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center justify-center w-full h-12 rounded-xl bg-slate-50 text-slate-900 text-[14px] font-semibold border border-slate-200 hover:bg-slate-100 transition-all"
-                                >
+                                <Link href="/login" onClick={() => setMenuOpen(false)}
+                                      className="flex items-center justify-center w-full py-3.5 rounded-2xl bg-slate-50 text-slate-900 font-bold text-base border border-slate-200 active:bg-slate-100 transition-colors">
                                     Sign In
                                 </Link>
-                                <Link
-                                    href="/sell"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center justify-center w-full h-12 rounded-xl bg-[#4F46E5] text-white text-[14px] font-semibold hover:bg-indigo-700 transition-all shadow-sm"
-                                >
+                                <Link href="/sell" onClick={() => setMenuOpen(false)}
+                                      className="flex items-center justify-center w-full py-3.5 rounded-2xl bg-slate-900 text-white font-bold text-base shadow-lg shadow-slate-900/20 active:translate-y-0.5 transition-all">
                                     List Your Property
                                 </Link>
                             </>
@@ -340,15 +291,12 @@ className="h-14 w-auto object-contain transition-all duration-300 group-hover:sc
                     </div>
                 </div>
             </div>
-        </>
+        </header>
     );
 }
 
-// Minimal header skeleton shown while Suspense resolves (prevents layout shift)
 function HeaderSkeleton() {
-    return (
-        <div className="sticky top-0 z-[100] w-full h-[68px] bg-white border-b border-slate-100/60" />
-    );
+    return <div className={`sticky top-0 z-[100] w-full ${H} bg-white border-b border-slate-100`} />;
 }
 
 export function Header() {

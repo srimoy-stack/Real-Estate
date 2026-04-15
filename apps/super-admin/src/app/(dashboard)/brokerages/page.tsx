@@ -22,7 +22,7 @@ import { useDebounce } from '@repo/hooks';
 import { useRouter } from 'next/navigation';
 import { TemplatePreviewPopup } from '@/components/TemplatePreviewPopup';
 
-export default function OrganizationsPage() {
+export default function BrokeragesPage() {
     const { user: superAdmin, hasHydrated } = useAuth();
     const router = useRouter();
 
@@ -194,17 +194,17 @@ export default function OrganizationsPage() {
         <div className="p-8 space-y-10 animate-in fade-in duration-500 bg-white min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Organization Management</h1>
-                    <p className="mt-1 text-slate-500 font-medium">Manage {total} onboarded organizations</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Brokerage Management</h1>
+                    <p className="mt-1 text-slate-500 font-medium">Manage {total} onboarded brokerages</p>
                 </div>
                 <button
-                    onClick={() => router.push('/onboard-organization')}
+                    onClick={() => router.push('/onboard-brokerage')}
                     className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2 group"
                 >
                     <svg className="h-5 w-5 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Register New Organization
+                    Register New Brokerage
                 </button>
             </div>
 
@@ -258,6 +258,7 @@ export default function OrganizationsPage() {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Template</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Domain</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">DDF Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Provider</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Leads (30d)</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Subscription</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
@@ -273,7 +274,7 @@ export default function OrganizationsPage() {
                                 ))
                             ) : items.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="px-6 py-20 text-center text-slate-500">No organizations found.</td>
+                                    <td colSpan={9} className="px-6 py-20 text-center text-slate-500">No brokerages found.</td>
                                 </tr>
                             ) : items.map((org) => {
                                 const ddf = getDDFBadge(org);
@@ -291,6 +292,18 @@ export default function OrganizationsPage() {
                                         <td className="px-6 py-4 text-xs text-indigo-600 font-mono tracking-tighter">{org.domain}</td>
                                         <td className="px-6 py-4 text-center">
                                             <StatusBadge label={ddf.label} type={ddf.type} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2 group/prov">
+                                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{(org as any).listingProvider?.providerName || 'DDF'}</span>
+                                                <button 
+                                                    onClick={() => setEditingOrg(org)}
+                                                    className="opacity-0 group-hover/prov:opacity-100 p-1 hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600 rounded transition-all"
+                                                    title="Edit Source Config"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3V17.5l13.732-13.732z" /></svg>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-right font-mono text-xs text-slate-900">
                                             {org.leads30d.toLocaleString()}
@@ -349,7 +362,7 @@ export default function OrganizationsPage() {
                                                         </svg>
                                                         View Live Site
                                                     </button>
-                                                    <button onClick={() => router.push(`/organizations/${org.id}/website`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                    <button onClick={() => router.push(`/brokerages/${org.id}/website`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                                         </svg>
@@ -361,13 +374,13 @@ export default function OrganizationsPage() {
                                                         </svg>
                                                         Website Builder
                                                     </button>
-                                                    <button onClick={() => router.push(`/organizations/${org.id}/shortcodes`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                    <button onClick={() => router.push(`/brokerages/${org.id}/shortcodes`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                                         </svg>
                                                         Configure Listings
                                                     </button>
-                                                    <button onClick={() => router.push(`/preview/organization/${org.id}`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                                                    <button onClick={() => router.push(`/preview/brokerage/${org.id}`)} className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -454,7 +467,7 @@ export default function OrganizationsPage() {
                     <div className="bg-white rounded-[40px] border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Edit <span className="text-indigo-600">Organization</span></h2>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Edit <span className="text-indigo-600">Brokerage</span></h2>
                                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">ID: {editingOrg.id}</p>
                             </div>
                             <button onClick={() => setEditingOrg(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -509,6 +522,45 @@ export default function OrganizationsPage() {
                                         <option value="agent-portfolio">Agent Portfolio</option>
                                         <option value="minimal-realty">Minimal Realty</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-4">
+                                    Listing Provider Config
+                                    <div className="h-px bg-slate-100 flex-1" />
+                                </label>
+                                <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Provider Name</label>
+                                        <input
+                                            type="text"
+                                            value={(editingOrg as any).listingProvider?.providerName || ''}
+                                            onChange={(e) => setEditingOrg({ ...editingOrg, listingProvider: { ...((editingOrg as any).listingProvider || {}), providerName: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-black uppercase"
+                                            placeholder="CREA DDF"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">API Key</label>
+                                        <input
+                                            type="password"
+                                            value={(editingOrg as any).listingProvider?.apiKey || ''}
+                                            onChange={(e) => setEditingOrg({ ...editingOrg, listingProvider: { ...((editingOrg as any).listingProvider || {}), apiKey: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all"
+                                            placeholder="••••••••••••••••"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Endpoint URL</label>
+                                        <input
+                                            type="text"
+                                            value={(editingOrg as any).listingProvider?.apiEndpoint || ''}
+                                            onChange={(e) => setEditingOrg({ ...editingOrg, listingProvider: { ...((editingOrg as any).listingProvider || {}), apiEndpoint: e.target.value } } as any)}
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-mono"
+                                            placeholder="https://api.provider.com/v3"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

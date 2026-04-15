@@ -56,6 +56,7 @@ model Listing {
 
   agentName             String?
   agentPhone            String?
+  agentPhoto            String?
   officeName            String?
 
   moreInformationLink   String?

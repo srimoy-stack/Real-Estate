@@ -22,14 +22,14 @@ export default function OnboardingLauncher() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Brokerage */}
                     <button
-                        onClick={() => router.push('/onboard-organization')}
+                        onClick={() => router.push('/onboard-brokerage')}
                         className="group p-10 bg-white border-2 border-slate-100 rounded-[40px] hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-300 text-left space-y-5"
                     >
                         <div className="h-16 w-16 bg-indigo-100 rounded-[20px] flex items-center justify-center text-3xl group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                             🏢
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-slate-900">Brokerage Organization</h2>
+                            <h2 className="text-xl font-black text-slate-900">Brokerage Entity</h2>
                             <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">
                                 Onboard a real estate brokerage firm with company details, template assignment, listing configuration, and website setup.
                             </p>

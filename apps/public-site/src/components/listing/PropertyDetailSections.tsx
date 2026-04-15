@@ -74,11 +74,48 @@ const icons = {
 };
 
 /* ─── Realtor Compliance Badge ───────────────────────────────────── */
-export function RealtorBadge(_props: { 
-  moreInformationLink?: string;
+export function RealtorBadge({ 
+  moreInformationLink,
+  variant = 'default'
+}: { 
+  moreInformationLink?: string | null;
   variant?: 'default' | 'full';
 }) {
-  return null;
+  return (
+    <div className={`flex flex-col items-center gap-6 py-12 ${variant === 'full' ? 'bg-slate-50 rounded-[48px]' : ''}`}>
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">Listing Provided By</span>
+        <a 
+          href="https://www.realtor.ca/en" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="transition-transform hover:scale-110 active:scale-95 duration-500"
+        >
+          <img 
+            width="140" 
+            src="https://www.realtor.ca/images/en-ca/powered_by_realtor.svg" 
+            alt="Powered by REALTOR.ca"
+            className="drop-shadow-sm"
+          />
+        </a>
+      </div>
+      
+      {moreInformationLink && (
+        <a 
+          href={moreInformationLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-external-link
+          className="group flex items-center gap-3 rounded-full bg-white border border-slate-100 px-8 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-500 shadow-xl shadow-slate-200/50 transition-all hover:bg-slate-900 hover:text-white hover:-translate-y-1"
+        >
+          View on REALTOR.ca
+          <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      )}
+    </div>
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */

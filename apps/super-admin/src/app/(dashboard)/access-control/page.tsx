@@ -182,7 +182,7 @@ export default function AccessControlPage() {
                     </svg>
                     <input
                         type="text"
-                        placeholder="Search Identity, Email, or Organization..."
+                        placeholder="Search Identity, Email, or Brokerage..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-[24px] text-sm font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-400 transition-all"

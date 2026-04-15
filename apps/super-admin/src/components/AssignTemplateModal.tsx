@@ -71,7 +71,7 @@ export function AssignTemplateModal({ template, onClose, onSuccess }: AssignTemp
                                 value={selectedOrgId}
                                 onChange={(e) => setSelectedOrgId(e.target.value)}
                             >
-                                <option value="">Choose an organization...</option>
+                                <option value="">Choose a brokerage...</option>
                                 {organizations.map((org) => (
                                     <option key={org.id} value={org.id}>{org.name}</option>
                                 ))}
