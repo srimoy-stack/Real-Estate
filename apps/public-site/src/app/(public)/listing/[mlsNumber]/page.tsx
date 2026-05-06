@@ -16,7 +16,6 @@ import {
   RoomsTableSection,
   LandDetailsSection,
   AssociationSection,
-  RealtorBadge,
 } from '@/components/listing/PropertyDetailSections';
 import {
   SafeImage,
@@ -188,7 +187,7 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
     : `${prop.bedrooms > 0 ? prop.bedrooms + ' Bedroom ' : ''}${prop.propertySubType || 'Property'} in ${city}`;
 
   const agentName = listing.agentName || 'Our Listing Team';
-  const agentPhoto = listing.agentPhoto || null;
+  const agentPhoto = (listing as any).agentPhoto || null;
   const agentPhone = listing.agentPhone || null;
   const brokerageName = prop.brokerageName;
 
@@ -292,9 +291,19 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                     <p className={`text-4xl font-black tracking-tighter sm:text-5xl ${(prop.price ?? 0) > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
                       {priceDisplay.text}
                     </p>
-                    <div className="mt-3 flex items-center justify-start md:justify-end gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">MLS® ID</span>
-                      <span className="rounded-md bg-slate-50 px-2 py-1 text-[11px] font-black text-slate-900 border border-slate-100">{listing.mlsNumber}</span>
+                    <div className="mt-3 flex flex-col items-start md:items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">MLS® ID</span>
+                        <span className="rounded-md bg-slate-50 px-2 py-1 text-[11px] font-black text-slate-900 border border-slate-100">{listing.mlsNumber}</span>
+                      </div>
+                      <a 
+                        href={moreInfoLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors underline decoration-slate-200 underline-offset-4"
+                      >
+                        More Information on REALTOR.ca®
+                      </a>
                     </div>
                   </div>
                   <SaveButton listingId={listing.mlsNumber} variant="full" />
@@ -320,26 +329,25 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
 
             {/* Public Remarks */}
             {(listing as any).description && (
-              <section id="property-description" className="scroll-mt-32 space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-200">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight text-slate-900">Public Remarks</h2>
-                    <div className="mt-1 h-1 w-12 rounded-full bg-slate-100" />
-                  </div>
+              <section id="property-description" className="scroll-mt-32 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Property Description</span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-slate-200 to-transparent" />
                 </div>
-                <div className="rounded-[40px] border border-slate-100 bg-white p-10 shadow-sm shadow-slate-100/50 sm:p-14">
-                  <div className="space-y-8 text-[17px] font-bold leading-relaxed text-slate-500">
-                    {(listing as any).description
-                      .split('\n')
-                      .filter(Boolean)
-                      .map((p: string, i: number) => (
-                        <p key={i} className="first-letter:text-3xl first-letter:font-black first-letter:text-slate-900 first-letter:mr-1">
-                          {p}
-                        </p>
-                      ))}
+                <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/40">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-slate-900 via-slate-600 to-slate-300 rounded-full" />
+                  <div className="px-10 py-10 sm:px-14 sm:py-12">
+                    <div className="space-y-5 text-[15px] leading-[1.85] tracking-wide text-slate-600">
+                      {(listing as any).description
+                        .split('\n')
+                        .filter(Boolean)
+                        .map((p: string, i: number) => (
+                          <p key={i} className={i === 0 ? 'first-letter:text-4xl first-letter:font-black first-letter:text-slate-900 first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:leading-none' : ''}>
+                            {p}
+                          </p>
+                        ))}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -358,7 +366,6 @@ export default async function DynamicListingPage({ params }: ListingDetailProps)
                   <RoomsTableSection data={details.rooms} />
                   <LandDetailsSection data={details.land} />
                   <AssociationSection data={details.association} />
-                  <RealtorBadge moreInformationLink={moreInfoLink} />
                 </div>
               );
             })()}

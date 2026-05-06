@@ -4,7 +4,6 @@ import { FeaturedListings } from '@/components/sections/FeaturedListings';
 import { PropertyCategories } from '@/components/sections/PropertyCategories';
 import { CommunitiesSection } from '@/components/sections/CommunitiesSection';
 import { CTASection } from '@/components/sections/CTASection';
-import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
 import { BlogSection } from '@/components/sections/BlogSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { Footer } from '@/components/sections/Footer';
@@ -19,7 +18,6 @@ export default function HomeLayout() {
                 <PropertyCategories />
                 <CommunitiesSection />
                 <CTASection />
-                <TestimonialsSection />
                 <BlogSection />
                 <ContactSection />
             </main>

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 
 import type { FooterColumn, SocialLinksConfig } from '@repo/types';
-import { RealtorBadge } from '@/components/listings/RealtorBadge';
 
 interface FooterProps {
   brandName: string;
@@ -79,13 +78,6 @@ export function Footer({ brandName, columns, socialLinks, copyrightText }: Foote
               </div>
             ))}
 
-            {/* Compliance Column */}
-            <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 mb-6 italic">Compliance</h3>
-              <div className="space-y-4">
-                <RealtorBadge />
-              </div>
-            </div>
           </div>
         </div>
 

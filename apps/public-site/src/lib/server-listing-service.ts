@@ -57,7 +57,7 @@ export async function getListingByMlsDirect(mlsNumber: string): Promise<MLSListi
     const agentCache = await getAgentFromCache(raw.ListAgentKey, raw.ListOfficeKey);
     const agentName = listing.agentName || agentCache?.agentName || raw.ListAgentFullName || '';
     const agentPhone = listing.agentPhone || agentCache?.agentPhone || raw.ListAgentDirectPhone || undefined;
-    const agentPhoto = listing.agentPhoto || agentCache?.agentPhoto || (raw.ListAgentPhoto && isValidImageUrl(raw.ListAgentPhoto) ? raw.ListAgentPhoto : null);
+    const agentPhoto = agentCache?.agentPhoto || (raw.ListAgentPhoto && isValidImageUrl(raw.ListAgentPhoto) ? raw.ListAgentPhoto : null);
     const brokerageName = listing.officeName || agentCache?.officeName || raw.ListOfficeName || null;
 
     return {
