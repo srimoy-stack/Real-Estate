@@ -18,18 +18,18 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
                         <div className="p-8 space-y-4">
                             <h3 className="text-xl font-black text-slate-900 tracking-tighter italic">Support</h3>
-                            <p className="text-slate-500 font-medium text-sm">Our technical team is available 24/7 for platform issues.</p>
-                            <a href="mailto:support@platform.com" className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">Email Support</a>
+                            <p className="text-slate-500 font-medium text-sm">Our technical team is available for platform assistance.</p>
+                            <a href="mailto:hello@squareft.ca" className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">Email Support</a>
                         </div>
                         <div className="p-8 space-y-4 border-x border-slate-100">
-                            <h3 className="text-xl font-black text-slate-900 tracking-tighter italic">Careers</h3>
-                            <p className="text-slate-500 font-medium text-sm">Interested in joining our elite team of agents?</p>
-                            <a href="/careers" className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">View Openings</a>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tighter italic">Office</h3>
+                            <p className="text-slate-500 font-medium text-sm">Visit our main headquarters in Brampton.</p>
+                            <span className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">416-903-7171</span>
                         </div>
                         <div className="p-8 space-y-4">
                             <h3 className="text-xl font-black text-slate-900 tracking-tighter italic">Press</h3>
                             <p className="text-slate-500 font-medium text-sm">For media inquiries and market reports.</p>
-                            <a href="mailto:press@platform.com" className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">Media Kit</a>
+                            <a href="mailto:hello@squareft.ca" className="text-[#4F46E5] font-black text-xs uppercase tracking-widest block">Media Kit</a>
                         </div>
                     </div>
                 </div>

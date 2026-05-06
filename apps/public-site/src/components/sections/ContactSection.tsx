@@ -106,7 +106,20 @@ export const ContactSection = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-widest text-[#4F46E5]/80 mb-1">Call Us Anytime</p>
-                                    <a href="tel:+18005550199" className="text-2xl font-black text-white hover:text-[#4F46E5]/60 transition-colors">1-800-555-0199</a>
+                                    <a href="tel:416-903-7171" className="text-2xl font-black text-white hover:text-[#4F46E5]/60 transition-colors">416-903-7171</a>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-6 group">
+                                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-[#4F46E5] group-hover:border-[#4F46E5]/70 transition-all duration-500">
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-black uppercase tracking-widest text-[#4F46E5]/80 mb-1">Visit Our Office</p>
+                                    <p className="text-2xl font-black text-white leading-tight">
+                                        7956 Torbram Rd Unit#19<br />
+                                        Brampton, ON L6T5A2
+                                    </p>
                                 </div>
                             </div>
 

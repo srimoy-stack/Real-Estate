@@ -30,7 +30,7 @@ export default function PrivacyPage() {
         {
             id: 'contact',
             title: '5. Exercising Your Rights',
-            content: 'You may request to access, correct, or delete your personal data at any time by contacting us at privacy@realestate.com.'
+            content: 'You may request to access, correct, or delete your personal data at any time by contacting us at privacy@squareft.ca.'
         }
     ];
 
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
                     </div>
 
                     <footer className="pt-12 border-t border-gray-100 italic font-bold text-gray-400 text-sm">
-                        Questions? Contact our Data Privacy Officer at privacy@realestate.com
+                        Questions? Contact our Data Privacy Officer at privacy@squareft.ca
                     </footer>
                 </div>
             </main>

@@ -113,9 +113,16 @@ export const Footer = () => {
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Support</h4>
                             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
                                 <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Office Address</p>
+                                    <p className="text-slate-900 text-sm font-black leading-relaxed">
+                                        7956 Torbram Rd Unit#19<br />
+                                        Brampton, ON L6T5A2
+                                    </p>
+                                </div>
+                                <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Direct Line</p>
-                                    <a href="tel:+18005550199" className="text-slate-900 text-sm font-black hover:text-brand-red transition-colors">
-                                        1-800-555-0199
+                                    <a href="tel:416-903-7171" className="text-slate-900 text-sm font-black hover:text-brand-red transition-colors">
+                                        416-903-7171
                                     </a>
                                 </div>
                                 <div>
